@@ -1895,6 +1895,19 @@ const Navbar = () => {
 
           <div className="pt-3 border-t border-slate-100 flex flex-col space-y-2">
             <button
+              onClick={() => handleNav(isAdminLoggedIn ? 'admin' : 'login')}
+              className="flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl text-xs font-bold font-heading bg-slate-900 text-white hover:bg-slate-800 transition shadow-sm"
+            >
+              <div className="flex items-center space-x-2">
+                <Icon name="shieldcheck" size={15} className="text-emerald-400" />
+                <span>{isAdminLoggedIn ? 'Admin Portal Dashboard' : 'Administrator Login'}</span>
+              </div>
+              <span className="text-[10px] text-emerald-400 font-mono">
+                {isAdminLoggedIn ? 'Active' : 'Portal'}
+              </span>
+            </button>
+
+            <button
               onClick={() => {
                 setIsDonateModalOpen(true);
                 setMobileMenuOpen(false);
@@ -3163,9 +3176,72 @@ CREATE POLICY "Public inquiries" ON public.inquiries FOR ALL USING (true) WITH C
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-100 w-full max-w-full">
-      {/* --- LEFT SIDEBAR --- */}
-      <aside className="w-full md:w-64 lg:w-72 bg-slate-950 text-white flex flex-col justify-between p-4 sm:p-5 border-r border-slate-800 shrink-0">
+    <div className="min-h-screen flex flex-col md:flex-row bg-slate-100 w-full max-w-full overflow-x-hidden">
+      {/* --- MOBILE TOP ADMIN HEADER & HORIZONTAL TABS (Mobile Only) --- */}
+      <div className="md:hidden bg-slate-950 text-white p-3 border-b border-slate-800 space-y-2.5 shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2.5 cursor-pointer" onClick={() => navigate('home')}>
+            <div className="w-8 h-8 rounded-full p-0.5 bg-gradient-to-tr from-emerald-600 to-amber-400 shrink-0">
+              <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
+            </div>
+            <div className="min-w-0">
+              <span className="font-extrabold text-xs text-white font-heading block truncate">
+                Medidhisubbaiah <span className="text-emerald-400">Admin</span>
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center space-x-1.5">
+            <button
+              onClick={() => navigate('home')}
+              className="text-[11px] font-bold font-heading text-slate-300 bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-700 transition"
+            >
+              Website
+            </button>
+            <button
+              onClick={logoutAdmin}
+              className="text-[11px] font-bold font-heading bg-red-600/90 text-white px-2.5 py-1.5 rounded-lg transition"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Horizontal Pill Tabs */}
+        <div className="flex space-x-1.5 overflow-x-auto scrollbar-none pb-1">
+          {[
+            { id: 'events', label: 'Events', count: events.length, icon: 'calendar' },
+            { id: 'gallery', label: 'Gallery', count: gallery.length, icon: 'image' },
+            { id: 'news', label: 'News', count: news.length, icon: 'filetext' },
+            { id: 'services', label: 'Services', count: services.length, icon: 'scissors' },
+            { id: 'leadership', label: 'Leadership', count: null, icon: 'users' },
+            { id: 'inquiries', label: 'Inquiries', count: inquiries.length, icon: 'mail' }
+          ].map(t => {
+            const active = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold font-heading whitespace-nowrap shrink-0 transition ${
+                  active ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <Icon name={t.icon} size={13} />
+                <span>{t.label}</span>
+                {t.count !== null && (
+                  <span className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded-full ${
+                    active ? 'bg-emerald-800 text-white' : 'bg-slate-800 text-slate-400'
+                  }`}>
+                    {t.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* --- DESKTOP / TABLET SIDEBAR (Hidden on Mobile) --- */}
+      <aside className="hidden md:flex w-64 lg:w-72 bg-slate-950 text-white flex-col justify-between p-4 sm:p-5 border-r border-slate-800 shrink-0">
         <div className="space-y-6">
           {/* Brand Header */}
           <div className="space-y-3 pb-4 border-b border-slate-800/80">
