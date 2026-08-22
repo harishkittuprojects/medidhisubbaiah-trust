@@ -345,6 +345,19 @@ const initialNews = [
 
 const initialGallery = [
   {
+    id: 100,
+    title: "Official Program Live Video — Free Tailoring & Muggam Work Convocations",
+    category: "Video Documentation",
+    type: "video",
+    videoUrl: "assets/gallery/trust_activity_video.mp4",
+    imageUrl: "assets/gallery/trust_activity_video_thumb.jpg",
+    duration: "1:22",
+    date: "2026-08-22",
+    isPdfWork: false,
+    location: "Hotel Chitturi Heritage, Tanuku",
+    caption: "Live video documentation showing trainees, master faculty, guest dignitaries, certificate distribution, and vocational skill activities across Tanuku, Mogultur, Narsapuram & Tadepalligudam."
+  },
+  {
     id: 1,
     title: "Grand Keynote & Certificate Distribution Inauguration",
     category: "Certificate Distribution",
@@ -809,6 +822,16 @@ function Icon({ name, className = "w-5 h-5", size = 20, color = "currentColor" }
       <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
       </svg>
+    ),
+    play: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3"/>
+      </svg>
+    ),
+    video: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2" ry="2"/>
+      </svg>
     )
   };
 
@@ -840,7 +863,7 @@ const TrustProvider = ({ children }) => {
   });
 
   const [gallery, setGallery] = useState(() => {
-    const saved = localStorage.getItem('mst_gallery_v2');
+    const saved = localStorage.getItem('mst_gallery_v3');
     return saved ? JSON.parse(saved) : initialGallery;
   });
 
@@ -877,7 +900,7 @@ const TrustProvider = ({ children }) => {
     localStorage.setItem('mst_news', JSON.stringify(news));
   }, [news]);
   useEffect(() => {
-    localStorage.setItem('mst_gallery_v2', JSON.stringify(gallery));
+    localStorage.setItem('mst_gallery_v3', JSON.stringify(gallery));
   }, [gallery]);
   useEffect(() => {
     localStorage.setItem('mst_inquiries', JSON.stringify(inquiries));
@@ -1001,6 +1024,7 @@ const TrustProvider = ({ children }) => {
     localStorage.removeItem('mst_news');
     localStorage.removeItem('mst_gallery');
     localStorage.removeItem('mst_gallery_v2');
+    localStorage.removeItem('mst_gallery_v3');
     showToast('Data reset to default trust datasets.', 'info');
   };
 
@@ -1967,28 +1991,36 @@ const LightboxModal = () => {
     setLightboxIndex(prev => (prev < gallery.length - 1 ? prev + 1 : 0));
   };
 
+  const isVideo = currentItem.type === 'video' || !!currentItem.videoUrl;
+
   return (
     <div onClick={() => setLightboxIndex(null)} className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-3 sm:p-5 animate-fadeIn">
       {/* Top Bar */}
       <div className="flex justify-between items-center text-white" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 flex-wrap">
           <span className="bg-emerald-600 text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase font-heading">{currentItem.category}</span>
-          <span className="text-xs text-slate-400 font-mono">Photo {lightboxIndex + 1} of {gallery.length}</span>
+          <span className="text-xs text-slate-400 font-mono">{isVideo ? 'Video' : 'Photo'} {lightboxIndex + 1} of {gallery.length}</span>
+          {isVideo && (
+            <span className="bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center space-x-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
+              <span>HD Video • {currentItem.duration || '01:22'}</span>
+            </span>
+          )}
           {currentItem.isPdfWork && (
             <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] px-2 py-0.5 rounded-full font-bold">Official Document</span>
           )}
         </div>
         <div className="flex items-center space-x-2">
           <a
-            href={currentItem.imageUrl}
-            download={`Medidhisubbaiah_Trust_Photo_${lightboxIndex + 1}.jpg`}
+            href={currentItem.videoUrl || currentItem.imageUrl}
+            download={isVideo ? `Medidhisubbaiah_Trust_Program_Video.mp4` : `Medidhisubbaiah_Trust_Photo_${lightboxIndex + 1}.jpg`}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-white/10 hover:bg-emerald-600 text-white p-2 rounded-xl text-xs flex items-center space-x-1.5 transition"
-            title="Download Image"
+            title={isVideo ? "Download Video" : "Download Image"}
           >
             <Icon name="download" size={16} />
-            <span className="hidden sm:inline font-bold font-heading">Save</span>
+            <span className="hidden sm:inline font-bold font-heading">{isVideo ? 'Download Video' : 'Save'}</span>
           </a>
           <button onClick={() => setLightboxIndex(null)} className="bg-white/10 hover:bg-red-600 text-white p-2 rounded-xl transition">
             <Icon name="x" size={18} />
@@ -1996,16 +2028,31 @@ const LightboxModal = () => {
         </div>
       </div>
 
-      {/* Main Image Container */}
+      {/* Main Media Container */}
       <div className="relative flex-1 flex items-center justify-center py-2" onClick={(e) => e.stopPropagation()}>
         <button onClick={handlePrev} className="absolute left-1 sm:left-4 bg-black/60 hover:bg-emerald-600 text-white p-2.5 sm:p-3.5 rounded-full z-10 transition backdrop-blur-sm border border-white/10">
           <Icon name="chevronleft" size={22} />
         </button>
-        <img
-          src={currentItem.imageUrl}
-          alt={currentItem.title}
-          className="max-h-[72vh] max-w-full object-contain rounded-2xl shadow-2xl border border-slate-800"
-        />
+
+        {isVideo ? (
+          <div className="max-h-[72vh] max-w-4xl w-full flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl bg-black border border-slate-800">
+            <video
+              src={currentItem.videoUrl}
+              poster={currentItem.imageUrl}
+              controls
+              autoPlay
+              playsInline
+              className="max-h-[70vh] w-full object-contain"
+            />
+          </div>
+        ) : (
+          <img
+            src={currentItem.imageUrl}
+            alt={currentItem.title}
+            className="max-h-[72vh] max-w-full object-contain rounded-2xl shadow-2xl border border-slate-800"
+          />
+        )}
+
         <button onClick={handleNext} className="absolute right-1 sm:right-4 bg-black/60 hover:bg-emerald-600 text-white p-2.5 sm:p-3.5 rounded-full z-10 transition backdrop-blur-sm border border-white/10">
           <Icon name="chevronright" size={22} />
         </button>
@@ -2604,7 +2651,7 @@ const NewsPage = () => {
   );
 };
 
-// --- GALLERY PAGE (Mobile Responsive with PDF Work Showcase) ---
+// --- GALLERY PAGE (Mobile Responsive with PDF Work & Video Showcase) ---
 const GalleryPage = () => {
   const { gallery, setLightboxIndex } = useTrust();
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -2612,6 +2659,7 @@ const GalleryPage = () => {
 
   const categories = [
     'All',
+    'Video Documentation',
     'Certificate Distribution',
     'Tailoring & Muggam',
     'Blood Donation',
@@ -2640,17 +2688,77 @@ const GalleryPage = () => {
         <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl relative overflow-hidden">
           <div className="relative z-10 max-w-2xl">
             <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">
-              Visual Chronicles & Official Records
+              Visual Chronicles, Video & Official Records
             </span>
             <h1 className="text-2xl sm:text-4xl font-black font-heading leading-tight">
-              Community <span className="text-emerald-400">Photo Gallery</span>
+              Community <span className="text-emerald-400">Gallery & Video Hub</span>
             </h1>
             <p className="text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed">
-              Authentic photographic records of our Free Tailoring & Muggam Work programs, grand certificate distributions with dignitaries, blood donation drives, Annadhanam food service, and summer Chalivendram water kiosks.
+              Authentic photographic records and live video coverage of our Free Tailoring & Muggam Work programs, grand certificate distributions with dignitaries, blood donation drives, Annadhanam food service, and summer Chalivendram water kiosks.
             </p>
           </div>
           <div className="absolute right-4 -bottom-10 opacity-10 pointer-events-none hidden md:block">
             <img src="./logo.png" alt="" className="w-80 h-80 object-contain" />
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Live Video Player Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full" data-aos="fade-up">
+        <div className="bg-slate-950 rounded-2xl sm:rounded-3xl border-2 border-emerald-500/40 p-4 sm:p-7 shadow-2xl overflow-hidden text-white">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            {/* Video Player Column */}
+            <div className="lg:col-span-7">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black border border-slate-800 aspect-video group">
+                <video
+                  src="assets/gallery/trust_activity_video.mp4"
+                  poster="assets/gallery/trust_activity_video_thumb.jpg"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+
+            {/* Video Info Column */}
+            <div className="lg:col-span-5 space-y-3.5">
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                <span className="bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full font-heading flex items-center space-x-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                  <span>Featured Video</span>
+                </span>
+                <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full font-heading">
+                  Duration 01:22 • HD Audio & Video
+                </span>
+              </div>
+
+              <h2 className="text-lg sm:text-2xl font-black font-heading text-white leading-snug">
+                Free Tailoring & Muggam Work Convocations — Live Field Footage
+              </h2>
+
+              <p className="text-slate-300 text-xs leading-relaxed">
+                Watch live video documentation of Sri Medidhi Subbaiah Memorial Trust's vocational training activities across <strong>Tanuku, Mogultur, Narsapuram & Tadepalligudam</strong>, featuring student stitching practice, master artisan guidance, and the grand certificate ceremony at <strong>Hotel Chitturi Heritage, Tanuku</strong> with <strong>Dr. Kishore Kumar Garu</strong>.
+              </p>
+
+              <div className="pt-2 flex flex-wrap gap-2.5">
+                <button
+                  onClick={() => setLightboxIndex(0)}
+                  className="inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold font-heading px-4 py-2.5 rounded-xl text-xs shadow-lg transition"
+                >
+                  <Icon name="play" size={14} />
+                  <span>Open Fullscreen Player</span>
+                </button>
+                <a
+                  href="assets/gallery/trust_activity_video.mp4"
+                  download="Medidhisubbaiah_Trust_Program_Video.mp4"
+                  className="inline-flex items-center space-x-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold font-heading px-4 py-2.5 rounded-xl text-xs shadow transition"
+                >
+                  <Icon name="download" size={14} />
+                  <span>Download Video (17.6 MB)</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -2710,7 +2818,7 @@ const GalleryPage = () => {
                   selectedCategory === cat ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                {cat}
+                {cat === 'Video Documentation' ? '📹 Videos' : cat}
               </button>
             ))}
           </div>
@@ -2729,7 +2837,7 @@ const GalleryPage = () => {
 
         {/* Results Counter */}
         <div className="flex justify-between items-center text-xs text-slate-500 mb-4 px-1">
-          <span>Showing <strong>{filtered.length}</strong> photo records</span>
+          <span>Showing <strong>{filtered.length}</strong> photo & video records</span>
           {selectedCategory !== 'All' && (
             <button onClick={() => setSelectedCategory('All')} className="text-emerald-600 font-bold hover:underline">
               Reset Filters
@@ -2737,15 +2845,18 @@ const GalleryPage = () => {
           )}
         </div>
 
-        {/* Photo Cards Grid */}
+        {/* Media Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filtered.map((item) => {
             const masterIdx = gallery.findIndex(g => g.id === item.id);
+            const isVid = item.type === 'video' || !!item.videoUrl;
             return (
               <div
                 key={item.id}
                 onClick={() => setLightboxIndex(masterIdx !== -1 ? masterIdx : 0)}
-                className="group bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer"
+                className={`group bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer ${
+                  isVid ? 'border-emerald-500/50 ring-2 ring-emerald-500/20' : 'border-slate-200'
+                }`}
               >
                 <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-slate-900">
                   <img
@@ -2758,8 +2869,10 @@ const GalleryPage = () => {
                   
                   {/* Category & Badge */}
                   <div className="absolute top-2.5 left-2.5 flex items-center space-x-1.5">
-                    <span className="bg-emerald-600 text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow font-heading">
-                      {item.category}
+                    <span className={`text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow font-heading ${
+                      isVid ? 'bg-red-600' : 'bg-emerald-600'
+                    }`}>
+                      {isVid ? '▶ Live Video' : item.category}
                     </span>
                     {item.isPdfWork && (
                       <span className="bg-amber-400 text-slate-950 text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow font-heading">
@@ -2768,17 +2881,32 @@ const GalleryPage = () => {
                     )}
                   </div>
 
-                  {/* Zoom indicator */}
-                  <div className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow">
-                    <Icon name="maximize" size={14} />
-                  </div>
-
-                  {/* Location badge on image */}
-                  {item.location && (
-                    <div className="absolute bottom-2.5 left-2.5 text-[10px] font-bold text-slate-200 bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-sm truncate max-w-[80%]">
-                      📍 {item.location}
+                  {/* Play / Zoom indicator */}
+                  {isVid ? (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:bg-red-600 transition-all border-2 border-white">
+                        <Icon name="play" size={20} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow">
+                      <Icon name="maximize" size={14} />
                     </div>
                   )}
+
+                  {/* Video Duration / Location badge */}
+                  <div className="absolute bottom-2.5 left-2.5 flex items-center space-x-1.5 text-[10px] font-bold text-slate-200">
+                    {isVid && (
+                      <span className="bg-black/70 px-2 py-0.5 rounded-md backdrop-blur-sm">
+                        ⏱️ {item.duration || '01:22'}
+                      </span>
+                    )}
+                    {item.location && (
+                      <span className="bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-sm truncate max-w-[150px]">
+                        📍 {item.location}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
@@ -2791,8 +2919,8 @@ const GalleryPage = () => {
                     </p>
                   </div>
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-emerald-600 font-bold font-heading">
-                    <span>Click to Expand High-Res</span>
-                    <Icon name="arrowright" size={12} />
+                    <span>{isVid ? 'Watch Full Video' : 'Click to Expand High-Res'}</span>
+                    <Icon name={isVid ? 'play' : 'arrowright'} size={12} />
                   </div>
                 </div>
               </div>
