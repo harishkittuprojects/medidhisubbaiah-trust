@@ -733,7 +733,7 @@ const trustInfo = {
 };
 
 const initialLeadership = {
-  imageUrl: 'leadership.png',
+  imageUrl: 'leadership.webp',
   directorName: 'Sri Medidhi Venkateshwar Rao',
   directorRole: 'Director, Medidhisubbaiah Trust',
   directorBio: 'Leading strategic social welfare, hospital blood donation coordination, and youth skill-building drives for 10+ years.',
@@ -748,6 +748,11 @@ const initialLeadership = {
 // --- UNIVERSAL ICON HELPER ---
 function Icon({ name, className = "w-5 h-5", size = 20, color = "currentColor" }) {
   const iconMap = {
+    whatsapp: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.301-.15-1.781-.879-2.057-.98-.276-.1-.477-.15-.678.15-.201.3-.778.98-.954 1.18-.176.2-.351.226-.652.075-.301-.15-1.272-.469-2.423-1.496-.896-.799-1.501-1.786-1.677-2.087-.176-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.151-.176.201-.301.301-.502.1-.201.05-.376-.025-.527-.075-.15-.678-1.635-.929-2.238-.245-.587-.494-.508-.678-.517l-.578-.01c-.201 0-.527.075-.803.376s-1.054 1.03-1.054 2.511 1.079 2.912 1.23 3.113c.151.201 2.124 3.244 5.146 4.549.719.31 1.281.495 1.719.634.722.229 1.379.197 1.898.119.579-.087 1.781-.728 2.032-1.43.251-.703.251-1.305.176-1.43-.075-.125-.276-.201-.577-.351zM12.042 21.849h-.008a9.837 9.837 0 0 1-5.01-1.368l-.359-.213-3.725.977.994-3.631-.234-.372a9.832 9.832 0 0 1-1.51-5.26c.003-5.437 4.426-9.859 9.868-9.859a9.81 9.81 0 0 1 6.98 2.894 9.814 9.814 0 0 1 2.888 6.981c-.004 5.438-4.426 9.861-9.884 9.861zm8.39-18.252A11.758 11.758 0 0 0 12.042 0C5.402 0 .01 5.393.007 12.034a11.72 11.72 0 0 0 1.6 5.962L0 24l6.177-1.62a11.737 11.737 0 0 0 5.86 1.554h.005c6.638 0 12.031-5.393 12.035-12.035a11.725 11.725 0 0 0-3.645-8.286z"/>
+      </svg>
+    ),
     scissors: (
       <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>
@@ -2346,19 +2351,22 @@ const AboutPage = () => {
             <div className="lg:col-span-5 flex flex-col items-center">
               <div className="relative w-full max-w-sm rounded-3xl bg-white p-3 shadow-xl border border-emerald-100 overflow-hidden group">
                 <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-emerald-100/50 to-amber-50/50 pt-2 flex items-center justify-center min-h-[260px]">
-                  {lead.imageUrl ? (
-                    <img
-                      src={lead.imageUrl}
-                      onError={(e) => { e.target.onerror = null; e.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
-                      alt={`Trust Leadership — ${lead.directorName} & ${lead.treasurerName}`}
-                      className="w-full h-auto max-h-[380px] object-contain object-bottom transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="h-64 flex flex-col items-center justify-center text-slate-400">
-                      <Icon name="users" size={48} className="text-emerald-300 mb-2" />
-                      <span className="text-xs font-bold font-heading">No Photo Uploaded</span>
-                    </div>
-                  )}
+                  <img
+                    src={lead.imageUrl || "leadership.webp"}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      if (!e.target.src.endsWith('leadership.png')) {
+                        e.target.src = "leadership.png";
+                      } else {
+                        e.target.src = "assets/gallery/trust_work_page_01.jpg";
+                      }
+                    }}
+                    loading="eager"
+                    decoding="async"
+                    fetchpriority="high"
+                    alt={`Trust Leadership — ${lead.directorName} & ${lead.treasurerName}`}
+                    className="w-full h-auto max-h-[380px] object-contain object-bottom transition-transform duration-500 group-hover:scale-105"
+                  />
                   
                   {/* Left & Right Role Badges */}
                   <div className="absolute bottom-6 left-3 bg-emerald-700/95 backdrop-blur-sm text-white text-[11px] font-extrabold px-3 py-1 rounded-lg shadow-md font-heading">
@@ -5685,10 +5693,10 @@ const FloatingActions = () => {
         href={trustInfo.socials.whatsapp}
         target="_blank"
         rel="noreferrer"
-        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition border-2 border-white"
-        title="WhatsApp Us"
+        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center shadow-2xl hover:scale-110 transition border-2 border-white"
+        title="Chat with Medidhisubbaiah Trust on WhatsApp"
       >
-        <Icon name="phone" size={18} />
+        <Icon name="whatsapp" size={24} />
       </a>
     </div>
   );
@@ -5730,7 +5738,7 @@ const Footer = () => {
               Medidhisubbaiah Trust is dedicated to uplifting underprivileged families, empowering women through free vocational training, providing life-saving healthcare and blood donor support, and fostering education for every child.
             </p>
             <div className="bg-emerald-950/40 border border-emerald-800/40 rounded-2xl p-3 flex items-center space-x-2.5">
-              <div className="p-2 bg-emerald-600 text-white rounded-xl shrink-0"><Icon name="heartpulse" size={18} /></div>
+              <div className="p-2 bg-emerald-600 text-white rounded-xl shrink-0"><Icon name="phone" size={18} /></div>
               <div className="min-w-0">
                 <div className="text-[10px] text-emerald-300 font-bold font-heading">24/7 Blood Emergency Hotline</div>
                 <a href={`tel:${trustInfo.emergencyBloodHelpline}`} className="text-white font-black text-sm hover:text-emerald-300 font-heading truncate block">{trustInfo.emergencyBloodHelpline}</a>

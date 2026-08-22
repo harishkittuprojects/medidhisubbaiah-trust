@@ -43,7 +43,7 @@ export const Footer = () => {
             {/* Helpline Box */}
             <div className="bg-red-950/40 border border-red-800/40 rounded-xl p-4 flex items-center space-x-3">
               <div className="p-2 bg-red-600 text-white rounded-lg">
-                <Icon name="heartpulse" size={20} />
+                <Icon name="phone" size={20} />
               </div>
               <div>
                 <div className="text-xs text-red-300 font-medium">24/7 Voluntary Blood Donor Support</div>
