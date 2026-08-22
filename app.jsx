@@ -2177,38 +2177,47 @@ const AboutPage = () => {
                 <span>Trust Leadership & Vision</span>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 tracking-tight">
-                Dedicated Community Stewards
-              </h2>
-
-              <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                Guided by the principles of compassion, integrity, and grassroots social development, our leaders have been tirelessly spearheading free educational, healthcare, and vocational initiatives across the community for more than a decade.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1">
-                  <div className="text-emerald-700 font-black font-heading text-base sm:text-lg">
+              {/* Director & Treasurer Profiles (Positioned Above) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-emerald-200/80 shadow-sm space-y-1 hover:border-emerald-400 transition-colors">
+                  <span className="bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md inline-block font-heading mb-1">
+                    Director
+                  </span>
+                  <div className="text-emerald-800 font-black font-heading text-base sm:text-lg leading-tight">
                     Sri Medidhi Venkateshwar Rao
                   </div>
                   <div className="text-xs font-bold text-slate-700 font-heading">
                     Director, Medidhisubbaiah Trust
                   </div>
-                  <p className="text-[11px] text-slate-500 pt-1">
+                  <p className="text-[11px] text-slate-500 pt-1 leading-relaxed">
                     Leading strategic social welfare, hospital blood donation coordination, and youth skill-building drives for 10+ years.
                   </p>
                 </div>
 
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1">
-                  <div className="text-emerald-700 font-black font-heading text-base sm:text-lg">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-teal-200/80 shadow-sm space-y-1 hover:border-teal-400 transition-colors">
+                  <span className="bg-teal-700 text-white text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md inline-block font-heading mb-1">
+                    Treasurer
+                  </span>
+                  <div className="text-teal-900 font-black font-heading text-base sm:text-lg leading-tight">
                     Smt. Medidhi Varalakshmi
                   </div>
                   <div className="text-xs font-bold text-slate-700 font-heading">
                     Treasurer, Medidhisubbaiah Trust
                   </div>
-                  <p className="text-[11px] text-slate-500 pt-1">
+                  <p className="text-[11px] text-slate-500 pt-1 leading-relaxed">
                     Overseeing transparent trust governance, women empowerment tailoring centers, and free food distribution programs for 10+ years.
                   </p>
                 </div>
+              </div>
+
+              {/* Dedicated Community Stewards (Positioned Down) */}
+              <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                <h2 className="text-xl sm:text-2xl font-black font-heading text-slate-900 tracking-tight">
+                  Dedicated Community Stewards
+                </h2>
+                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                  Guided by the principles of compassion, integrity, and grassroots social development, our leaders have been tirelessly spearheading free educational, healthcare, and vocational initiatives across the community for more than a decade.
+                </p>
               </div>
             </div>
           </div>
