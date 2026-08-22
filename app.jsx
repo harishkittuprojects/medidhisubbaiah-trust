@@ -5778,8 +5778,12 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="pt-6 text-center text-[11px] text-slate-500">
-          © {new Date().getFullYear()} Medidhisubbaiah Trust (మేడిది సుబ్బయ్య ట్రస్ట్). All Rights Reserved.
+        <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row justify-between items-center text-[11px] text-slate-500 gap-2.5">
+          <p>© {new Date().getFullYear()} Medidhisubbaiah Trust (మేడిది సుబ్బయ్య ట్రస్ట్). All Rights Reserved.</p>
+          <p className="text-slate-400 text-xs font-medium flex items-center space-x-1">
+            <span>Developed and maintained by</span>
+            <span className="text-emerald-400 font-bold font-heading">Trilok Infotech Pvt Limited</span>
+          </p>
         </div>
       </div>
     </footer>

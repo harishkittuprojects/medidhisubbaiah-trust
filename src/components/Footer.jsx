@@ -149,8 +149,12 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Bar: Copyright & Terms */}
-        <div className="pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} Medidhisubbaiah Trust. All Rights Reserved. Committed to selfless social service.</p>
+        <div className="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
+          <p>© {new Date().getFullYear()} Medidhisubbaiah Trust. All Rights Reserved.</p>
+          <p className="text-slate-400 font-medium flex items-center space-x-1">
+            <span>Developed and maintained by</span>
+            <span className="text-emerald-400 font-bold font-heading">Trilok Infotech Pvt Limited</span>
+          </p>
           <div className="flex space-x-6">
             <button onClick={() => navigate('about')} className="hover:text-slate-300 transition">About Trust</button>
             <button onClick={() => navigate('contact')} className="hover:text-slate-300 transition">Contact Us</button>
