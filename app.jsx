@@ -1605,6 +1605,19 @@ const TrustProvider = ({ children }) => {
     }
   };
 
+  const deleteInquiry = async (id) => {
+    const stringId = String(id);
+    setInquiries(prev => prev.filter(i => String(i.id) !== stringId));
+    showToast('Inquiry deleted.', 'info');
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('inquiries').delete().eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase inquiry delete notice:', err);
+      }
+    }
+  };
+
   const submitDonationLog = async (donationData) => {
     const donationItem = {
       ...donationData,
@@ -1678,6 +1691,7 @@ const TrustProvider = ({ children }) => {
       updateGalleryItem,
       deleteGalleryItem,
       submitContactForm,
+      deleteInquiry,
       submitDonationLog,
       resetToFactoryDefaults,
       supabaseConnected,
@@ -2867,7 +2881,7 @@ const LoginPage = () => {
 
 // --- ADMIN MANAGEMENT HUB (FULL CRUD FOR EVENTS, GALLERY, NEWS, SERVICES & CLOUDINARY/SUPABASE) ---
 const AdminPage = () => {
-  const {
+const {
     isAdminLoggedIn,
     logoutAdmin,
     services,
@@ -2889,6 +2903,7 @@ const AdminPage = () => {
     leadership,
     updateLeadership,
     inquiries,
+    deleteInquiry,
     supabaseConnected,
     supabaseStatusMsg,
     fetchSupabaseData,
@@ -2996,8 +3011,8 @@ const AdminPage = () => {
   // Handle Event Submit (Create or Edit)
   const handleEventSubmit = (e) => {
     e.preventDefault();
-    if (!eventForm.title || !eventForm.date) {
-      alert('Title and Date are required.');
+    if (!eventForm.title) {
+      alert('Title is required.');
       return;
     }
     if (editingEvent) {
@@ -3113,9 +3128,7 @@ CREATE TABLE IF NOT EXISTS public.services (
   image TEXT,
   raised TEXT,
   goal TEXT,
-  progress INTEGER DEFAULT 0,
-  features JSONB DEFAULT '[]'::jsonb,
-  beneficiaries TEXT,
+  progress INTEGER DEFAULT 50,
   duration TEXT,
   location TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -3123,7 +3136,7 @@ CREATE TABLE IF NOT EXISTS public.services (
 
 CREATE TABLE IF NOT EXISTS public.inquiries (
   id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
+  name TEXT,
   phone TEXT,
   email TEXT,
   subject TEXT,
@@ -3132,6 +3145,7 @@ CREATE TABLE IF NOT EXISTS public.inquiries (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Enable RLS and create public policies
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.news ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.gallery ENABLE ROW LEVEL SECURITY;
@@ -3189,7 +3203,8 @@ CREATE POLICY "Public inquiries" ON public.inquiries FOR ALL USING (true) WITH C
               { id: 'gallery', label: 'Gallery & Videos', count: gallery.length, icon: 'image' },
               { id: 'news', label: 'Media & News', count: news.length, icon: 'filetext' },
               { id: 'services', label: 'Services & Causes', count: services.length, icon: 'scissors' },
-              { id: 'leadership', label: 'Leadership & Vision', count: null, icon: 'users' }
+              { id: 'leadership', label: 'Leadership & Vision', count: null, icon: 'users' },
+              { id: 'inquiries', label: 'Contact Inquiries', count: inquiries.length, icon: 'mail' }
             ].map(t => {
               const active = activeTab === t.id;
               return (
@@ -3918,6 +3933,98 @@ CREATE POLICY "Public inquiries" ON public.inquiries FOR ALL USING (true) WITH C
               </div>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* --- TAB: CONTACT INQUIRIES --- */}
+      {activeTab === 'inquiries' && (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h2 className="text-xl font-black font-heading text-slate-900">Contact & Seva Inquiries</h2>
+              <p className="text-xs text-slate-500">Citizen submissions, volunteer registrations, and helpline messages.</p>
+            </div>
+            {inquiries.length > 0 && (
+              <span className="bg-emerald-100 text-emerald-800 text-xs font-bold font-heading px-3 py-1 rounded-full">
+                {inquiries.length} Total Messages
+              </span>
+            )}
+          </div>
+
+          {inquiries.length === 0 ? (
+            <div className="bg-white p-12 rounded-2xl border border-dashed border-slate-300 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                <Icon name="mail" size={24} />
+              </div>
+              <h3 className="font-black font-heading text-slate-800 text-base">No Inquiries Yet</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                When visitors submit the contact form or register for programs on the public website, their messages will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {inquiries.map((inq) => (
+                <div key={inq.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded font-heading">
+                          {inq.subject || inq.interest || 'General Inquiry'}
+                        </span>
+                        <h3 className="text-base font-black font-heading text-slate-900 mt-1">{inq.name || 'Anonymous User'}</h3>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono">{inq.submitted_at || inq.date || 'Recent'}</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 pt-1">
+                      {inq.phone && (
+                        <div className="flex items-center space-x-1.5 font-mono">
+                          <Icon name="phone" size={13} className="text-emerald-600 shrink-0" />
+                          <a href={`tel:${inq.phone}`} className="hover:underline truncate">{inq.phone}</a>
+                        </div>
+                      )}
+                      {inq.email && (
+                        <div className="flex items-center space-x-1.5 font-mono truncate">
+                          <Icon name="mail" size={13} className="text-emerald-600 shrink-0" />
+                          <a href={`mailto:${inq.email}`} className="hover:underline truncate">{inq.email}</a>
+                        </div>
+                      )}
+                    </div>
+
+                    {inq.message && (
+                      <p className="text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed whitespace-pre-line">
+                        {inq.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                    <div className="flex space-x-2">
+                      {inq.phone && (
+                        <a
+                          href={`https://wa.me/${inq.phone.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1 rounded-lg text-xs font-bold font-heading flex items-center space-x-1 transition"
+                        >
+                          <Icon name="phone" size={12} />
+                          <span>WhatsApp</span>
+                        </a>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Delete inquiry from "${inq.name}"?`)) deleteInquiry(inq.id);
+                      }}
+                      className="text-xs text-red-600 hover:bg-red-50 font-bold px-2.5 py-1 rounded-lg transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
