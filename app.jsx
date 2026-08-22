@@ -346,75 +346,213 @@ const initialNews = [
 const initialGallery = [
   {
     id: 1,
-    title: "Women Empowered at Tailoring Workshop",
-    category: "Tailoring",
-    imageUrl: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=80",
-    date: "2026-08-05",
-    caption: "Students practicing garment cutting and finishing at the Skill Development Center."
+    title: "Grand Keynote & Certificate Distribution Inauguration",
+    category: "Certificate Distribution",
+    imageUrl: "assets/gallery/trust_work_page_01.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Hotel Chitturi Heritage, Tanuku",
+    caption: "Dr. Kishore Kumar Garu (Founder, GVSK Nutraceuticals & Ayurveda, Hyderabad) inaugurating the Certificate Distribution Ceremony for Free Tailoring & Muggam Work batches across Tanuku, Mogultur, Narsapuram & Tadepalligudam."
   },
   {
     id: 2,
-    title: "Voluntary Blood Donation Drive",
-    category: "Blood Donation",
-    imageUrl: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=1200&q=80",
-    date: "2026-07-15",
-    caption: "Generous donors contributing life-saving blood units at our hospital partnership camp."
+    title: "Mega Graduation Convocation - Women Beneficiaries",
+    category: "Certificate Distribution",
+    imageUrl: "assets/gallery/trust_work_page_02.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Tanuku, West Godavari",
+    caption: "Grand convocation group photograph of women trainees holding their official certificates after completing the intensive vocational skill development program."
   },
   {
     id: 3,
+    title: "Tanuku & Mogultur Batch Certificate Distribution",
+    category: "Certificate Distribution",
+    imageUrl: "assets/gallery/trust_work_page_03.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Hotel Chitturi Heritage, Tanuku",
+    caption: "Dignitaries presenting vocational credentials to successful trainees from Tanuku and Mogultur mandals, fostering women self-reliance."
+  },
+  {
+    id: 4,
+    title: "Vocational Skills Certificate Distribution - Narsapuram Batch",
+    category: "Certificate Distribution",
+    imageUrl: "assets/gallery/trust_work_page_04.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Narsapuram & Regional Center",
+    caption: "Honoring deserving women students with course completion credentials, encouraging micro-entrepreneurship and boutique startups."
+  },
+  {
+    id: 5,
+    title: "Free Tailoring & Maggam Work Certificate Presentation - Tadepalligudam",
+    category: "Certificate Distribution",
+    imageUrl: "assets/gallery/trust_work_page_05.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Tadepalligudam & Tanuku Centers",
+    caption: "Trainees proudly receiving certificates recognizing their dedicated practice in garment making, drafting, and intricate embroidery."
+  },
+  {
+    id: 6,
+    title: "Dignitaries & Master Trainers Felicitation",
+    category: "Tailoring & Muggam",
+    imageUrl: "assets/gallery/trust_work_page_06.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Hotel Chitturi Heritage, Tanuku",
+    caption: "Trust leaders presenting graduation certificates to women participants from rural and semi-urban communities."
+  },
+  {
+    id: 7,
+    title: "Empowering Rural Women Artisans with Tailoring Mastery",
+    category: "Tailoring & Muggam",
+    imageUrl: "assets/gallery/trust_work_page_07.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Tanuku, West Godavari",
+    caption: "Congratulating women artisans on mastering traditional Maggam work and commercial garment stitching."
+  },
+  {
+    id: 8,
+    title: "Practical Muggam & Aari Needlework Demonstration & Awards",
+    category: "Tailoring & Muggam",
+    imageUrl: "assets/gallery/trust_work_page_08.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Tanuku & Mogultur Centers",
+    caption: "Moments from the grand certificate distribution honoring hardworking candidates."
+  },
+  {
+    id: 9,
+    title: "Women Livelihood & Skill Development Certification Session",
+    category: "Tailoring & Muggam",
+    imageUrl: "assets/gallery/trust_work_page_09.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Tanuku, AP",
+    caption: "Celebrating the achievements of students across multiple training centers."
+  },
+  {
+    id: 10,
+    title: "Tanuku Division Women Beneficiaries Group Felicitation",
+    category: "Certificate Distribution",
+    imageUrl: "assets/gallery/trust_work_page_10.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Hotel Chitturi Heritage Auditorium",
+    caption: "Dignitaries handing over formal certificates to successful tailoring trainees."
+  },
+  {
+    id: 11,
+    title: "Mogultur & Coastal Mandals Free Tailoring Graduation",
+    category: "Tailoring & Muggam",
+    imageUrl: "assets/gallery/trust_work_page_11.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Mogultur & Tanuku Centers",
+    caption: "Empowering women with recognized credentials to start their home-based tailoring ventures."
+  },
+  {
+    id: 12,
+    title: "Handicraft & Traditional Maggam Design Certification Program",
+    category: "Tailoring & Muggam",
+    imageUrl: "assets/gallery/trust_work_page_12.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Tanuku, West Godavari",
+    caption: "Honoring artisans skilled in Aari needle, zardosi, and designer blouse creation."
+  },
+  {
+    id: 13,
+    title: "Vocational Course Achievers Award Ceremony",
+    category: "Certificate Distribution",
+    imageUrl: "assets/gallery/trust_work_page_13.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Hotel Chitturi Heritage, Tanuku",
+    caption: "Inspiring speeches and certificate awards empowering women towards financial dignity."
+  },
+  {
+    id: 14,
+    title: "Graduation Honor for Tadepalligudem & Narsapur Trainees",
+    category: "Certificate Distribution",
+    imageUrl: "assets/gallery/trust_work_page_14.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Narsapuram, Tanuku & Tadepalligudem",
+    caption: "Trust representatives presenting graduation honors to successful students."
+  },
+  {
+    id: 15,
+    title: "Grand Finale - Medidhisubbaiah Trust Social Service Portfolio",
+    category: "Certificate Distribution",
+    imageUrl: "assets/gallery/trust_work_page_15.jpg",
+    date: "2026-08-10",
+    isPdfWork: true,
+    location: "Hotel Chitturi Heritage, Tanuku",
+    caption: "Comprehensive photo compilation of Free Tailoring & Muggam Works programs across Tanuku, Mogultur, Narsapuram & Tadepalligudem."
+  },
+  {
+    id: 16,
+    title: "Voluntary Blood Donation Drive & Medical Camp",
+    category: "Blood Donation",
+    imageUrl: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=1200&q=80",
+    date: "2026-07-15",
+    isPdfWork: false,
+    location: "Trust Main Hall, Gandhi Nagar",
+    caption: "Generous donors contributing life-saving blood units at our hospital partnership camp."
+  },
+  {
+    id: 17,
     title: "Nutritious Food Annadhanam Service",
     category: "Food Distribution",
     imageUrl: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80",
     date: "2026-07-28",
+    isPdfWork: false,
+    location: "Govt. Hospital & Bus Terminal",
     caption: "Volunteers serving fresh, nutritious meals with love to hospital attendants and needy individuals."
   },
   {
-    id: 4,
-    title: "Grocery Kit Distribution to Families",
+    id: 18,
+    title: "Essential Grocery Kit Distribution to Families",
     category: "Grocery Distribution",
     imageUrl: "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80",
     date: "2026-06-20",
+    isPdfWork: false,
+    location: "Trust Community Points",
     caption: "Monthly dry ration packs containing essentials provided to economically weak families."
   },
   {
-    id: 5,
-    title: "Traditional Maggam Craft Training",
-    category: "Tailoring",
-    imageUrl: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=80",
-    date: "2026-06-05",
-    caption: "Hands-on Maggam and Zardosi embroidery training empowering local artisans."
-  },
-  {
-    id: 6,
-    title: "School Bags & Books Distribution",
-    category: "Educational Programs",
-    imageUrl: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80",
-    date: "2026-06-12",
-    caption: "Happy school children receiving new backpacks and stationery sets for the school term."
-  },
-  {
-    id: 7,
-    title: "District Youth Sports Championship",
-    category: "Sports",
-    imageUrl: "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1200&q=80",
-    date: "2026-05-18",
-    caption: "Youth teams competing with fervor at the annual community sports meet."
-  },
-  {
-    id: 8,
-    title: "Summer Chalivendram Water Service",
+    id: 19,
+    title: "Summer Chalivendram Water & Buttermilk Service",
     category: "Chalivendram",
     imageUrl: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=1200&q=80",
     date: "2026-04-25",
-    caption: "Providing cold clay-pot drinking water and buttermilk to beat the scorching heat."
+    isPdfWork: false,
+    location: "RTC Bus Stand & 8 City Junctions",
+    caption: "Providing cold clay-pot drinking water and spiced buttermilk to beat the scorching summer heat."
   },
   {
-    id: 9,
-    title: "Graduation & Certificate Distribution",
-    category: "Events",
-    imageUrl: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80",
-    date: "2026-04-10",
-    caption: "Students receiving course completion certificates upon successful vocational training."
+    id: 20,
+    title: "Free School Bags & Stationery Kits Distribution",
+    category: "Educational Programs",
+    imageUrl: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80",
+    date: "2026-06-12",
+    isPdfWork: false,
+    location: "Govt High Schools, Ward 4",
+    caption: "Happy school children receiving new backpacks and stationery sets for the school term."
+  },
+  {
+    id: 21,
+    title: "Inter-District Youth Sports Championship",
+    category: "Sports",
+    imageUrl: "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1200&q=80",
+    date: "2026-05-18",
+    isPdfWork: false,
+    location: "District Sports Stadium",
+    caption: "Youth teams competing with fervor at the annual community sports meet."
   }
 ];
 
@@ -651,6 +789,26 @@ function Icon({ name, className = "w-5 h-5", size = 20, color = "currentColor" }
       <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
       </svg>
+    ),
+    filetext: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
+      </svg>
+    ),
+    download: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+    ),
+    externallink: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+    ),
+    maximize: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+      </svg>
     )
   };
 
@@ -682,7 +840,7 @@ const TrustProvider = ({ children }) => {
   });
 
   const [gallery, setGallery] = useState(() => {
-    const saved = localStorage.getItem('mst_gallery');
+    const saved = localStorage.getItem('mst_gallery_v2');
     return saved ? JSON.parse(saved) : initialGallery;
   });
 
@@ -719,7 +877,7 @@ const TrustProvider = ({ children }) => {
     localStorage.setItem('mst_news', JSON.stringify(news));
   }, [news]);
   useEffect(() => {
-    localStorage.setItem('mst_gallery', JSON.stringify(gallery));
+    localStorage.setItem('mst_gallery_v2', JSON.stringify(gallery));
   }, [gallery]);
   useEffect(() => {
     localStorage.setItem('mst_inquiries', JSON.stringify(inquiries));
@@ -842,6 +1000,7 @@ const TrustProvider = ({ children }) => {
     localStorage.removeItem('mst_events');
     localStorage.removeItem('mst_news');
     localStorage.removeItem('mst_gallery');
+    localStorage.removeItem('mst_gallery_v2');
     showToast('Data reset to default trust datasets.', 'info');
   };
 
@@ -1784,6 +1943,18 @@ const NewsModal = () => {
 // --- LIGHTBOX MODAL ---
 const LightboxModal = () => {
   const { lightboxIndex, setLightboxIndex, gallery } = useTrust();
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (lightboxIndex === null) return;
+      if (e.key === 'Escape') setLightboxIndex(null);
+      if (e.key === 'ArrowLeft') setLightboxIndex(prev => (prev > 0 ? prev - 1 : gallery.length - 1));
+      if (e.key === 'ArrowRight') setLightboxIndex(prev => (prev < gallery.length - 1 ? prev + 1 : 0));
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxIndex, gallery.length]);
+
   if (lightboxIndex === null || !gallery[lightboxIndex]) return null;
 
   const currentItem = gallery[lightboxIndex];
@@ -1797,27 +1968,71 @@ const LightboxModal = () => {
   };
 
   return (
-    <div onClick={() => setLightboxIndex(null)} className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-3 sm:p-4 animate-fadeIn">
+    <div onClick={() => setLightboxIndex(null)} className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-3 sm:p-5 animate-fadeIn">
+      {/* Top Bar */}
       <div className="flex justify-between items-center text-white" onClick={(e) => e.stopPropagation()}>
-        <span className="bg-emerald-600 text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase font-heading">{currentItem.category}</span>
-        <button onClick={() => setLightboxIndex(null)} className="bg-white/10 text-white p-2 rounded-full">
-          <Icon name="x" size={20} />
-        </button>
+        <div className="flex items-center space-x-2">
+          <span className="bg-emerald-600 text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase font-heading">{currentItem.category}</span>
+          <span className="text-xs text-slate-400 font-mono">Photo {lightboxIndex + 1} of {gallery.length}</span>
+          {currentItem.isPdfWork && (
+            <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] px-2 py-0.5 rounded-full font-bold">Official Document</span>
+          )}
+        </div>
+        <div className="flex items-center space-x-2">
+          <a
+            href={currentItem.imageUrl}
+            download={`Medidhisubbaiah_Trust_Photo_${lightboxIndex + 1}.jpg`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white/10 hover:bg-emerald-600 text-white p-2 rounded-xl text-xs flex items-center space-x-1.5 transition"
+            title="Download Image"
+          >
+            <Icon name="download" size={16} />
+            <span className="hidden sm:inline font-bold font-heading">Save</span>
+          </a>
+          <button onClick={() => setLightboxIndex(null)} className="bg-white/10 hover:bg-red-600 text-white p-2 rounded-xl transition">
+            <Icon name="x" size={18} />
+          </button>
+        </div>
       </div>
 
+      {/* Main Image Container */}
       <div className="relative flex-1 flex items-center justify-center py-2" onClick={(e) => e.stopPropagation()}>
-        <button onClick={handlePrev} className="absolute left-2 bg-black/50 text-white p-2 sm:p-3 rounded-full z-10">
-          <Icon name="chevronleft" size={20} />
+        <button onClick={handlePrev} className="absolute left-1 sm:left-4 bg-black/60 hover:bg-emerald-600 text-white p-2.5 sm:p-3.5 rounded-full z-10 transition backdrop-blur-sm border border-white/10">
+          <Icon name="chevronleft" size={22} />
         </button>
-        <img src={currentItem.imageUrl} alt={currentItem.title} className="max-h-[70vh] max-w-full object-contain rounded-xl shadow-2xl" />
-        <button onClick={handleNext} className="absolute right-2 bg-black/50 text-white p-2 sm:p-3 rounded-full z-10">
-          <Icon name="chevronright" size={20} />
+        <img
+          src={currentItem.imageUrl}
+          alt={currentItem.title}
+          className="max-h-[72vh] max-w-full object-contain rounded-2xl shadow-2xl border border-slate-800"
+        />
+        <button onClick={handleNext} className="absolute right-1 sm:right-4 bg-black/60 hover:bg-emerald-600 text-white p-2.5 sm:p-3.5 rounded-full z-10 transition backdrop-blur-sm border border-white/10">
+          <Icon name="chevronright" size={22} />
         </button>
       </div>
 
-      <div className="text-center text-white p-3 bg-black/40 rounded-xl max-w-xl mx-auto w-full" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-bold font-heading text-xs sm:text-sm">{currentItem.title}</h3>
-        <p className="text-[11px] text-slate-300 line-clamp-2">{currentItem.caption}</p>
+      {/* Bottom Information Panel */}
+      <div className="text-center text-white p-3.5 bg-slate-950/80 border border-slate-800 backdrop-blur-md rounded-2xl max-w-2xl mx-auto w-full space-y-1" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-center space-x-2 flex-wrap text-emerald-400 text-xs font-bold font-heading">
+          <span>{currentItem.title}</span>
+          {currentItem.location && (
+            <span className="text-slate-400 text-[11px] font-normal">📍 {currentItem.location}</span>
+          )}
+        </div>
+        <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed">{currentItem.caption}</p>
+        {currentItem.isPdfWork && (
+          <div className="pt-1">
+            <a
+              href="assets/medidhisubbaiah_trust_all_works.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center space-x-1 text-[11px] text-amber-300 hover:text-amber-200 underline font-semibold"
+            >
+              <span>📄 View in Full 15-Page PDF Presentation</span>
+              <Icon name="arrowright" size={11} />
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2389,57 +2604,195 @@ const NewsPage = () => {
   );
 };
 
-// --- GALLERY PAGE (Mobile Responsive) ---
+// --- GALLERY PAGE (Mobile Responsive with PDF Work Showcase) ---
 const GalleryPage = () => {
   const { gallery, setLightboxIndex } = useTrust();
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const categories = ['All', 'Events', 'Blood Donation', 'Food Distribution', 'Grocery Distribution', 'Tailoring', 'Educational Programs', 'Sports', 'Chalivendram'];
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const categories = [
+    'All',
+    'Certificate Distribution',
+    'Tailoring & Muggam',
+    'Blood Donation',
+    'Food Distribution',
+    'Grocery Distribution',
+    'Chalivendram',
+    'Educational Programs',
+    'Sports'
+  ];
 
   const filtered = useMemo(() => {
-    if (selectedCategory === 'All') return gallery;
-    return gallery.filter(item => item.category === selectedCategory);
-  }, [gallery, selectedCategory]);
+    return gallery.filter(item => {
+      const matchCat = selectedCategory === 'All' || item.category === selectedCategory;
+      const matchSearch =
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.caption && item.caption.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.location && item.location.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchCat && matchSearch;
+    });
+  }, [gallery, selectedCategory, searchQuery]);
 
   return (
-    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden">
+    <div className="space-y-6 sm:space-y-10 py-6 sm:py-8 w-full max-w-full overflow-hidden">
+      {/* Header Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
-          <span className="bg-emerald-600/30 text-emerald-400 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">Visual Chronicles</span>
-          <h1 className="text-2xl sm:text-4xl font-black font-heading">Community <span className="text-emerald-400">Photo Gallery</span></h1>
-          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">Authentic photographs capturing moments of community empowerment, blood drives, food service, and summer Chalivendram water kiosks.</p>
+        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl relative overflow-hidden">
+          <div className="relative z-10 max-w-2xl">
+            <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">
+              Visual Chronicles & Official Records
+            </span>
+            <h1 className="text-2xl sm:text-4xl font-black font-heading leading-tight">
+              Community <span className="text-emerald-400">Photo Gallery</span>
+            </h1>
+            <p className="text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed">
+              Authentic photographic records of our Free Tailoring & Muggam Work programs, grand certificate distributions with dignitaries, blood donation drives, Annadhanam food service, and summer Chalivendram water kiosks.
+            </p>
+          </div>
+          <div className="absolute right-4 -bottom-10 opacity-10 pointer-events-none hidden md:block">
+            <img src="./logo.png" alt="" className="w-80 h-80 object-contain" />
+          </div>
         </div>
       </section>
 
+      {/* Official PDF Document Showcase Card */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-1.5 overflow-x-auto scrollbar-none mb-6">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold font-heading whitespace-nowrap transition ${
-                selectedCategory === cat ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
+        <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-white shadow-xl border border-emerald-700/50 flex flex-col md:flex-row items-center justify-between gap-5">
+          <div className="flex items-start space-x-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-emerald-600/30 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shrink-0 shadow-lg">
+              <Icon name="filetext" size={28} />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2 flex-wrap">
+                <span className="bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-md font-heading">Official Document</span>
+                <span className="text-emerald-300 text-xs font-bold font-heading">15 Pages • Comprehensive Presentation</span>
+              </div>
+              <h2 className="text-base sm:text-xl font-black font-heading text-white">
+                All Works Together — Official Presentation Report (PDF)
+              </h2>
+              <p className="text-slate-300 text-xs leading-relaxed max-w-2xl">
+                Official document chronicling Free Tailoring & Muggam Works conducted at <strong>Tanuku, Mogultur, Narsapuram & Tadepalligudam</strong>, and the grand Certificate Distribution Ceremony at <strong>Hotel Chitturi Heritage, Tanuku</strong> with <strong>Dr. Kishore Kumar Garu</strong> (Founder, GVSK Nutraceuticals & Ayurveda, Hyderabad).
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-row sm:flex-col lg:flex-row gap-2.5 w-full md:w-auto shrink-0">
+            <a
+              href="assets/medidhisubbaiah_trust_all_works.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 md:flex-none inline-flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold font-heading px-4 py-2.5 rounded-xl text-xs shadow-lg transition"
             >
-              {cat}
-            </button>
-          ))}
+              <Icon name="external-link" size={14} />
+              <span>View PDF</span>
+            </a>
+            <a
+              href="assets/medidhisubbaiah_trust_all_works.pdf"
+              download="Medidhisubbaiah_Trust_All_Works.pdf"
+              className="flex-1 md:flex-none inline-flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold font-heading px-4 py-2.5 rounded-xl text-xs shadow transition"
+            >
+              <Icon name="download" size={14} />
+              <span>Download PDF</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Filter and Search Bar */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 mb-6">
+          <div className="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold font-heading whitespace-nowrap transition ${
+                  selectedCategory === cat ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative w-full md:w-72">
+            <input
+              type="text"
+              placeholder="Search by location (Tanuku, etc)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500"
+            />
+            <div className="absolute left-3 top-2.5 text-slate-400"><Icon name="search" size={14} /></div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-          {filtered.map((item, idx) => {
+        {/* Results Counter */}
+        <div className="flex justify-between items-center text-xs text-slate-500 mb-4 px-1">
+          <span>Showing <strong>{filtered.length}</strong> photo records</span>
+          {selectedCategory !== 'All' && (
+            <button onClick={() => setSelectedCategory('All')} className="text-emerald-600 font-bold hover:underline">
+              Reset Filters
+            </button>
+          )}
+        </div>
+
+        {/* Photo Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {filtered.map((item) => {
             const masterIdx = gallery.findIndex(g => g.id === item.id);
             return (
               <div
                 key={item.id}
-                onClick={() => setLightboxIndex(masterIdx !== -1 ? masterIdx : idx)}
-                className="group relative rounded-2xl overflow-hidden bg-slate-900 border shadow cursor-pointer transition h-48 sm:h-72"
+                onClick={() => setLightboxIndex(masterIdx !== -1 ? masterIdx : 0)}
+                className="group bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer"
               >
-                <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent p-2.5 sm:p-4 flex flex-col justify-between text-white">
-                  <span className="bg-emerald-600 text-[9px] font-bold px-2 py-0.5 rounded-full self-start uppercase font-heading">{item.category}</span>
-                  <div>
-                    <h3 className="font-bold font-heading text-xs sm:text-sm leading-snug line-clamp-1">{item.title}</h3>
-                    <p className="text-[10px] text-slate-300 line-clamp-1">{item.caption}</p>
+                <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-slate-900">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                  
+                  {/* Category & Badge */}
+                  <div className="absolute top-2.5 left-2.5 flex items-center space-x-1.5">
+                    <span className="bg-emerald-600 text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow font-heading">
+                      {item.category}
+                    </span>
+                    {item.isPdfWork && (
+                      <span className="bg-amber-400 text-slate-950 text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow font-heading">
+                        PDF Report
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Zoom indicator */}
+                  <div className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow">
+                    <Icon name="maximize" size={14} />
+                  </div>
+
+                  {/* Location badge on image */}
+                  {item.location && (
+                    <div className="absolute bottom-2.5 left-2.5 text-[10px] font-bold text-slate-200 bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-sm truncate max-w-[80%]">
+                      📍 {item.location}
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
+                  <div className="space-y-1">
+                    <h3 className="font-bold font-heading text-sm text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-slate-600 text-xs leading-relaxed line-clamp-2">
+                      {item.caption}
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-emerald-600 font-bold font-heading">
+                    <span>Click to Expand High-Res</span>
+                    <Icon name="arrowright" size={12} />
                   </div>
                 </div>
               </div>
