@@ -1102,8 +1102,13 @@ const TrustProvider = ({ children }) => {
 
   const sanitizeUrl = (u) => {
     if (!u) return 'assets/gallery/trust_work_page_01.jpg';
-    if (typeof u === 'string' && u.includes('1548839140')) {
-      return 'https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=800&q=80';
+    if (typeof u === 'string') {
+      if (u.includes('1548839140')) {
+        return 'https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=800&q=80';
+      }
+      if (u.includes('1517649763962')) {
+        return 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=800&q=80';
+      }
     }
     return u;
   };
@@ -3943,8 +3948,13 @@ const ServiceModal = () => {
           </button>
         </div>
 
-        <div className="h-44 rounded-2xl overflow-hidden bg-slate-100">
-          <img src={selectedService.image || "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80"} alt={selectedService.title} className="w-full h-full object-cover" />
+        <div className="h-44 sm:h-52 rounded-2xl overflow-hidden bg-slate-100">
+          <img
+            src={selectedService.image || "assets/gallery/trust_work_page_01.jpg"}
+            onError={(ev) => { ev.target.onerror = null; ev.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+            alt={selectedService.title}
+            className="w-full h-full object-cover"
+          />
         </div>
 
         <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
@@ -4049,7 +4059,12 @@ const NewsModal = () => {
         </div>
 
         <div className="h-52 rounded-2xl overflow-hidden bg-slate-100">
-          <img src={selectedNews.thumbnail || "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80"} alt={selectedNews.title} className="w-full h-full object-cover" />
+          <img
+            src={selectedNews.thumbnail || "assets/gallery/trust_work_page_01.jpg"}
+            onError={(ev) => { ev.target.onerror = null; ev.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+            alt={selectedNews.title}
+            className="w-full h-full object-cover"
+          />
         </div>
 
         <div className="text-slate-700 text-xs sm:text-sm leading-relaxed whitespace-pre-line space-y-2">
@@ -4094,7 +4109,12 @@ const LightboxModal = () => {
         {isVid ? (
           <video src={current.video_url || "assets/gallery/trust_activity_video.mp4"} controls autoPlay playsInline className="max-h-[75vh] max-w-full rounded-2xl shadow-2xl" />
         ) : (
-          <img src={current.image_url || current.imageUrl} alt={current.title} className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl" />
+          <img
+            src={current.image_url || current.imageUrl || "assets/gallery/trust_work_page_01.jpg"}
+            onError={(ev) => { ev.target.onerror = null; ev.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+            alt={current.title}
+            className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl"
+          />
         )}
       </div>
 
