@@ -2140,18 +2140,6 @@ const AboutPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
             <div className="lg:col-span-5 p-6 sm:p-8 bg-gradient-to-br from-emerald-50 via-teal-50 to-white flex justify-center items-center">
               <div className="relative group max-w-sm w-full">
-                {/* Director & Treasurer Top Badges */}
-                <div className="grid grid-cols-2 gap-2 mb-2.5 text-center">
-                  <div className="bg-emerald-700 text-white py-1.5 px-2 rounded-xl shadow-md border border-emerald-600">
-                    <span className="block text-[10px] font-black uppercase tracking-wider text-emerald-200 font-heading">Director</span>
-                    <span className="block text-xs font-bold font-heading truncate">Sri M. Venkateshwar Rao</span>
-                  </div>
-                  <div className="bg-teal-800 text-white py-1.5 px-2 rounded-xl shadow-md border border-teal-700">
-                    <span className="block text-[10px] font-black uppercase tracking-wider text-teal-200 font-heading">Treasurer</span>
-                    <span className="block text-xs font-bold font-heading truncate">Smt. M. Varalakshmi</span>
-                  </div>
-                </div>
-
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-white">
                   <img
                     src="./leadership.png"
