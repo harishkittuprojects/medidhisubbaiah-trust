@@ -2418,7 +2418,7 @@ const AboutPage = () => {
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-white">
                   <img
                     src="./leadership.png"
-                    alt="Director Sri Medidhi Venkateshwar Rao & Treasurer Smt. Medidhi Varalakshmi"
+                    alt="Director Dr. Sri Medidhi Venkateshwar Rao & Treasurer Smt. Medidhi Varalakshmi"
                     className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   {/* Floating role indicator chips at bottom of photo */}
@@ -2447,7 +2447,7 @@ const AboutPage = () => {
                     Director
                   </span>
                   <div className="text-emerald-800 font-black font-heading text-base sm:text-lg leading-tight">
-                    Sri Medidhi Venkateshwar Rao
+                    Dr. Sri Medidhi Venkateshwar Rao
                   </div>
                   <div className="text-xs font-bold text-slate-700 font-heading">
                     Director, Medidhisubbaiah Trust
