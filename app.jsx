@@ -732,6 +732,19 @@ const trustInfo = {
   }
 };
 
+const initialLeadership = {
+  imageUrl: 'leadership.png',
+  directorName: 'Sri Medidhi Venkateshwar Rao',
+  directorRole: 'Director, Medidhisubbaiah Trust',
+  directorBio: 'Leading strategic social welfare, hospital blood donation coordination, and youth skill-building drives for 10+ years.',
+  treasurerName: 'Smt. Medidhi Varalakshmi',
+  treasurerRole: 'Treasurer, Medidhisubbaiah Trust',
+  treasurerBio: 'Overseeing transparent trust governance, women empowerment tailoring centers, and free food distribution programs for 10+ years.',
+  badgeTag: '10+ Years of Selfless Service',
+  sectionTitle: 'Dedicated Community Stewards',
+  sectionDesc: 'Guided by the principles of compassion, integrity, and grassroots social development, our leaders have been tirelessly spearheading free educational, healthcare, and vocational initiatives across the community for more than a decade.'
+};
+
 // --- UNIVERSAL ICON HELPER ---
 function Icon({ name, className = "w-5 h-5", size = 20, color = "currentColor" }) {
   const iconMap = {
@@ -1168,6 +1181,15 @@ const TrustProvider = ({ children }) => {
     }
   });
 
+  const [leadership, setLeadership] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mst_leadership');
+      return saved ? JSON.parse(saved) : initialLeadership;
+    } catch {
+      return initialLeadership;
+    }
+  });
+
   const [supabaseConnected, setSupabaseConnected] = useState(false);
   const [supabaseStatusMsg, setSupabaseStatusMsg] = useState('Connecting to Supabase...');
 
@@ -1189,6 +1211,11 @@ const TrustProvider = ({ children }) => {
     setTimeout(() => setToast(null), 4500);
   };
 
+  const updateLeadership = (newLeadership) => {
+    setLeadership(newLeadership);
+    showToast('Leadership profiles & photo updated successfully!', 'success');
+  };
+
   // Local storage synchronization as offline fallback
   useEffect(() => {
     localStorage.setItem('mst_services', JSON.stringify(services));
@@ -1205,6 +1232,9 @@ const TrustProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('mst_inquiries', JSON.stringify(inquiries));
   }, [inquiries]);
+  useEffect(() => {
+    localStorage.setItem('mst_leadership', JSON.stringify(leadership));
+  }, [leadership]);
 
   // Fetch initial data from Supabase if tables exist
   const fetchSupabaseData = async () => {
@@ -1614,6 +1644,8 @@ const TrustProvider = ({ children }) => {
       news,
       gallery,
       inquiries,
+      leadership,
+      updateLeadership,
       stats: initialStats,
       testimonials: initialTestimonials,
       trustInfo,
@@ -2148,7 +2180,8 @@ const ServicesSection = () => {
 
 // --- ABOUT PAGE COMPONENT ---
 const AboutPage = () => {
-  const { trustInfo, setIsDonateModalOpen } = useTrust();
+  const { trustInfo, leadership, setIsDonateModalOpen } = useTrust();
+  const lead = leadership || initialLeadership;
 
   return (
     <div className="space-y-12 sm:space-y-20 py-8 sm:py-12 w-full max-w-full overflow-hidden">
@@ -2182,13 +2215,20 @@ const AboutPage = () => {
             {/* Leadership Image with Badges */}
             <div className="lg:col-span-5 flex flex-col items-center">
               <div className="relative w-full max-w-sm rounded-3xl bg-white p-3 shadow-xl border border-emerald-100 overflow-hidden group">
-                <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-emerald-100/50 to-amber-50/50 pt-2 flex items-center justify-center">
-                  <img
-                    src="leadership.png"
-                    onError={(e) => { e.target.onerror = null; e.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
-                    alt="Trust Leadership — Sri Medidhi Venkateshwar Rao & Smt. Medidhi Varalakshmi"
-                    className="w-full h-auto max-h-[380px] object-contain object-bottom transition-transform duration-500 group-hover:scale-105"
-                  />
+                <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-emerald-100/50 to-amber-50/50 pt-2 flex items-center justify-center min-h-[260px]">
+                  {lead.imageUrl ? (
+                    <img
+                      src={lead.imageUrl}
+                      onError={(e) => { e.target.onerror = null; e.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+                      alt={`Trust Leadership — ${lead.directorName} & ${lead.treasurerName}`}
+                      className="w-full h-auto max-h-[380px] object-contain object-bottom transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="h-64 flex flex-col items-center justify-center text-slate-400">
+                      <Icon name="users" size={48} className="text-emerald-300 mb-2" />
+                      <span className="text-xs font-bold font-heading">No Photo Uploaded</span>
+                    </div>
+                  )}
                   
                   {/* Left & Right Role Badges */}
                   <div className="absolute bottom-6 left-3 bg-emerald-700/95 backdrop-blur-sm text-white text-[11px] font-extrabold px-3 py-1 rounded-lg shadow-md font-heading">
@@ -2203,7 +2243,7 @@ const AboutPage = () => {
                 <div className="flex justify-center -mt-3.5 relative z-10">
                   <span className="bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white text-[11px] font-black font-heading px-4 py-1.5 rounded-full shadow-lg border border-emerald-600/50 flex items-center space-x-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>10+ Years of Selfless Service</span>
+                    <span>{lead.badgeTag || "10+ Years of Selfless Service"}</span>
                   </span>
                 </div>
               </div>
@@ -2222,13 +2262,13 @@ const AboutPage = () => {
                   Director
                 </span>
                 <h3 className="text-lg font-black font-heading text-slate-900">
-                  Sri Medidhi Venkateshwar Rao
+                  {lead.directorName || "Sri Medidhi Venkateshwar Rao"}
                 </h3>
                 <p className="text-xs font-bold text-emerald-700 font-heading">
-                  Director, Medidhisubbaiah Trust
+                  {lead.directorRole || "Director, Medidhisubbaiah Trust"}
                 </p>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Leading strategic social welfare, hospital blood donation coordination, and youth skill-building drives for 10+ years.
+                  {lead.directorBio || "Leading strategic social welfare, hospital blood donation coordination, and youth skill-building drives for 10+ years."}
                 </p>
               </div>
 
@@ -2238,23 +2278,23 @@ const AboutPage = () => {
                   Treasurer
                 </span>
                 <h3 className="text-lg font-black font-heading text-slate-900">
-                  Smt. Medidhi Varalakshmi
+                  {lead.treasurerName || "Smt. Medidhi Varalakshmi"}
                 </h3>
                 <p className="text-xs font-bold text-teal-700 font-heading">
-                  Treasurer, Medidhisubbaiah Trust
+                  {lead.treasurerRole || "Treasurer, Medidhisubbaiah Trust"}
                 </p>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Overseeing transparent trust governance, women empowerment tailoring centers, and free food distribution programs for 10+ years.
+                  {lead.treasurerBio || "Overseeing transparent trust governance, women empowerment tailoring centers, and free food distribution programs for 10+ years."}
                 </p>
               </div>
 
               {/* Dedicated Community Stewards */}
               <div className="pt-2 space-y-2">
                 <h4 className="text-xl font-black font-heading text-slate-900">
-                  Dedicated Community Stewards
+                  {lead.sectionTitle || "Dedicated Community Stewards"}
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Guided by the principles of compassion, integrity, and grassroots social development, our leaders have been tirelessly spearheading free educational, healthcare, and vocational initiatives across the community for more than a decade.
+                  {lead.sectionDesc || "Guided by the principles of compassion, integrity, and grassroots social development, our leaders have been tirelessly spearheading free educational, healthcare, and vocational initiatives across the community for more than a decade."}
                 </p>
               </div>
             </div>
@@ -2846,6 +2886,8 @@ const AdminPage = () => {
     addGalleryItem,
     updateGalleryItem,
     deleteGalleryItem,
+    leadership,
+    updateLeadership,
     inquiries,
     supabaseConnected,
     supabaseStatusMsg,
@@ -2868,6 +2910,18 @@ const AdminPage = () => {
   const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+
+  // Form states for Create/Edit
+  const [leadershipForm, setLeadershipForm] = useState(() => leadership || initialLeadership);
+
+  useEffect(() => {
+    if (leadership) setLeadershipForm(leadership);
+  }, [leadership]);
+
+  const handleLeadershipSubmit = (e) => {
+    e.preventDefault();
+    updateLeadership(leadershipForm);
+  };
 
   // Form states for Create/Edit
   const [eventForm, setEventForm] = useState({
@@ -3134,7 +3188,8 @@ CREATE POLICY "Public inquiries" ON public.inquiries FOR ALL USING (true) WITH C
               { id: 'events', label: 'Events & Drives', count: events.length, icon: 'calendar' },
               { id: 'gallery', label: 'Gallery & Videos', count: gallery.length, icon: 'image' },
               { id: 'news', label: 'Media & News', count: news.length, icon: 'filetext' },
-              { id: 'services', label: 'Services & Causes', count: services.length, icon: 'scissors' }
+              { id: 'services', label: 'Services & Causes', count: services.length, icon: 'scissors' },
+              { id: 'leadership', label: 'Leadership & Vision', count: null, icon: 'users' }
             ].map(t => {
               const active = activeTab === t.id;
               return (
@@ -3576,6 +3631,293 @@ CREATE POLICY "Public inquiries" ON public.inquiries FOR ALL USING (true) WITH C
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* --- TAB: LEADERSHIP & VISION --- */}
+      {activeTab === 'leadership' && (
+        <div className="space-y-6 animate-fadeIn">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h2 className="text-xl font-black font-heading text-slate-900">Trust Leadership & Vision</h2>
+              <p className="text-xs text-slate-500">Edit Director & Treasurer credentials, upload/replace the official photo, and update the community steward vision.</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const def = {
+                    imageUrl: 'leadership.png',
+                    directorName: 'Sri Medidhi Venkateshwar Rao',
+                    directorRole: 'Director, Medidhisubbaiah Trust',
+                    directorBio: 'Leading strategic social welfare, hospital blood donation coordination, and youth skill-building drives for 10+ years.',
+                    treasurerName: 'Smt. Medidhi Varalakshmi',
+                    treasurerRole: 'Treasurer, Medidhisubbaiah Trust',
+                    treasurerBio: 'Overseeing transparent trust governance, women empowerment tailoring centers, and free food distribution programs for 10+ years.',
+                    badgeTag: '10+ Years of Selfless Service',
+                    sectionTitle: 'Dedicated Community Stewards',
+                    sectionDesc: 'Guided by the principles of compassion, integrity, and grassroots social development, our leaders have been tirelessly spearheading free educational, healthcare, and vocational initiatives across the community for more than a decade.'
+                  };
+                  setLeadershipForm(def);
+                  updateLeadership(def);
+                }}
+                className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold font-heading px-3.5 py-2 rounded-xl text-xs flex items-center space-x-1.5 transition"
+              >
+                <Icon name="refresh" size={14} />
+                <span>Reset to Default</span>
+              </button>
+            </div>
+          </div>
+
+          <form onSubmit={handleLeadershipSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Live Visual Preview (Left) */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="bg-slate-900 text-white p-3.5 rounded-2xl flex items-center justify-between">
+                <span className="text-xs font-bold font-heading uppercase tracking-wider text-emerald-400">Live Website Preview</span>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-heading">Real-Time</span>
+              </div>
+
+              <div className="bg-gradient-to-b from-emerald-50/80 via-white to-emerald-50/40 rounded-3xl border border-emerald-200 p-4 sm:p-5 shadow-md space-y-4">
+                {/* Photo with badges */}
+                <div className="relative rounded-2xl bg-white p-2.5 shadow-sm border border-emerald-100 overflow-hidden">
+                  <div className="relative rounded-xl overflow-hidden bg-gradient-to-b from-emerald-100/50 to-amber-50/50 pt-2 flex items-center justify-center min-h-[220px]">
+                    {leadershipForm.imageUrl ? (
+                      <img
+                        src={leadershipForm.imageUrl}
+                        onError={(e) => { e.target.onerror = null; e.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+                        alt="Leadership Preview"
+                        className="w-full h-auto max-h-[260px] object-contain object-bottom"
+                      />
+                    ) : (
+                      <div className="h-44 flex flex-col items-center justify-center text-slate-400">
+                        <Icon name="users" size={36} className="text-emerald-300 mb-1" />
+                        <span className="text-xs font-bold">No Photo Selected</span>
+                      </div>
+                    )}
+                    
+                    <div className="absolute bottom-4 left-2.5 bg-emerald-700/95 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-md shadow">
+                      Director
+                    </div>
+                    <div className="absolute bottom-4 right-2.5 bg-teal-700/95 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-md shadow">
+                      Treasurer
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center -mt-3 relative z-10">
+                    <span className="bg-gradient-to-r from-emerald-800 to-teal-800 text-white text-[10px] font-black font-heading px-3 py-1 rounded-full shadow border border-emerald-600/50">
+                      {leadershipForm.badgeTag || "10+ Years of Selfless Service"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Director Card Preview */}
+                <div className="bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-xs space-y-1">
+                  <span className="bg-emerald-700 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded font-heading inline-block">
+                    Director
+                  </span>
+                  <h4 className="text-sm font-black font-heading text-slate-900">{leadershipForm.directorName || "Director Name"}</h4>
+                  <p className="text-[11px] font-bold text-emerald-700 font-heading">{leadershipForm.directorRole || "Director Role"}</p>
+                  <p className="text-[11px] text-slate-600 line-clamp-2">{leadershipForm.directorBio}</p>
+                </div>
+
+                {/* Treasurer Card Preview */}
+                <div className="bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-xs space-y-1">
+                  <span className="bg-teal-700 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded font-heading inline-block">
+                    Treasurer
+                  </span>
+                  <h4 className="text-sm font-black font-heading text-slate-900">{leadershipForm.treasurerName || "Treasurer Name"}</h4>
+                  <p className="text-[11px] font-bold text-teal-700 font-heading">{leadershipForm.treasurerRole || "Treasurer Role"}</p>
+                  <p className="text-[11px] text-slate-600 line-clamp-2">{leadershipForm.treasurerBio}</p>
+                </div>
+
+                {/* Stewards Text Preview */}
+                <div className="pt-1 space-y-1">
+                  <h5 className="text-sm font-black font-heading text-slate-900">{leadershipForm.sectionTitle}</h5>
+                  <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-3">{leadershipForm.sectionDesc}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Form Controls (Right) */}
+            <div className="lg:col-span-7 space-y-5">
+              {/* Photo Upload Card */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b">
+                  <div className="flex items-center space-x-2">
+                    <Icon name="image" size={18} className="text-emerald-600" />
+                    <h3 className="text-sm font-black font-heading text-slate-900">Leadership Photo (Cloudinary Upload)</h3>
+                  </div>
+                  {leadershipForm.imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setLeadershipForm(prev => ({ ...prev, imageUrl: '' }))}
+                      className="text-xs text-red-600 hover:text-red-700 font-bold flex items-center space-x-1"
+                    >
+                      <Icon name="trash" size={13} />
+                      <span>Delete Photo</span>
+                    </button>
+                  )}
+                </div>
+
+                <CloudinaryUploader
+                  label="Upload New Leadership Image (PNG / JPG / WEBP)"
+                  currentUrl={leadershipForm.imageUrl}
+                  acceptedTypes="image/*"
+                  onUploaded={(url) => setLeadershipForm(prev => ({ ...prev, imageUrl: url }))}
+                />
+
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Or Direct Image URL / Local Asset</label>
+                  <input
+                    type="text"
+                    value={leadershipForm.imageUrl || ''}
+                    onChange={(e) => setLeadershipForm({ ...leadershipForm, imageUrl: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl text-xs font-mono"
+                    placeholder="e.g. leadership.png or https://res.cloudinary.com/..."
+                  />
+                </div>
+              </div>
+
+              {/* Director Details Card */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <div className="flex items-center space-x-2 pb-2 border-b text-emerald-800">
+                  <Icon name="award" size={18} />
+                  <h3 className="text-sm font-black font-heading">Director Credentials</h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Director Full Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={leadershipForm.directorName}
+                      onChange={(e) => setLeadershipForm({ ...leadershipForm, directorName: e.target.value })}
+                      className="w-full p-2.5 border rounded-xl text-xs"
+                      placeholder="Sri Medidhi Venkateshwar Rao"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Designation / Title</label>
+                    <input
+                      type="text"
+                      value={leadershipForm.directorRole}
+                      onChange={(e) => setLeadershipForm({ ...leadershipForm, directorRole: e.target.value })}
+                      className="w-full p-2.5 border rounded-xl text-xs"
+                      placeholder="Director, Medidhisubbaiah Trust"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Director Biography / Summary</label>
+                  <textarea
+                    rows="2"
+                    value={leadershipForm.directorBio}
+                    onChange={(e) => setLeadershipForm({ ...leadershipForm, directorBio: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl text-xs"
+                    placeholder="Leading strategic social welfare..."
+                  />
+                </div>
+              </div>
+
+              {/* Treasurer Details Card */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <div className="flex items-center space-x-2 pb-2 border-b text-teal-800">
+                  <Icon name="award" size={18} />
+                  <h3 className="text-sm font-black font-heading">Treasurer Credentials</h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Treasurer Full Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={leadershipForm.treasurerName}
+                      onChange={(e) => setLeadershipForm({ ...leadershipForm, treasurerName: e.target.value })}
+                      className="w-full p-2.5 border rounded-xl text-xs"
+                      placeholder="Smt. Medidhi Varalakshmi"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Designation / Title</label>
+                    <input
+                      type="text"
+                      value={leadershipForm.treasurerRole}
+                      onChange={(e) => setLeadershipForm({ ...leadershipForm, treasurerRole: e.target.value })}
+                      className="w-full p-2.5 border rounded-xl text-xs"
+                      placeholder="Treasurer, Medidhisubbaiah Trust"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Treasurer Biography / Summary</label>
+                  <textarea
+                    rows="2"
+                    value={leadershipForm.treasurerBio}
+                    onChange={(e) => setLeadershipForm({ ...leadershipForm, treasurerBio: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl text-xs"
+                    placeholder="Overseeing transparent trust governance..."
+                  />
+                </div>
+              </div>
+
+              {/* Vision, Badge & Narrative Card */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <div className="flex items-center space-x-2 pb-2 border-b text-slate-900">
+                  <Icon name="target" size={18} className="text-emerald-600" />
+                  <h3 className="text-sm font-black font-heading">Vision & Narrative Section</h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Badge Tag Text</label>
+                    <input
+                      type="text"
+                      value={leadershipForm.badgeTag}
+                      onChange={(e) => setLeadershipForm({ ...leadershipForm, badgeTag: e.target.value })}
+                      className="w-full p-2.5 border rounded-xl text-xs"
+                      placeholder="10+ Years of Selfless Service"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Section Title</label>
+                    <input
+                      type="text"
+                      value={leadershipForm.sectionTitle}
+                      onChange={(e) => setLeadershipForm({ ...leadershipForm, sectionTitle: e.target.value })}
+                      className="w-full p-2.5 border rounded-xl text-xs"
+                      placeholder="Dedicated Community Stewards"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Section Description / Philosophy</label>
+                  <textarea
+                    rows="3"
+                    value={leadershipForm.sectionDesc}
+                    onChange={(e) => setLeadershipForm({ ...leadershipForm, sectionDesc: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl text-xs"
+                    placeholder="Guided by the principles of compassion..."
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black font-heading px-8 py-3 rounded-xl text-xs shadow-lg flex items-center space-x-2 transition"
+                >
+                  <Icon name="check" size={16} />
+                  <span>Save Leadership & Vision Updates</span>
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       )}
 
