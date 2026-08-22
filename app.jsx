@@ -843,8 +843,22 @@ function Icon({ name, className = "w-5 h-5", size = 20, color = "currentColor" }
 const TrustContext = createContext(null);
 
 const TrustProvider = ({ children }) => {
+  const normalizeRoute = (raw) => {
+    if (!raw) return 'home';
+    const cleaned = String(raw).replace(/^[#\/]+/, '').toLowerCase().trim();
+    if (cleaned === 'about-us' || cleaned === 'aboutus' || cleaned === 'about') return 'about';
+    if (cleaned === 'our-services' || cleaned === 'services' || cleaned === 'service') return 'services';
+    if (cleaned === 'events' || cleaned === 'event') return 'events';
+    if (cleaned === 'news' || cleaned === 'media') return 'news';
+    if (cleaned === 'gallery' || cleaned === 'photos' || cleaned === 'videos') return 'gallery';
+    if (cleaned === 'contact' || cleaned === 'contact-us' || cleaned === 'contactus') return 'contact';
+    if (cleaned === 'login' || cleaned === 'admin-login') return 'login';
+    if (cleaned === 'admin' || cleaned === 'dashboard') return 'admin';
+    return cleaned || 'home';
+  };
+
   const [currentRoute, setCurrentRoute] = useState(() => {
-    return window.location.hash.replace('#', '') || 'home';
+    return normalizeRoute(window.location.hash);
   });
 
   const [services, setServices] = useState(() => {
@@ -907,8 +921,9 @@ const TrustProvider = ({ children }) => {
   }, [inquiries]);
 
   const navigate = (route) => {
-    window.location.hash = route;
-    setCurrentRoute(route);
+    const clean = normalizeRoute(route);
+    window.location.hash = clean;
+    setCurrentRoute(clean);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => {
       if (window.AOS) window.AOS.refresh();
@@ -917,8 +932,8 @@ const TrustProvider = ({ children }) => {
 
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '') || 'home';
-      setCurrentRoute(hash);
+      const clean = normalizeRoute(window.location.hash);
+      setCurrentRoute(clean);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     window.addEventListener('hashchange', handleHashChange);
@@ -3302,15 +3317,36 @@ const App = () => {
   }, []);
 
   const renderPage = () => {
-    switch (currentRoute) {
-      case 'about': return <AboutPage />;
-      case 'services': return <ServicesPage />;
-      case 'events': return <EventsPage />;
-      case 'news': return <NewsPage />;
-      case 'gallery': return <GalleryPage />;
-      case 'contact': return <ContactPage />;
-      case 'login': return <LoginPage />;
-      case 'admin': return <AdminPage />;
+    const r = (currentRoute || '').replace(/^[#\/]+/, '').toLowerCase().trim();
+    switch (r) {
+      case 'about':
+      case 'about-us':
+      case 'aboutus':
+        return <AboutPage />;
+      case 'services':
+      case 'our-services':
+      case 'service':
+        return <ServicesPage />;
+      case 'events':
+      case 'event':
+        return <EventsPage />;
+      case 'news':
+      case 'media':
+        return <NewsPage />;
+      case 'gallery':
+      case 'photos':
+      case 'videos':
+        return <GalleryPage />;
+      case 'contact':
+      case 'contact-us':
+      case 'contactus':
+        return <ContactPage />;
+      case 'login':
+      case 'admin-login':
+        return <LoginPage />;
+      case 'admin':
+      case 'dashboard':
+        return <AdminPage />;
       case 'home':
       default:
         return <HomePage />;
