@@ -1807,13 +1807,14 @@ const Navbar = () => {
             </button>
           </div>
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Menu Toggle & Mobile Donate CTA */}
           <div className="flex lg:hidden items-center space-x-2">
             <button
               onClick={() => setIsDonateModalOpen(true)}
-              className="bg-emerald-600 text-white font-bold font-heading px-3 py-1.5 rounded-lg text-xs"
+              className="donate-shine bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-extrabold font-heading px-3 py-1.5 rounded-xl text-xs shadow-md flex items-center space-x-1"
             >
-              Donate
+              <Icon name="heart" size={13} />
+              <span>Donate</span>
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -1828,7 +1829,7 @@ const Navbar = () => {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-6 space-y-2 shadow-2xl animate-fadeIn">
+        <div className="lg:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-6 space-y-3 shadow-2xl animate-fadeIn">
           <div className="grid grid-cols-1 gap-1">
             {navLinks.map((link) => {
               const active = currentRoute === link.id;
@@ -1847,6 +1848,17 @@ const Navbar = () => {
           </div>
 
           <div className="pt-3 border-t border-slate-100 flex flex-col space-y-2">
+            <button
+              onClick={() => {
+                setIsDonateModalOpen(true);
+                setMobileMenuOpen(false);
+              }}
+              className="donate-shine w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-extrabold font-heading py-2.5 rounded-xl text-xs shadow-md flex items-center justify-center space-x-2"
+            >
+              <Icon name="heart" size={15} />
+              <span>Donate Online (80G Tax-Exempt)</span>
+            </button>
+
             <a
               href={`tel:${trustInfo.emergencyBloodHelpline}`}
               className="flex items-center justify-center space-x-2 bg-red-600 text-white font-bold font-heading py-2.5 rounded-xl text-xs"
@@ -4244,25 +4256,36 @@ const Toast = () => {
 
 // --- FLOATING ACTIONS ---
 const FloatingActions = () => {
-  const { trustInfo } = useTrust();
+  const { trustInfo, setIsDonateModalOpen } = useTrust();
 
   return (
-    <div className="fixed bottom-6 right-4 sm:right-6 z-30 flex flex-col space-y-2.5">
+    <div className="fixed bottom-5 right-3.5 sm:right-6 z-30 flex flex-col space-y-2 items-end">
+      {/* Quick Donate Floating Button */}
+      <button
+        onClick={() => setIsDonateModalOpen(true)}
+        className="donate-shine donate-dance px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white flex items-center space-x-1.5 shadow-2xl hover:scale-105 transition border-2 border-white font-extrabold font-heading text-xs"
+        title="Donate Online (80G Tax-Exempt)"
+      >
+        <Icon name="heart" size={14} />
+        <span>Donate</span>
+      </button>
+
       <a
         href={`tel:${trustInfo.emergencyBloodHelpline}`}
-        className="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition border-2 border-white animate-pulse"
+        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition border-2 border-white animate-pulse"
         title="24/7 Emergency Blood Helpline"
       >
-        <Icon name="heartpulse" size={22} />
+        <Icon name="heartpulse" size={20} />
       </a>
+
       <a
         href={trustInfo.socials.whatsapp}
         target="_blank"
         rel="noreferrer"
-        className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition border-2 border-white"
+        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition border-2 border-white"
         title="WhatsApp Us"
       >
-        <Icon name="phone" size={20} />
+        <Icon name="phone" size={18} />
       </a>
     </div>
   );
