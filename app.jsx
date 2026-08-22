@@ -1,6 +1,6 @@
 // ==========================================
 // Medidhisubbaiah Trust Web Application
-// Theme: White & Green (Emerald / Teal / Fresh Grass Green)
+// Theme: White & Green with Official Trust Emblem Logo
 // Built with React 18, Tailwind CSS, Outfit & Inter Typography, and Lucide Icons
 // ==========================================
 
@@ -487,8 +487,10 @@ const heroSlides = [
 const trustInfo = {
   name: "Medidhisubbaiah Trust",
   shortName: "Medidhisubbaiah Trust",
+  teluguName: "మేడిది సుబ్బయ్య ట్రస్ట్",
   tagline: "Local Vision, Selfless Service, Global Impact",
   registration: "Regd. Social Welfare & Charitable Organization",
+  logoUrl: "./logo.png",
   founded: "Serving the Community with Pride & Transparency",
   address: "Medidhisubbaiah Trust Bhavan, Main Road, Beside Gandhi Statue, Andhra Pradesh / Telangana, India",
   phone: "+91 98480 12345 / +91 94401 67890",
@@ -957,9 +959,9 @@ const TopBar = () => {
   );
 };
 
-// --- NAVBAR ---
+// --- NAVBAR WITH EMBLEM LOGO ---
 const Navbar = () => {
-  const { currentRoute, navigate, setIsDonateModalOpen } = useTrust();
+  const { currentRoute, navigate, setIsDonateModalOpen, trustInfo } = useTrust();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -989,20 +991,24 @@ const Navbar = () => {
       <MarqueeTicker />
       <TopBar />
 
-      <nav className={`w-full bg-white transition-all duration-300 ${isScrolled ? 'shadow-lg py-2 border-b border-emerald-100 bg-white/95 backdrop-blur-md' : 'shadow-sm py-3.5 border-b border-slate-100'}`}>
+      <nav className={`w-full bg-white transition-all duration-300 ${isScrolled ? 'shadow-lg py-2 border-b border-emerald-100 bg-white/95 backdrop-blur-md' : 'shadow-sm py-3 border-b border-slate-100'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
-            {/* Logo */}
-            <div onClick={() => handleNavClick('home')} className="flex items-center space-x-3 cursor-pointer group select-none">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 flex items-center justify-center text-white shadow-lg shadow-emerald-600/30 group-hover:scale-105 transition-transform duration-300">
-                <span className="font-black text-xl font-heading tracking-wider">MT</span>
+            {/* Logo with Image Emblem */}
+            <div onClick={() => handleNavClick('home')} className="flex items-center space-x-3.5 cursor-pointer group select-none">
+              <div className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full p-0.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-md group-hover:scale-105 transition-transform duration-300 flex items-center justify-center shrink-0">
+                <img
+                  src={trustInfo.logoUrl}
+                  alt="Medidhisubbaiah Trust Logo"
+                  className="w-full h-full rounded-full object-cover bg-white"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="font-black text-lg sm:text-xl text-slate-900 font-heading tracking-tight leading-none group-hover:text-emerald-600 transition-colors">
                   Medidhisubbaiah <span className="text-emerald-600">Trust</span>
                 </span>
-                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                  Local Vision • Global Impact
+                <span className="text-[10px] sm:text-[11px] font-bold text-emerald-800 tracking-wide mt-0.5 font-heading">
+                  మేడిది సుబ్బయ్య ట్రస్ట్ • Local Vision, Global Impact
                 </span>
               </div>
             </div>
@@ -1026,7 +1032,7 @@ const Navbar = () => {
               })}
             </div>
 
-            {/* Donate Button with Green Gradient and Shine Animation */}
+            {/* Donate Button */}
             <div className="hidden lg:flex items-center space-x-3">
               <button
                 onClick={() => setIsDonateModalOpen(true)}
@@ -1460,9 +1466,12 @@ const DonateModal = () => {
           <button onClick={() => setIsDonateModalOpen(false)} className="absolute top-4 right-4 bg-black/30 hover:bg-black/60 text-white p-2 rounded-full transition">
             <Icon name="x" size={20} />
           </button>
-          <span className="bg-white/20 text-white text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full inline-block mb-2 font-heading">
-            80G Tax Exemption Available
-          </span>
+          <div className="flex items-center space-x-3 mb-2">
+            <img src={trustInfo.logoUrl} alt="Logo" className="w-10 h-10 rounded-full bg-white p-0.5 shadow" />
+            <span className="bg-white/20 text-white text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full font-heading">
+              80G Tax Exemption Available
+            </span>
+          </div>
           <h2 className="text-2xl font-black font-heading">Support Medidhisubbaiah Trust</h2>
           <p className="text-emerald-100 text-xs mt-1">100% of contributions fund free tailoring classes, emergency blood drives & food relief.</p>
         </div>
@@ -1871,7 +1880,7 @@ const FloatingActions = () => {
 
 // --- HOME PAGE ---
 const HomePage = () => {
-  const { services, events, news, gallery, testimonials, navigate, setLightboxIndex, setIsDonateModalOpen } = useTrust();
+  const { services, events, news, gallery, testimonials, navigate, setLightboxIndex, setIsDonateModalOpen, trustInfo } = useTrust();
   const featuredServices = services.slice(0, 6);
   const upcomingEvents = events.filter(e => e.status === 'Upcoming').slice(0, 3);
   const latestNews = news.slice(0, 3);
@@ -1885,13 +1894,15 @@ const HomePage = () => {
       {/* 4 Overlapping Feature Cards */}
       <HeroFeatureCards />
 
-      {/* About Foundation & Impact Overview */}
+      {/* About Foundation & Founder Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-6 space-y-5" data-aos="fade-right">
-            <span className="text-emerald-700 font-bold font-heading text-xs uppercase tracking-widest bg-emerald-50 px-3.5 py-1 rounded-full inline-block border border-emerald-200">
-              Welcome to Medidhisubbaiah Trust
-            </span>
+            <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3.5 py-1 rounded-full text-xs font-bold font-heading uppercase tracking-widest">
+              <span>మేడిది సుబ్బయ్య ట్రస్ట్</span>
+              <span>•</span>
+              <span>Welcome to Medidhisubbaiah Trust</span>
+            </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black font-heading text-slate-900 tracking-tight leading-tight">
               Serving Humanity With <br />
               <span className="text-emerald-600">Dignity, Care & Transparency</span>
@@ -1923,15 +1934,20 @@ const HomePage = () => {
           </div>
 
           <div className="lg:col-span-6" data-aos="fade-left">
-            <div className="relative">
-              <img
-                src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=800&q=80"
-                alt="Community Work"
-                className="rounded-3xl shadow-2xl w-full h-[400px] object-cover"
-              />
-              <div className="absolute -bottom-6 -left-6 bg-emerald-700 text-white p-6 rounded-2xl shadow-xl max-w-xs hidden sm:block">
-                <div className="font-black font-heading text-2xl">8+ Years</div>
-                <div className="text-xs text-emerald-100 mt-1">Of continuous selfless dedication and transparent community welfare.</div>
+            <div className="relative flex items-center justify-center p-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-white rounded-3xl border border-emerald-200 shadow-xl">
+              <div className="text-center space-y-4">
+                <div className="w-44 h-44 sm:w-56 sm:h-56 mx-auto rounded-full p-2 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-2xl">
+                  <img
+                    src={trustInfo.logoUrl}
+                    alt="Sri Medidhi Subbaiah Medallion Logo"
+                    className="w-full h-full rounded-full object-cover bg-white"
+                  />
+                </div>
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-black font-heading text-slate-900">శ్రీ మేడిది సుబ్బయ్య స్మారక ట్రస్ట్</h3>
+                  <p className="text-xs sm:text-sm font-bold text-emerald-800 font-heading mt-1">Sri Medidhisubbaiah Memorial Charitable Trust</p>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Committed to preserving human dignity, self-reliance, and uplifting community welfare across generations.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -2085,7 +2101,7 @@ const HomePage = () => {
 
 // --- ABOUT PAGE ---
 const AboutPage = () => {
-  const { navigate, setIsDonateModalOpen } = useTrust();
+  const { navigate, setIsDonateModalOpen, trustInfo } = useTrust();
   const objectives = [
     { title: "Women's Economic Empowerment", desc: "Free tailoring and Maggam embroidery training to help women generate sustainable household income.", icon: "scissors" },
     { title: "24/7 Life Saving Healthcare", desc: "Voluntary blood donation registries and rapid donor coordination.", icon: "heartpulse" },
@@ -2098,12 +2114,17 @@ const AboutPage = () => {
   return (
     <div className="space-y-12 sm:space-y-16 py-8">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-14 shadow-2xl">
-          <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-xs font-bold font-heading uppercase tracking-wider px-3.5 py-1 rounded-full inline-block mb-3">About Medidhisubbaiah Trust</span>
-          <h1 className="text-3xl sm:text-5xl font-black font-heading leading-tight">A Legacy of Selfless Service & <span className="text-emerald-400">Integrity</span></h1>
-          <p className="text-slate-300 text-base sm:text-lg mt-3 max-w-3xl leading-relaxed">
-            Medidhisubbaiah Trust is a registered non-profit charitable social-service organization committed to creating equal opportunities, supporting vulnerable families, and empowering rural and urban youth through education and vocational training.
-          </p>
+        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-14 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="max-w-2xl space-y-3">
+            <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-xs font-bold font-heading uppercase tracking-wider px-3.5 py-1 rounded-full inline-block">About Medidhisubbaiah Trust</span>
+            <h1 className="text-3xl sm:text-5xl font-black font-heading leading-tight">A Legacy of Selfless Service & <span className="text-emerald-400">Integrity</span></h1>
+            <p className="text-slate-300 text-base sm:text-lg mt-3 leading-relaxed">
+              Medidhisubbaiah Trust is a registered non-profit charitable social-service organization committed to creating equal opportunities, supporting vulnerable families, and empowering rural and urban youth through education and vocational training.
+            </p>
+          </div>
+          <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full p-2 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-2xl shrink-0">
+            <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
+          </div>
         </div>
       </section>
 
@@ -2445,7 +2466,7 @@ const ContactPage = () => {
 
 // --- LOGIN PAGE ---
 const LoginPage = () => {
-  const { loginAdmin } = useTrust();
+  const { loginAdmin, trustInfo } = useTrust();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -2467,12 +2488,14 @@ const LoginPage = () => {
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 bg-slate-50">
       <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border shadow-xl">
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center text-white mx-auto shadow-lg">
-            <span className="font-black text-2xl font-heading">MT</span>
+        <div className="text-center space-y-3">
+          <div className="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-xl mx-auto">
+            <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
           </div>
-          <h2 className="text-2xl font-black font-heading text-slate-900">Administrator Portal</h2>
-          <p className="text-xs text-slate-500">Authorized management access for Medidhisubbaiah Trust</p>
+          <div>
+            <h2 className="text-2xl font-black font-heading text-slate-900">Administrator Portal</h2>
+            <p className="text-xs text-slate-500">Authorized management access for Medidhisubbaiah Trust</p>
+          </div>
         </div>
 
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs flex justify-between items-center">
@@ -2626,7 +2649,7 @@ const AdminPage = () => {
   );
 };
 
-// --- RICH FOOTER ---
+// --- RICH FOOTER WITH EMBLEM LOGO ---
 const Footer = () => {
   const { navigate, trustInfo, services, setIsDonateModalOpen } = useTrust();
   return (
@@ -2634,13 +2657,13 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800">
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('home')}>
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center text-white shadow-lg">
-                <span className="font-black text-xl font-heading">MT</span>
+            <div className="flex items-center space-x-3.5 cursor-pointer" onClick={() => navigate('home')}>
+              <div className="w-14 h-14 rounded-full p-0.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-xl shrink-0">
+                <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
               </div>
               <div>
                 <span className="font-bold text-xl text-white tracking-tight font-heading">Medidhisubbaiah <span className="text-emerald-400">Trust</span></span>
-                <p className="text-xs text-slate-400">{trustInfo.registration}</p>
+                <p className="text-xs text-emerald-300 font-bold font-heading">మేడిది సుబ్బయ్య ట్రస్ట్ • {trustInfo.registration}</p>
               </div>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed">
@@ -2696,7 +2719,7 @@ const Footer = () => {
         </div>
 
         <div className="pt-8 text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} Medidhisubbaiah Trust. All Rights Reserved. Committed to selfless social service and transparency.
+          © {new Date().getFullYear()} Medidhisubbaiah Trust (మేడిది సుబ్బయ్య ట్రస్ట్). All Rights Reserved. Committed to selfless social service and transparency.
         </div>
       </div>
     </footer>
