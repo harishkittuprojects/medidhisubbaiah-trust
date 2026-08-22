@@ -493,9 +493,9 @@ const trustInfo = {
   registration: "Regd. Social Welfare Organization",
   logoUrl: "./logo.png",
   founded: "Serving the Community with Pride & Transparency",
-  address: "Medidhisubbaiah Trust Bhavan, Main Road, Beside Gandhi Statue, Andhra Pradesh / Telangana, India",
-  phone: "+91 98480 12345 / +91 94401 67890",
-  emergencyBloodHelpline: "+91 98480 99999",
+  address: "1104, 11th Floor, Gokul Bhavanam, Nizampet, Hyderabad - 500090",
+  phone: "+91 7686-019999",
+  emergencyBloodHelpline: "+91 7686-019999",
   email: "contact@medidhisubbaiahtrust.org",
   operatingHours: "Mon - Sat: 08:30 AM - 06:30 PM",
   upiId: "medidhisubbaiah@sbi",
@@ -510,7 +510,7 @@ const trustInfo = {
     twitter: "https://twitter.com",
     instagram: "https://instagram.com",
     youtube: "https://youtube.com",
-    whatsapp: "https://wa.me/919848012345"
+    whatsapp: "https://wa.me/917686019999"
   }
 };
 
@@ -2455,13 +2455,13 @@ const ContactPage = () => {
             <div className="h-60 sm:h-72 w-full rounded-xl overflow-hidden bg-slate-100">
               <iframe
                 title="Trust Map"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d122554.40939515949!2d79.94829762145025!3d14.442598715873998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bb3644f1c1f54cd%3A0xb5b7964b73b5f922!2sAndhra%20Pradesh!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15220.737151061985!2d78.3742468341662!3d17.51433010777598!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb8dfe18cb9ab1%3A0x6b1076b107080f55!2sNizampet%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
                 className="w-full h-full border-0"
                 allowFullScreen=""
                 loading="lazy"
               ></iframe>
             </div>
-            <p className="text-[11px] text-slate-600 px-2 pb-1 font-medium">📍 Visiting Hours: 8:30 AM - 6:30 PM (Mon - Sat)</p>
+            <p className="text-[11px] text-slate-600 px-2 pb-1 font-medium">📍 1104, 11th Floor, Gokul Bhavanam, Nizampet, Hyderabad - 500090</p>
           </div>
         </div>
       </section>
