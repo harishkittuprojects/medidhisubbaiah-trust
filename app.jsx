@@ -2175,6 +2175,93 @@ const AboutPage = () => {
         </div>
       </section>
 
+      {/* Trust Leadership & Vision Section (Below Header) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-gradient-to-b from-emerald-50/70 via-white to-emerald-50/30 rounded-3xl border border-emerald-100 p-6 sm:p-10 shadow-lg">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Leadership Image with Badges */}
+            <div className="lg:col-span-5 flex flex-col items-center">
+              <div className="relative w-full max-w-sm rounded-3xl bg-white p-3 shadow-xl border border-emerald-100 overflow-hidden group">
+                <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-emerald-100/50 to-amber-50/50 pt-2 flex items-center justify-center">
+                  <img
+                    src="leadership.png"
+                    onError={(e) => { e.target.onerror = null; e.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+                    alt="Trust Leadership — Sri Medidhi Venkateshwar Rao & Smt. Medidhi Varalakshmi"
+                    className="w-full h-auto max-h-[380px] object-contain object-bottom transition-transform duration-500 group-hover:scale-105"
+                  />
+                  
+                  {/* Left & Right Role Badges */}
+                  <div className="absolute bottom-6 left-3 bg-emerald-700/95 backdrop-blur-sm text-white text-[11px] font-extrabold px-3 py-1 rounded-lg shadow-md font-heading">
+                    Director
+                  </div>
+                  <div className="absolute bottom-6 right-3 bg-teal-700/95 backdrop-blur-sm text-white text-[11px] font-extrabold px-3 py-1 rounded-lg shadow-md font-heading">
+                    Treasurer
+                  </div>
+                </div>
+
+                {/* 10+ Years of Selfless Service Center Pill Badge */}
+                <div className="flex justify-center -mt-3.5 relative z-10">
+                  <span className="bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white text-[11px] font-black font-heading px-4 py-1.5 rounded-full shadow-lg border border-emerald-600/50 flex items-center space-x-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>10+ Years of Selfless Service</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Leadership Details & Narrative */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="inline-flex items-center space-x-2 bg-emerald-100 text-emerald-800 text-xs font-bold font-heading px-3.5 py-1 rounded-full">
+                <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                <span className="uppercase tracking-wider">Trust Leadership & Vision</span>
+              </div>
+
+              {/* Director Card */}
+              <div className="bg-white p-5 rounded-2xl border border-emerald-200/80 shadow-sm space-y-2 hover:border-emerald-400 transition">
+                <span className="bg-emerald-700 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md font-heading inline-block">
+                  Director
+                </span>
+                <h3 className="text-lg font-black font-heading text-slate-900">
+                  Sri Medidhi Venkateshwar Rao
+                </h3>
+                <p className="text-xs font-bold text-emerald-700 font-heading">
+                  Director, Medidhisubbaiah Trust
+                </p>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Leading strategic social welfare, hospital blood donation coordination, and youth skill-building drives for 10+ years.
+                </p>
+              </div>
+
+              {/* Treasurer Card */}
+              <div className="bg-white p-5 rounded-2xl border border-emerald-200/80 shadow-sm space-y-2 hover:border-emerald-400 transition">
+                <span className="bg-teal-700 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md font-heading inline-block">
+                  Treasurer
+                </span>
+                <h3 className="text-lg font-black font-heading text-slate-900">
+                  Smt. Medidhi Varalakshmi
+                </h3>
+                <p className="text-xs font-bold text-teal-700 font-heading">
+                  Treasurer, Medidhisubbaiah Trust
+                </p>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Overseeing transparent trust governance, women empowerment tailoring centers, and free food distribution programs for 10+ years.
+                </p>
+              </div>
+
+              {/* Dedicated Community Stewards */}
+              <div className="pt-2 space-y-2">
+                <h4 className="text-xl font-black font-heading text-slate-900">
+                  Dedicated Community Stewards
+                </h4>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Guided by the principles of compassion, integrity, and grassroots social development, our leaders have been tirelessly spearheading free educational, healthcare, and vocational initiatives across the community for more than a decade.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Mission & Vision Pillars */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
