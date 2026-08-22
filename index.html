@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medidhisubbaiah Trust | Dedicated to Community Welfare, Education & Healthcare</title>
+  
+  <meta name="description" content="Medidhisubbaiah Trust is a registered non-profit social service organization in India providing 100% free tailoring & Maggam training, 24/7 emergency blood donor helpline, Annadhanam food distributions, monthly grocery kits, summer Chalivendram water kiosks, youth sports meets, and educational scholarships." />
+  <meta name="keywords" content="Medidhisubbaiah Trust, NGO, charity India, free tailoring classes, free Maggam embroidery, blood donation helpline, Annadhanam, grocery distribution, Chalivendram drinking water, rural youth sports, educational scholarships, community social welfare" />
+  <meta name="author" content="Medidhisubbaiah Trust" />
+  <meta name="theme-color" content="#059669" />
+
+  <!-- Open Graph / Social Meta -->
+  <meta property="og:title" content="Medidhisubbaiah Trust | Local Vision, Global Impact" />
+  <meta property="og:description" content="100% Free Vocational Training, Blood Donation Network, Food Distribution, Chalivendram, and Youth Programs." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80" />
+
+  <!-- Google Fonts: Outfit (Headings) & Inter (Body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ECFDF5',
+              100: '#D1FAE5',
+              200: '#A7F3D0',
+              300: '#6EE7B7',
+              400: '#34D399',
+              500: '#10B981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065F46',
+              900: '#064E3B',
+              950: '#022C22',
+            },
+            foundation: {
+              teal: '#0F6E6E',
+              dark: '#0A1118',
+              accent: '#059669',
+              gold: '#F59E0B'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- AOS (Animate on Scroll) CSS -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+  <!-- Custom CSS for Reference Site Animations & White/Green Theme -->
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Outfit', sans-serif;
+    }
+    @keyframes donateShine {
+      0% { transform: translateX(-200%) skew(-20deg); }
+      60%, 100% { transform: translateX(300%) skew(-20deg); }
+    }
+    .donate-shine {
+      position: relative;
+      overflow: hidden;
+    }
+    .donate-shine::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 40%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      animation: donateShine 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes donateDance {
+      0%, 100% { transform: translateY(0) rotate(0); }
+      20% { transform: translateY(-4px) rotate(1.5deg); }
+      40% { transform: translateY(0) rotate(0); }
+      60% { transform: translateY(-3px) rotate(-1.5deg); }
+      80% { transform: translateY(0) rotate(0); }
+    }
+    .donate-dance {
+      animation: donateDance 3.5s ease-in-out infinite;
+    }
+    @keyframes kenBurns {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.08); }
+    }
+    .animate-ken-burns {
+      animation: kenBurns 18s ease-in-out infinite alternate;
+    }
+    @keyframes marqueeScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .animate-marquee {
+      display: flex;
+      width: 200%;
+      animation: marqueeScroll 28s linear infinite;
+    }
+    .animate-marquee:hover {
+      animation-play-state: paused;
+    }
+  </style>
+
+  <!-- React 18 & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
+</head>
+<body class="bg-white text-slate-900 antialiased selection:bg-emerald-600 selection:text-white">
+  <div id="root">
+    <!-- Initial Loading placeholder -->
+    <div class="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white space-y-4">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center text-white shadow-2xl animate-pulse">
+        <span class="font-black text-2xl font-heading">MT</span>
+      </div>
+      <p class="text-sm font-bold text-slate-300 font-heading tracking-wider">Loading Medidhisubbaiah Trust...</p>
+    </div>
+  </div>
+
+  <!-- AOS JS -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+  <!-- Mount Standalone React Application via Babel -->
+  <script type="text/babel" src="./app.jsx"></script>
+</body>
+</html>
