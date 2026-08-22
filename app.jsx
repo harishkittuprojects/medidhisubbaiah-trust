@@ -1706,6 +1706,20 @@ const TrustProvider = ({ children }) => {
     }
   };
 
+  const updateDonationScreenshot = async (id, screenshotUrl) => {
+    const stringId = String(id);
+    setDonations(prev => prev.map(d => String(d.id) === stringId ? { ...d, screenshot_url: screenshotUrl } : d));
+    showToast('Payment screenshot updated successfully!', 'success');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('donations').update({ screenshot_url: screenshotUrl }).eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase donation screenshot update error:', err);
+      }
+    }
+  };
+
   const deleteDonation = async (id) => {
     const stringId = String(id);
     setDonations(prev => prev.filter(d => String(d.id) !== stringId));
@@ -1780,6 +1794,7 @@ const TrustProvider = ({ children }) => {
       deleteInquiry,
       submitDonationLog,
       updateDonationStatus,
+      updateDonationScreenshot,
       deleteDonation,
       resetToFactoryDefaults,
       supabaseConnected,
@@ -4421,53 +4436,109 @@ CREATE POLICY "Public donations" ON public.donations FOR ALL USING (true) WITH C
                         </div>
 
                         {/* --- PAYMENT SCREENSHOT PROOF CARD --- */}
-                        <div className="space-y-1.5">
-                          <span className="text-[11px] font-bold font-heading text-slate-800 flex items-center space-x-1">
-                            <Icon name="image" size={13} className="text-emerald-600" />
-                            <span>Payment Screenshot / Proof:</span>
-                          </span>
-
-                          {d.screenshot_url ? (
-                            <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between gap-3">
-                              <div
-                                onClick={() => setViewingReceipt(d)}
-                                className="flex items-center space-x-2.5 cursor-pointer group min-w-0"
-                              >
-                                <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-emerald-300 bg-white shrink-0 shadow-sm">
-                                  <img
-                                    src={d.screenshot_url}
-                                    alt="Receipt"
-                                    className="w-full h-full object-cover group-hover:scale-105 transition"
-                                  />
-                                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white">
-                                    <Icon name="search" size={14} />
-                                  </div>
-                                </div>
-                                <div className="min-w-0">
-                                  <span className="text-xs font-bold text-emerald-950 font-heading block group-hover:text-emerald-700 transition truncate">
-                                    Click to View Screenshot
+                        {(() => {
+                          const screenshot = d.screenshot_url || d.screenshotUrl || d.receipt_url || d.image || d.image_url;
+                          return (
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold font-heading text-slate-800 flex items-center space-x-1">
+                                  <Icon name="image" size={13} className="text-emerald-600" />
+                                  <span>Payment Screenshot / Proof:</span>
+                                </span>
+                                {screenshot && (
+                                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full font-heading">
+                                    Verified Attachment
                                   </span>
-                                  <span className="text-[10px] text-slate-500 font-mono block truncate">
-                                    {d.screenshot_url}
-                                  </span>
-                                </div>
+                                )}
                               </div>
 
-                              <button
-                                type="button"
-                                onClick={() => setViewingReceipt(d)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold font-heading px-3 py-1.5 rounded-lg shadow shrink-0 flex items-center space-x-1"
-                              >
-                                <Icon name="eye" size={12} />
-                                <span>Preview</span>
-                              </button>
+                              {screenshot ? (
+                                <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between gap-3">
+                                  <div
+                                    onClick={() => setViewingReceipt(d)}
+                                    className="flex items-center space-x-2.5 cursor-pointer group min-w-0"
+                                  >
+                                    <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-emerald-300 bg-white shrink-0 shadow-sm">
+                                      <img
+                                        src={screenshot}
+                                        alt="Receipt"
+                                        className="w-full h-full object-cover group-hover:scale-105 transition"
+                                      />
+                                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white">
+                                        <Icon name="search" size={14} />
+                                      </div>
+                                    </div>
+                                    <div className="min-w-0">
+                                      <span className="text-xs font-bold text-emerald-950 font-heading block group-hover:text-emerald-700 transition truncate">
+                                        Click to View Screenshot
+                                      </span>
+                                      <span className="text-[10px] text-slate-500 font-mono block truncate">
+                                        {screenshot}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center space-x-1.5 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => setViewingReceipt(d)}
+                                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold font-heading px-3 py-1.5 rounded-lg shadow flex items-center space-x-1 transition"
+                                    >
+                                      <Icon name="eye" size={12} />
+                                      <span>Preview</span>
+                                    </button>
+
+                                    <label className="cursor-pointer bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-[11px] font-bold font-heading px-2 py-1.5 rounded-lg shadow-sm transition flex items-center" title="Replace screenshot">
+                                      <Icon name="cloud" size={12} />
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={async (e) => {
+                                          const file = e.target.files && e.target.files[0];
+                                          if (!file) return;
+                                          try {
+                                            const res = await uploadToCloudinary(file);
+                                            updateDonationScreenshot(d.id, res.url);
+                                          } catch (err) {
+                                            const reader = new FileReader();
+                                            reader.onload = () => updateDonationScreenshot(d.id, reader.result);
+                                            reader.readAsDataURL(file);
+                                          }
+                                        }}
+                                      />
+                                    </label>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300 flex items-center justify-between gap-2">
+                                  <span className="text-xs text-slate-500 italic">No screenshot uploaded with this entry</span>
+                                  <label className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold font-heading px-3 py-1.5 rounded-lg shadow flex items-center space-x-1 shrink-0 transition">
+                                    <Icon name="cloud" size={13} />
+                                    <span>Attach Screenshot</span>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={async (e) => {
+                                        const file = e.target.files && e.target.files[0];
+                                        if (!file) return;
+                                        try {
+                                          const res = await uploadToCloudinary(file);
+                                          updateDonationScreenshot(d.id, res.url);
+                                        } catch (err) {
+                                          const reader = new FileReader();
+                                          reader.onload = () => updateDonationScreenshot(d.id, reader.result);
+                                          reader.readAsDataURL(file);
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                </div>
+                              )}
                             </div>
-                          ) : (
-                            <div className="p-2.5 bg-slate-50 rounded-xl border text-center text-xs text-slate-400 italic">
-                              No screenshot uploaded with this entry
-                            </div>
-                          )}
-                        </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Card Footer Actions */}
@@ -5269,30 +5340,40 @@ const DonateModal = () => {
   if (!isDonateModalOpen) return null;
 
   const handleScreenshotChange = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
 
     setIsUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(15);
     setUploadError(null);
 
-    try {
-      // Direct Cloudinary upload
-      const res = await uploadToCloudinary(file, (p) => setUploadProgress(p));
-      setScreenshotUrl(res.url);
-      showToast('Payment screenshot attached successfully!', 'success');
-    } catch (err) {
-      console.warn('Cloudinary upload warning:', err);
-      // Fallback to FileReader base64
-      const reader = new FileReader();
-      reader.onload = () => {
-        setScreenshotUrl(reader.result);
-        showToast('Payment screenshot attached!', 'info');
-      };
-      reader.readAsDataURL(file);
-    } finally {
+    // 1. Immediately read as Base64 Data URL so the screenshot is instantly attached with zero wait time
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const base64Data = evt.target.result;
+      setScreenshotUrl(base64Data);
+      showToast('Payment screenshot attached! Uploading to cloud...', 'info');
+
+      // 2. Upload to Cloudinary in background for persistent public URL
+      try {
+        setUploadProgress(35);
+        const res = await uploadToCloudinary(file, (p) => setUploadProgress(Math.max(35, p)));
+        if (res && res.url) {
+          setScreenshotUrl(res.url);
+          showToast('Payment screenshot verified & saved to cloud ✅', 'success');
+        }
+      } catch (err) {
+        console.warn('Cloudinary background upload note (using base64 proof):', err);
+        showToast('Payment screenshot attached successfully ✅', 'success');
+      } finally {
+        setIsUploading(false);
+      }
+    };
+    reader.onerror = () => {
       setIsUploading(false);
-    }
+      setUploadError('Failed to read selected image.');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e) => {
@@ -5312,7 +5393,7 @@ const DonateModal = () => {
         pan_number: pan,
         transaction_id: transactionId,
         cause,
-        screenshot_url: screenshotUrl,
+        screenshot_url: screenshotUrl || '',
         status: 'Pending Verification'
       });
       setIsDonateModalOpen(false);
