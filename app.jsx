@@ -1438,8 +1438,6 @@ const HeroFeatureCards = () => {
         {features.map((f, idx) => (
           <div
             key={idx}
-            data-aos="fade-up"
-            data-aos-delay={idx * 80}
             onClick={() => navigate(f.route)}
             className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-lg border border-emerald-100 hover:border-emerald-300 hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between"
           >
@@ -1472,7 +1470,7 @@ const StatsCounter = () => {
     <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-8 pb-4 w-full">
       <div className="bg-slate-900 rounded-2xl sm:rounded-3xl p-6 sm:p-10 text-white shadow-xl grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
         {stats.map((stat, idx) => (
-          <div key={idx} className="text-center space-y-1.5 group" data-aos="fade-up" data-aos-delay={idx * 80}>
+          <div key={idx} className="text-center space-y-1.5 group">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-800 text-emerald-400 flex items-center justify-center mx-auto mb-1 group-hover:bg-emerald-600 group-hover:text-white transition-all">
               <Icon name={stat.icon} size={22} />
             </div>
@@ -2179,7 +2177,7 @@ const HomePage = () => {
       {/* About Foundation & Founder Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          <div className="lg:col-span-6 space-y-4" data-aos="fade-right">
+          <div className="lg:col-span-6 space-y-4">
             <div className="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold font-heading uppercase tracking-wider">
               <span>మేడిది సుబ్బయ్య ట్రస్ట్</span>
               <span>•</span>
@@ -2215,7 +2213,7 @@ const HomePage = () => {
             </div>
           </div>
 
-          <div className="lg:col-span-6" data-aos="fade-left">
+          <div className="lg:col-span-6">
             <div className="relative flex items-center justify-center p-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-white rounded-3xl border border-emerald-200 shadow-lg">
               <div className="text-center space-y-3">
                 <div className="w-36 h-36 sm:w-48 sm:h-48 mx-auto rounded-full p-1.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-xl">
@@ -2394,7 +2392,7 @@ const AboutPage = () => {
   ];
 
   return (
-    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden">
+    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden animate-fadeIn">
       {/* First Header Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
@@ -2412,7 +2410,7 @@ const AboutPage = () => {
       </section>
 
       {/* Leadership Showcase: Director & Treasurer (10+ Years Experience) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full" data-aos="fade-up">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="bg-white rounded-2xl sm:rounded-3xl border border-emerald-100 shadow-xl overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
             <div className="lg:col-span-5 p-6 sm:p-8 bg-gradient-to-br from-emerald-50 via-teal-50 to-white flex justify-center items-center">
@@ -2719,7 +2717,7 @@ const GalleryPage = () => {
       </section>
 
       {/* Featured Live Video Player Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full" data-aos="fade-up">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="bg-slate-950 rounded-2xl sm:rounded-3xl border-2 border-emerald-500/40 p-4 sm:p-7 shadow-2xl overflow-hidden text-white">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
             {/* Video Player Column */}
