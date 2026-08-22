@@ -1,6 +1,7 @@
 // ==========================================
 // Medidhisubbaiah Trust Web Application
 // Theme: White & Green with Official Trust Emblem Logo
+// Responsive Mobile-First Architecture (100% Contained & Viewport Safe)
 // Built with React 18, Tailwind CSS, Outfit & Inter Typography, and Lucide Icons
 // ==========================================
 
@@ -428,21 +429,21 @@ const initialTestimonials = [
   {
     id: 1,
     name: "Lakshmi Devi",
-    role: "Tailoring Course Graduate & Boutique Owner",
+    role: "Tailoring Graduate & Boutique Owner",
     quote: "Joining Medidhisubbaiah Trust's free tailoring course transformed my life. Today I earn ₹15,000 every month stitching bridal garments and support my family with pride.",
     image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80"
   },
   {
     id: 2,
     name: "Dr. K. Srinivas Rao",
-    role: "Government Hospital Medical Officer",
+    role: "Govt Hospital Medical Officer",
     quote: "The 24/7 Voluntary Blood Donor Network by Medidhisubbaiah Trust has been a lifesaver for our emergency ICU trauma cases. Their coordination is instantaneous.",
     image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=200&q=80"
   },
   {
     id: 3,
     name: "Ramesh Babu",
-    role: "Auto Rickshaw Driver & Parent",
+    role: "Auto Driver & Parent",
     quote: "During hot summers, the Chalivendram drinking water kiosk keeps hundreds of daily wage workers going. The Trust also gifted my two children high quality school bags and books.",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80"
   }
@@ -489,14 +490,14 @@ const trustInfo = {
   shortName: "Medidhisubbaiah Trust",
   teluguName: "మేడిది సుబ్బయ్య ట్రస్ట్",
   tagline: "Local Vision, Selfless Service, Global Impact",
-  registration: "Regd. Social Welfare & Charitable Organization",
+  registration: "Regd. Social Welfare Organization",
   logoUrl: "./logo.png",
   founded: "Serving the Community with Pride & Transparency",
   address: "Medidhisubbaiah Trust Bhavan, Main Road, Beside Gandhi Statue, Andhra Pradesh / Telangana, India",
   phone: "+91 98480 12345 / +91 94401 67890",
   emergencyBloodHelpline: "+91 98480 99999",
   email: "contact@medidhisubbaiahtrust.org",
-  operatingHours: "Monday - Saturday: 08:30 AM - 06:30 PM",
+  operatingHours: "Mon - Sat: 08:30 AM - 06:30 PM",
   upiId: "medidhisubbaiah@sbi",
   accountDetails: {
     bank: "State Bank of India",
@@ -893,64 +894,66 @@ const TrustProvider = ({ children }) => {
 
 const useTrust = () => useContext(TrustContext);
 
-// --- MARQUEE TICKER BANNER ---
+// --- MARQUEE TICKER BANNER (Mobile Contained) ---
 const MarqueeTicker = () => {
   const { trustInfo } = useTrust();
   const tickerText = "🌿 100% Free Tailoring & Maggam Work Admissions Open • 24/7 Emergency Blood Helpline: " + trustInfo.emergencyBloodHelpline + " • Weekly Annadhanam Nutritious Meals & Monthly Grocery Kits • Free Drinking Water Chalivendram Kiosks • Registered Non-Profit Charitable Trust Dedicated to Social Welfare";
 
   return (
-    <div className="bg-emerald-700 text-white text-[11px] sm:text-xs py-1.5 overflow-hidden whitespace-nowrap border-b border-emerald-800 select-none flex items-center">
-      <div className="bg-emerald-950 font-black px-3 py-0.5 text-[10px] tracking-wider uppercase z-10 shrink-0 shadow text-emerald-300">
+    <div className="w-full max-w-full overflow-hidden bg-emerald-700 text-white text-[11px] sm:text-xs py-1.5 border-b border-emerald-800 select-none flex items-center">
+      <div className="bg-emerald-950 font-black px-2.5 sm:px-3 py-0.5 text-[10px] tracking-wider uppercase z-10 shrink-0 shadow text-emerald-300">
         Updates
       </div>
-      <div className="animate-marquee font-medium flex items-center space-x-12">
-        <span>{tickerText}</span>
-        <span>•</span>
-        <span>{tickerText}</span>
+      <div className="overflow-hidden w-full">
+        <div className="animate-marquee font-medium flex items-center space-x-8 sm:space-x-12">
+          <span>{tickerText}</span>
+          <span>•</span>
+          <span>{tickerText}</span>
+        </div>
       </div>
     </div>
   );
 };
 
-// --- TOP BAR ---
+// --- TOP BAR (Mobile Responsive) ---
 const TopBar = () => {
   const { trustInfo, isAdminLoggedIn, logoutAdmin, navigate } = useTrust();
 
   return (
-    <div className="bg-slate-950 text-slate-200 text-xs py-2 px-4 border-b border-slate-800">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
-        <div className="flex items-center space-x-4">
-          <span className="flex items-center text-emerald-400 font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping mr-2"></span>
-            24/7 Emergency Blood Helpline:
-            <a href={`tel:${trustInfo.emergencyBloodHelpline}`} className="ml-1.5 text-white hover:text-emerald-300 font-extrabold underline">
+    <div className="w-full max-w-full bg-slate-950 text-slate-200 text-xs py-2 px-3 sm:px-4 border-b border-slate-800 overflow-hidden">
+      <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+        <div className="flex items-center space-x-2 sm:space-x-4 max-w-full">
+          <span className="flex items-center text-emerald-400 font-bold text-[11px] sm:text-xs truncate">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping mr-1.5 shrink-0"></span>
+            <span className="hidden sm:inline">24/7 Helpline:</span>
+            <a href={`tel:${trustInfo.emergencyBloodHelpline}`} className="ml-1 text-white hover:text-emerald-300 font-extrabold underline">
               {trustInfo.emergencyBloodHelpline}
             </a>
           </span>
-          <span className="hidden lg:inline text-slate-700">|</span>
-          <span className="hidden lg:flex items-center text-slate-300">
-            <Icon name="mail" size={13} className="mr-1.5 text-emerald-400" />
+          <span className="hidden md:inline text-slate-700">|</span>
+          <span className="hidden md:flex items-center text-slate-300 truncate">
+            <Icon name="mail" size={13} className="mr-1.5 text-emerald-400 shrink-0" />
             {trustInfo.email}
           </span>
         </div>
 
-        <div className="flex items-center space-x-4 text-slate-300">
-          <span className="hidden sm:inline-block bg-slate-900 text-emerald-300 border border-emerald-800/60 px-2.5 py-0.5 rounded text-[11px] font-semibold">
+        <div className="flex items-center space-x-2 sm:space-x-4 text-slate-300 text-[11px] sm:text-xs">
+          <span className="hidden lg:inline-block bg-slate-900 text-emerald-300 border border-emerald-800/60 px-2 py-0.5 rounded text-[10px] font-semibold">
             {trustInfo.registration}
           </span>
           {isAdminLoggedIn ? (
             <div className="flex items-center space-x-2">
-              <button onClick={() => navigate('admin')} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-0.5 rounded font-bold">
+              <button onClick={() => navigate('admin')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-0.5 rounded font-bold">
                 Admin Hub
               </button>
-              <button onClick={logoutAdmin} className="text-xs text-slate-400 hover:text-white">
+              <button onClick={logoutAdmin} className="text-slate-400 hover:text-white">
                 Logout
               </button>
             </div>
           ) : (
-            <button onClick={() => navigate('login')} className="flex items-center space-x-1 text-slate-300 hover:text-white text-xs hover:underline">
-              <Icon name="lock" size={12} className="text-emerald-400" />
-              <span>Admin Login</span>
+            <button onClick={() => navigate('login')} className="flex items-center space-x-1 text-slate-300 hover:text-white hover:underline">
+              <Icon name="lock" size={11} className="text-emerald-400" />
+              <span>Admin</span>
             </button>
           )}
         </div>
@@ -959,7 +962,7 @@ const TopBar = () => {
   );
 };
 
-// --- NAVBAR WITH EMBLEM LOGO ---
+// --- NAVBAR (Mobile Optimized) ---
 const Navbar = () => {
   const { currentRoute, navigate, setIsDonateModalOpen, trustInfo } = useTrust();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -987,28 +990,28 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full transition-all duration-300">
+    <header className="sticky top-0 z-40 w-full max-w-full transition-all duration-300 bg-white">
       <MarqueeTicker />
       <TopBar />
 
-      <nav className={`w-full bg-white transition-all duration-300 ${isScrolled ? 'shadow-lg py-2 border-b border-emerald-100 bg-white/95 backdrop-blur-md' : 'shadow-sm py-3 border-b border-slate-100'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className={`w-full max-w-full bg-white transition-all duration-300 ${isScrolled ? 'shadow-lg py-2 border-b border-emerald-100 bg-white/95 backdrop-blur-md' : 'shadow-sm py-2.5 sm:py-3 border-b border-slate-100'}`}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
-            {/* Logo with Image Emblem */}
-            <div onClick={() => handleNavClick('home')} className="flex items-center space-x-3.5 cursor-pointer group select-none">
-              <div className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full p-0.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-md group-hover:scale-105 transition-transform duration-300 flex items-center justify-center shrink-0">
+            {/* Logo */}
+            <div onClick={() => handleNavClick('home')} className="flex items-center space-x-2.5 sm:space-x-3.5 cursor-pointer group select-none min-w-0">
+              <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-full p-0.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-md group-hover:scale-105 transition-transform shrink-0">
                 <img
                   src={trustInfo.logoUrl}
                   alt="Medidhisubbaiah Trust Logo"
                   className="w-full h-full rounded-full object-cover bg-white"
                 />
               </div>
-              <div className="flex flex-col">
-                <span className="font-black text-lg sm:text-xl text-slate-900 font-heading tracking-tight leading-none group-hover:text-emerald-600 transition-colors">
+              <div className="flex flex-col min-w-0">
+                <span className="font-black text-base sm:text-xl text-slate-900 font-heading tracking-tight leading-tight truncate group-hover:text-emerald-600 transition-colors">
                   Medidhisubbaiah <span className="text-emerald-600">Trust</span>
                 </span>
-                <span className="text-[10px] sm:text-[11px] font-bold text-emerald-800 tracking-wide mt-0.5 font-heading">
-                  మేడిది సుబ్బయ్య ట్రస్ట్ • Local Vision, Global Impact
+                <span className="text-[10px] sm:text-[11px] font-bold text-emerald-800 tracking-wide font-heading truncate">
+                  మేడిది సుబ్బయ్య ట్రస్ట్
                 </span>
               </div>
             </div>
@@ -1021,35 +1024,43 @@ const Navbar = () => {
                   <button
                     key={item.route}
                     onClick={() => handleNavClick(item.route)}
-                    className={`px-3.5 py-2 rounded-xl text-sm font-bold font-heading transition-all duration-200 relative ${
+                    className={`px-3 py-2 rounded-xl text-sm font-bold font-heading transition-all duration-200 relative ${
                       isActive ? 'text-emerald-700 bg-emerald-50 shadow-sm' : 'text-slate-700 hover:text-emerald-600 hover:bg-slate-50'
                     }`}
                   >
                     {item.name}
-                    {isActive && <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-emerald-600 rounded-full" />}
+                    {isActive && <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-emerald-600 rounded-full" />}
                   </button>
                 );
               })}
             </div>
 
-            {/* Donate Button */}
+            {/* Desktop Donate Button */}
             <div className="hidden lg:flex items-center space-x-3">
               <button
                 onClick={() => setIsDonateModalOpen(true)}
-                className="donate-shine donate-dance bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white px-5 py-2.5 rounded-xl text-sm font-black font-heading shadow-lg shadow-emerald-600/30 hover:shadow-xl hover:shadow-emerald-600/40 hover:-translate-y-0.5 transition-all flex items-center space-x-2"
+                className="donate-shine donate-dance bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white px-5 py-2.5 rounded-xl text-sm font-black font-heading shadow-lg shadow-emerald-600/30 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center space-x-2"
               >
                 <Icon name="heart" size={16} className="text-white" />
                 <span>Support & Donate</span>
               </button>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Actions: Compact Donate + Hamburger */}
             <div className="lg:hidden flex items-center space-x-2">
               <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2.5 rounded-xl text-slate-700 hover:text-emerald-600 hover:bg-slate-100"
+                onClick={() => setIsDonateModalOpen(true)}
+                className="bg-emerald-600 text-white p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold font-heading flex items-center space-x-1 shadow"
               >
-                <Icon name={isMobileMenuOpen ? 'x' : 'menu'} size={24} />
+                <Icon name="heart" size={14} />
+                <span className="hidden xs:inline">Donate</span>
+              </button>
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 rounded-xl text-slate-700 hover:text-emerald-600 hover:bg-slate-100"
+                aria-label="Toggle Menu"
+              >
+                <Icon name={isMobileMenuOpen ? 'x' : 'menu'} size={22} />
               </button>
             </div>
           </div>
@@ -1057,31 +1068,31 @@ const Navbar = () => {
 
         {/* Mobile Drawer */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-6 space-y-2 shadow-2xl animate-fadeIn">
+          <div className="lg:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-6 space-y-1.5 shadow-2xl animate-fadeIn">
             {navItems.map((item) => {
               const isActive = currentRoute === item.route;
               return (
                 <button
                   key={item.route}
                   onClick={() => handleNavClick(item.route)}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-base font-bold font-heading flex items-center justify-between ${
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-bold font-heading flex items-center justify-between ${
                     isActive ? 'text-emerald-700 bg-emerald-50 border-l-4 border-emerald-600' : 'text-slate-700 hover:text-emerald-600 hover:bg-slate-50'
                   }`}
                 >
                   <span>{item.name}</span>
-                  {isActive && <Icon name="arrowright" size={16} className="text-emerald-600" />}
+                  {isActive && <Icon name="arrowright" size={14} className="text-emerald-600" />}
                 </button>
               );
             })}
-            <div className="pt-4 border-t border-slate-100 flex flex-col space-y-2">
+            <div className="pt-3 border-t border-slate-100">
               <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
                   setIsDonateModalOpen(true);
                 }}
-                className="w-full bg-emerald-600 text-white py-3 rounded-xl font-black font-heading text-center shadow-lg"
+                className="w-full bg-emerald-600 text-white py-3 rounded-xl font-black font-heading text-sm text-center shadow-lg"
               >
-                Support / Donate Online
+                Support / Donate Online (80G)
               </button>
             </div>
           </div>
@@ -1091,7 +1102,7 @@ const Navbar = () => {
   );
 };
 
-// --- HERO SLIDER WITH KEN BURNS EFFECT ---
+// --- HERO SLIDER (Mobile Responsive) ---
 const HeroSlider = () => {
   const { navigate, setIsDonateModalOpen } = useTrust();
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -1106,7 +1117,7 @@ const HeroSlider = () => {
   const slide = heroSlides[currentSlide];
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 text-white min-h-[580px] sm:min-h-[640px] flex items-center">
+    <section className="relative overflow-hidden bg-slate-950 text-white min-h-[500px] sm:min-h-[580px] lg:min-h-[640px] flex items-center w-full max-w-full">
       {/* Background Images with Ken Burns Zoom */}
       {heroSlides.map((s, idx) => (
         <div
@@ -1120,39 +1131,39 @@ const HeroSlider = () => {
       ))}
 
       {/* Slide Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-16 sm:py-24">
-        <div className="max-w-3xl space-y-6 animate-fadeIn" key={currentSlide}>
-          <div className="inline-flex items-center space-x-2 bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold font-heading uppercase tracking-wider shadow">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-1" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12 sm:py-20 w-full">
+        <div className="max-w-3xl space-y-4 sm:space-y-6 animate-fadeIn" key={currentSlide}>
+          <div className="inline-flex items-center space-x-1.5 bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold font-heading uppercase tracking-wider shadow">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping mr-1" />
             <span>{slide.badge}</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-heading tracking-tight leading-[1.15] text-white">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black font-heading tracking-tight leading-[1.2] text-white">
             {slide.title}
           </h1>
 
-          <p className="text-base sm:text-xl font-medium text-emerald-200 max-w-2xl font-heading">
+          <p className="text-sm sm:text-lg font-medium text-emerald-200 max-w-2xl font-heading leading-snug">
             {slide.subtitle}
           </p>
 
-          <p className="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed line-clamp-3 sm:line-clamp-none">
             {slide.description}
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 sm:pt-4 w-full sm:w-auto">
             <button
               onClick={() => navigate(slide.ctaPrimaryRoute)}
-              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-8 py-4 rounded-xl font-black font-heading text-base shadow-xl shadow-emerald-600/40 hover:-translate-y-0.5 transition-all flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-6 py-3.5 rounded-xl font-black font-heading text-sm shadow-xl shadow-emerald-600/40 transition-all flex items-center justify-center space-x-2"
             >
               <span>{slide.ctaPrimary}</span>
-              <Icon name="arrowright" size={18} />
+              <Icon name="arrowright" size={16} />
             </button>
 
             <button
               onClick={() => setIsDonateModalOpen(true)}
-              className="donate-shine w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/30 backdrop-blur-md px-8 py-4 rounded-xl font-bold font-heading text-base transition-all flex items-center justify-center space-x-2"
+              className="donate-shine w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/30 backdrop-blur-md px-6 py-3.5 rounded-xl font-bold font-heading text-sm transition-all flex items-center justify-center space-x-2"
             >
-              <Icon name="heart" size={18} className="text-emerald-400" />
+              <Icon name="heart" size={16} className="text-emerald-400" />
               <span>Donate & Support</span>
             </button>
           </div>
@@ -1160,21 +1171,21 @@ const HeroSlider = () => {
       </div>
 
       {/* Slider Controls */}
-      <div className="absolute bottom-6 right-6 z-20 flex items-center space-x-3 bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-800">
+      <div className="absolute bottom-3 right-3 sm:bottom-6 sm:right-6 z-20 flex items-center space-x-2 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-800">
         <button
           onClick={() => setCurrentSlide(prev => (prev > 0 ? prev - 1 : heroSlides.length - 1))}
           className="text-slate-400 hover:text-white p-1"
           aria-label="Previous slide"
         >
-          <Icon name="chevronleft" size={18} />
+          <Icon name="chevronleft" size={16} />
         </button>
 
-        <div className="flex space-x-2">
+        <div className="flex space-x-1.5">
           {heroSlides.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentSlide(idx)}
-              className={`h-2 rounded-full transition-all ${idx === currentSlide ? 'w-6 bg-emerald-500' : 'w-2 bg-slate-600 hover:bg-slate-400'}`}
+              className={`h-1.5 rounded-full transition-all ${idx === currentSlide ? 'w-5 bg-emerald-500' : 'w-1.5 bg-slate-600'}`}
               aria-label={`Slide ${idx + 1}`}
             />
           ))}
@@ -1185,69 +1196,69 @@ const HeroSlider = () => {
           className="text-slate-400 hover:text-white p-1"
           aria-label="Next slide"
         >
-          <Icon name="chevronright" size={18} />
+          <Icon name="chevronright" size={16} />
         </button>
       </div>
     </section>
   );
 };
 
-// --- HERO 4 OVERLAPPING FEATURE CARDS ---
+// --- HERO 4 OVERLAPPING FEATURE CARDS (Mobile Contained) ---
 const HeroFeatureCards = () => {
   const { navigate } = useTrust();
 
   const features = [
     {
       title: "Free Tailoring & Maggam",
-      desc: "Skill training centers equipping women with certified skills and self-employment toolkits.",
+      desc: "Vocational centers empowering women with free certified skills and toolkits.",
       icon: "scissors",
       route: "services"
     },
     {
       title: "24/7 Blood Network",
-      desc: "Emergency donor hotline and voluntary camps ensuring zero delay for critical hospital surgeries.",
+      desc: "Emergency donor hotline & camps ensuring zero delay for critical hospital cases.",
       icon: "heartpulse",
       route: "contact"
     },
     {
       title: "Annadhanam & Groceries",
-      desc: "Fresh nutritious meals served weekly outside hospitals and monthly dry ration kits to families.",
+      desc: "Fresh nutritious meals served weekly and monthly dry ration kits to needy families.",
       icon: "utensils",
       route: "services"
     },
     {
       title: "Education & Sports Meet",
-      desc: "Free school kit distribution, tuition support, and annual rural athletics championships.",
+      desc: "Free school kits, notebooks, and annual rural youth athletics championships.",
       icon: "graduationcap",
       route: "events"
     }
   ];
 
   return (
-    <section className="relative z-20 -mt-12 sm:-mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+    <section className="relative z-20 -mt-6 sm:-mt-12 lg:-mt-16 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {features.map((f, idx) => (
           <div
             key={idx}
             data-aos="fade-up"
-            data-aos-delay={idx * 100}
+            data-aos-delay={idx * 80}
             onClick={() => navigate(f.route)}
-            className="bg-white p-6 rounded-3xl shadow-xl border border-emerald-100 hover:border-emerald-300 hover:shadow-2xl transition-all duration-300 cursor-pointer group flex flex-col justify-between hover:-translate-y-1.5"
+            className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-lg border border-emerald-100 hover:border-emerald-300 hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between"
           >
-            <div className="space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 shadow-sm">
-                <Icon name={f.icon} size={24} />
+            <div className="space-y-2.5">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                <Icon name={f.icon} size={20} />
               </div>
-              <h3 className="font-extrabold font-heading text-base sm:text-lg text-slate-900 group-hover:text-emerald-600 transition-colors">
+              <h3 className="font-extrabold font-heading text-base text-slate-900 group-hover:text-emerald-600 transition-colors">
                 {f.title}
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 {f.desc}
               </p>
             </div>
-            <div className="pt-4 mt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600 group-hover:translate-x-1 transition-transform">
+            <div className="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600 group-hover:translate-x-1 transition-transform">
               <span>Learn Details</span>
-              <Icon name="arrowright" size={14} />
+              <Icon name="arrowright" size={13} />
             </div>
           </div>
         ))}
@@ -1260,16 +1271,16 @@ const HeroFeatureCards = () => {
 const StatsCounter = () => {
   const { stats } = useTrust();
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6">
-      <div className="bg-slate-900 rounded-3xl p-8 sm:p-12 text-white shadow-2xl grid grid-cols-2 lg:grid-cols-4 gap-8">
+    <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-8 pb-4 w-full">
+      <div className="bg-slate-900 rounded-2xl sm:rounded-3xl p-6 sm:p-10 text-white shadow-xl grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
         {stats.map((stat, idx) => (
-          <div key={idx} className="text-center space-y-2 group" data-aos="fade-up" data-aos-delay={idx * 100}>
-            <div className="w-14 h-14 rounded-2xl bg-slate-800 text-emerald-400 flex items-center justify-center mx-auto mb-2 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow">
-              <Icon name={stat.icon} size={28} />
+          <div key={idx} className="text-center space-y-1.5 group" data-aos="fade-up" data-aos-delay={idx * 80}>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-800 text-emerald-400 flex items-center justify-center mx-auto mb-1 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+              <Icon name={stat.icon} size={22} />
             </div>
-            <div className="text-3xl sm:text-4xl lg:text-5xl font-black font-heading text-white tracking-tight">{stat.value}</div>
-            <div className="text-xs sm:text-sm font-bold text-slate-300 font-heading">{stat.label}</div>
-            <div className="text-[11px] font-semibold text-emerald-400">{stat.change}</div>
+            <div className="text-2xl sm:text-4xl font-black font-heading text-white tracking-tight">{stat.value}</div>
+            <div className="text-[11px] sm:text-xs font-bold text-slate-300 font-heading">{stat.label}</div>
+            <div className="text-[10px] font-semibold text-emerald-400">{stat.change}</div>
           </div>
         ))}
       </div>
@@ -1277,58 +1288,58 @@ const StatsCounter = () => {
   );
 };
 
-// --- CAUSE / SERVICE CARD ---
+// --- CAUSE / SERVICE CARD (Mobile Contained) ---
 const ServiceCard = ({ service }) => {
   const { setSelectedService, setIsDonateModalOpen } = useTrust();
   return (
-    <div className="group bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col hover:-translate-y-1.5">
-      <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-slate-100">
+    <div className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col w-full">
+      <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-100">
         <img src={service.image} alt={service.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
-        <div className="absolute top-3.5 left-3.5">
-          <span className="bg-white/95 text-slate-800 text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full shadow">
+        <div className="absolute top-2.5 left-2.5">
+          <span className="bg-white/95 text-slate-800 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow">
             {service.category}
           </span>
         </div>
-        <div className="absolute bottom-3 right-3.5 w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg group-hover:bg-emerald-700 transition">
-          <Icon name={service.icon || 'award'} size={22} />
+        <div className="absolute bottom-2.5 right-2.5 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-lg group-hover:bg-emerald-700 transition">
+          <Icon name={service.icon || 'award'} size={18} />
         </div>
       </div>
 
-      <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-        <div className="space-y-2.5">
-          <h3 className="font-black font-heading text-lg text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+        <div className="space-y-1.5">
+          <h3 className="font-black font-heading text-base sm:text-lg text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1">
             {service.title}
           </h3>
-          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed line-clamp-3">
+          <p className="text-slate-600 text-xs leading-relaxed line-clamp-2 sm:line-clamp-3">
             {service.shortDescription}
           </p>
         </div>
 
         {/* Progress / Beneficiary Meter */}
-        <div className="space-y-1.5 pt-2">
-          <div className="flex justify-between text-xs font-bold font-heading">
+        <div className="space-y-1 pt-1">
+          <div className="flex justify-between text-[11px] font-bold font-heading">
             <span className="text-emerald-600">{service.raised || service.beneficiaries}</span>
             <span className="text-slate-500">{service.goal || 'Ongoing'}</span>
           </div>
-          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-emerald-600 to-teal-500 rounded-full transition-all" style={{ width: `${service.progress || 75}%` }} />
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+        <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
           <button
             onClick={() => setSelectedService(service)}
-            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 py-2.5 px-3 rounded-xl text-xs font-bold font-heading transition text-center"
+            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 py-2 px-2 rounded-xl text-xs font-bold font-heading transition text-center"
           >
-            Learn Details
+            Details
           </button>
           <button
             onClick={() => setIsDonateModalOpen(true)}
-            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-3 rounded-xl text-xs font-bold font-heading shadow-md transition text-center"
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-2 rounded-xl text-xs font-bold font-heading shadow transition text-center"
           >
-            Support Cause
+            Support
           </button>
         </div>
       </div>
@@ -1345,45 +1356,39 @@ const EventCard = ({ event }) => {
   const month = !isNaN(dateObj.getMonth()) ? dateObj.toLocaleString('default', { month: 'short' }).toUpperCase() : 'SEP';
 
   return (
-    <div className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col hover:-translate-y-1 group">
-      <div className="relative h-48 w-full overflow-hidden bg-slate-900">
+    <div className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group w-full">
+      <div className="relative h-40 sm:h-48 w-full overflow-hidden bg-slate-900">
         <img src={event.image} alt={event.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent" />
-        <div className="absolute top-3.5 left-3.5 bg-white rounded-2xl shadow-lg p-2 text-center min-w-[54px] border border-emerald-100">
-          <span className="block text-emerald-600 font-black text-lg leading-none font-heading">{day}</span>
-          <span className="block text-[10px] font-bold text-slate-700 tracking-wider mt-0.5">{month}</span>
+        <div className="absolute top-2.5 left-2.5 bg-white rounded-xl shadow p-1.5 text-center min-w-[46px] border border-emerald-100">
+          <span className="block text-emerald-600 font-black text-base leading-none font-heading">{day}</span>
+          <span className="block text-[9px] font-bold text-slate-700 tracking-wider mt-0.5">{month}</span>
         </div>
-        <div className="absolute top-3.5 right-3.5">
-          <span className={`text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow ${isCompleted ? 'bg-slate-800 text-slate-200' : 'bg-emerald-600 text-white'}`}>
+        <div className="absolute top-2.5 right-2.5">
+          <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow ${isCompleted ? 'bg-slate-800 text-slate-200' : 'bg-emerald-600 text-white'}`}>
             {event.status}
           </span>
         </div>
-        <div className="absolute bottom-3 left-3.5">
-          <span className="bg-emerald-700/90 text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md">
-            {event.category}
-          </span>
-        </div>
       </div>
-      <div className="p-6 flex-1 flex flex-col justify-between space-y-3">
-        <div className="space-y-2">
-          <h3 className="font-bold font-heading text-lg text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2">{event.title}</h3>
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-2.5">
+        <div className="space-y-1.5">
+          <h3 className="font-bold font-heading text-base text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2">{event.title}</h3>
           <div className="space-y-1 text-xs text-slate-500">
-            <div className="flex items-center space-x-2">
-              <Icon name="clock" size={14} className="text-emerald-600 shrink-0" />
-              <span>{event.time}</span>
+            <div className="flex items-center space-x-1.5">
+              <Icon name="clock" size={13} className="text-emerald-600 shrink-0" />
+              <span className="truncate">{event.time}</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <Icon name="mappin" size={14} className="text-emerald-600 shrink-0" />
+            <div className="flex items-center space-x-1.5">
+              <Icon name="mappin" size={13} className="text-emerald-600 shrink-0" />
               <span className="truncate">{event.location}</span>
             </div>
           </div>
-          <p className="text-slate-600 text-xs sm:text-sm line-clamp-2 leading-relaxed">{event.description}</p>
         </div>
-        <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-xs text-slate-500 font-semibold">{isCompleted ? 'Finished Event' : `${event.seatsRegistered || 50}+ Registered`}</span>
-          <button onClick={() => setSelectedEvent(event)} className="bg-slate-900 hover:bg-emerald-600 text-white text-xs font-bold font-heading px-4 py-2 rounded-xl transition flex items-center space-x-1.5">
-            <span>{isCompleted ? 'View Details' : 'RSVP & Join'}</span>
-            <Icon name="arrowright" size={13} />
+        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <span className="text-[11px] text-slate-500 font-medium">{isCompleted ? 'Completed' : `${event.seatsRegistered || 50}+ RSVP`}</span>
+          <button onClick={() => setSelectedEvent(event)} className="bg-slate-900 hover:bg-emerald-600 text-white text-xs font-bold font-heading px-3.5 py-1.5 rounded-xl transition flex items-center space-x-1">
+            <span>{isCompleted ? 'Details' : 'RSVP'}</span>
+            <Icon name="arrowright" size={12} />
           </button>
         </div>
       </div>
@@ -1395,33 +1400,33 @@ const EventCard = ({ event }) => {
 const NewsCard = ({ newsItem }) => {
   const { setSelectedNews } = useTrust();
   return (
-    <div className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col group hover:-translate-y-1">
-      <div className="relative h-48 w-full overflow-hidden bg-slate-900">
+    <div className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group w-full">
+      <div className="relative h-40 sm:h-48 w-full overflow-hidden bg-slate-900">
         <img src={newsItem.thumbnail} alt={newsItem.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        <div className="absolute top-3.5 left-3.5">
-          <span className="bg-emerald-600 text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow">
+        <div className="absolute top-2.5 left-2.5">
+          <span className="bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow">
             {newsItem.category}
           </span>
         </div>
       </div>
-      <div className="p-6 flex-1 flex flex-col justify-between space-y-3">
-        <div className="space-y-2">
-          <div className="flex items-center space-x-3 text-xs text-slate-400">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-2.5">
+        <div className="space-y-1.5">
+          <div className="flex items-center space-x-2 text-[11px] text-slate-400">
             <span className="flex items-center space-x-1">
-              <Icon name="calendar" size={13} className="text-emerald-500" />
+              <Icon name="calendar" size={11} className="text-emerald-500" />
               <span>{newsItem.date}</span>
             </span>
             <span>•</span>
-            <span>{newsItem.readTime || '3 min read'}</span>
+            <span>{newsItem.readTime || '3 min'}</span>
           </div>
-          <h3 className="font-bold font-heading text-base sm:text-lg text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2">{newsItem.title}</h3>
-          <p className="text-slate-600 text-xs sm:text-sm line-clamp-3 leading-relaxed">{newsItem.shortDescription}</p>
+          <h3 className="font-bold font-heading text-sm sm:text-base text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2">{newsItem.title}</h3>
+          <p className="text-slate-600 text-xs line-clamp-2 leading-relaxed">{newsItem.shortDescription}</p>
         </div>
-        <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-xs text-slate-500 font-medium">{newsItem.author ? `By ${newsItem.author}` : 'Official Trust Desk'}</span>
+        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <span className="text-[11px] text-slate-500 truncate max-w-[140px]">{newsItem.author ? `${newsItem.author}` : 'Trust Desk'}</span>
           <button onClick={() => setSelectedNews(newsItem)} className="text-emerald-600 hover:text-emerald-700 font-bold font-heading text-xs flex items-center space-x-1">
-            <span>Read Story</span>
-            <Icon name="arrowright" size={14} />
+            <span>Read</span>
+            <Icon name="arrowright" size={13} />
           </button>
         </div>
       </div>
@@ -1429,7 +1434,7 @@ const NewsCard = ({ newsItem }) => {
   );
 };
 
-// --- INTERACTIVE DONATION MODAL ---
+// --- INTERACTIVE DONATION MODAL (Mobile Responsive) ---
 const DonateModal = () => {
   const { isDonateModalOpen, setIsDonateModalOpen, trustInfo, showToast } = useTrust();
   const [amount, setAmount] = useState('1000');
@@ -1445,42 +1450,42 @@ const DonateModal = () => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(trustInfo.upiId);
       setIsCopied(true);
-      showToast('UPI ID copied to clipboard!');
+      showToast('UPI ID copied!');
       setTimeout(() => setIsCopied(false), 3000);
     }
   };
 
   const handleConfirm = (e) => {
     e.preventDefault();
-    showToast(`Thank you ${donorName || 'Generous Donor'}! Your contribution directly supports free community welfare.`);
+    showToast(`Thank you ${donorName || 'Generous Donor'}! Contribution received.`);
     setIsDonateModalOpen(false);
   };
 
   const currentAmount = customAmount || amount;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 relative my-8 max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
+      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 relative my-auto max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-700 to-teal-800 text-white p-6 relative">
-          <button onClick={() => setIsDonateModalOpen(false)} className="absolute top-4 right-4 bg-black/30 hover:bg-black/60 text-white p-2 rounded-full transition">
-            <Icon name="x" size={20} />
+        <div className="bg-gradient-to-r from-emerald-700 to-teal-800 text-white p-4 sm:p-5 relative">
+          <button onClick={() => setIsDonateModalOpen(false)} className="absolute top-3.5 right-3.5 bg-black/30 hover:bg-black/60 text-white p-1.5 rounded-full transition">
+            <Icon name="x" size={18} />
           </button>
-          <div className="flex items-center space-x-3 mb-2">
-            <img src={trustInfo.logoUrl} alt="Logo" className="w-10 h-10 rounded-full bg-white p-0.5 shadow" />
-            <span className="bg-white/20 text-white text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full font-heading">
-              80G Tax Exemption Available
+          <div className="flex items-center space-x-2.5 mb-1.5">
+            <img src={trustInfo.logoUrl} alt="Logo" className="w-8 h-8 rounded-full bg-white p-0.5 shadow shrink-0" />
+            <span className="bg-white/20 text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full font-heading">
+              80G Tax Exemption
             </span>
           </div>
-          <h2 className="text-2xl font-black font-heading">Support Medidhisubbaiah Trust</h2>
-          <p className="text-emerald-100 text-xs mt-1">100% of contributions fund free tailoring classes, emergency blood drives & food relief.</p>
+          <h2 className="text-xl font-black font-heading">Support Medidhisubbaiah Trust</h2>
+          <p className="text-emerald-100 text-xs mt-0.5">100% of contributions fund free tailoring, blood drives & food relief.</p>
         </div>
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto space-y-5 flex-1 text-slate-800 text-sm">
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 text-slate-800 text-xs sm:text-sm">
           <div>
-            <label className="block text-xs font-bold font-heading text-slate-700 mb-2">Select Donation Amount (₹)</label>
-            <div className="grid grid-cols-4 gap-2">
+            <label className="block text-xs font-bold font-heading text-slate-700 mb-1.5">Select Amount (₹)</label>
+            <div className="grid grid-cols-4 gap-1.5">
               {['500', '1000', '2500', '5000'].map((amt) => (
                 <button
                   key={amt}
@@ -1489,9 +1494,9 @@ const DonateModal = () => {
                     setAmount(amt);
                     setCustomAmount('');
                   }}
-                  className={`py-2.5 rounded-xl font-black font-heading text-sm transition ${
+                  className={`py-2 rounded-xl font-black font-heading text-xs transition ${
                     amount === amt && !customAmount
-                      ? 'bg-emerald-600 text-white shadow-md'
+                      ? 'bg-emerald-600 text-white shadow'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
@@ -1499,45 +1504,45 @@ const DonateModal = () => {
                 </button>
               ))}
             </div>
-            <div className="mt-2">
+            <div className="mt-1.5">
               <input
                 type="number"
-                placeholder="Or enter custom amount in ₹"
+                placeholder="Or custom amount in ₹"
                 value={customAmount}
                 onChange={(e) => setCustomAmount(e.target.value)}
-                className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500"
               />
             </div>
           </div>
 
-          <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-200 space-y-3">
+          <div className="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200 space-y-2">
             <div className="flex justify-between items-center">
               <div>
-                <span className="text-xs text-slate-500 block">Direct UPI ID</span>
-                <strong className="text-slate-900 font-mono text-sm">{trustInfo.upiId}</strong>
+                <span className="text-[10px] text-slate-500 block">Direct UPI ID</span>
+                <strong className="text-slate-900 font-mono text-xs">{trustInfo.upiId}</strong>
               </div>
               <button
                 type="button"
                 onClick={handleCopyUpi}
-                className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 font-bold px-3 py-1.5 rounded-lg text-xs transition"
+                className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 font-bold px-2.5 py-1 rounded-lg text-[11px] transition"
               >
                 {isCopied ? 'Copied!' : 'Copy UPI'}
               </button>
             </div>
 
-            <div className="pt-2 border-t border-emerald-200 grid grid-cols-2 gap-2 text-xs text-slate-600">
+            <div className="pt-2 border-t border-emerald-200 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-slate-600">
               <div><strong>Bank:</strong> {trustInfo.accountDetails.bank}</div>
               <div><strong>IFSC:</strong> {trustInfo.accountDetails.ifsc}</div>
-              <div className="col-span-2"><strong>A/C No:</strong> {trustInfo.accountDetails.accountNumber}</div>
+              <div className="sm:col-span-2"><strong>A/C:</strong> {trustInfo.accountDetails.accountNumber}</div>
             </div>
           </div>
 
-          <form onSubmit={handleConfirm} className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <form onSubmit={handleConfirm} className="space-y-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
                 type="text"
                 required
-                placeholder="Your Full Name *"
+                placeholder="Full Name *"
                 value={donorName}
                 onChange={(e) => setDonorName(e.target.value)}
                 className="w-full p-2.5 border rounded-xl text-xs"
@@ -1553,7 +1558,7 @@ const DonateModal = () => {
             </div>
             <input
               type="text"
-              placeholder="PAN Card (Optional for 80G Tax Exemption)"
+              placeholder="PAN Card (Optional for 80G Receipt)"
               value={donorPan}
               onChange={(e) => setDonorPan(e.target.value)}
               className="w-full p-2.5 border rounded-xl text-xs"
@@ -1561,10 +1566,10 @@ const DonateModal = () => {
 
             <button
               type="submit"
-              className="donate-shine w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black font-heading py-3.5 rounded-xl shadow-lg shadow-emerald-600/30 transition text-sm flex items-center justify-center space-x-2"
+              className="donate-shine w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black font-heading py-3 rounded-xl shadow-md transition text-xs sm:text-sm flex items-center justify-center space-x-2"
             >
-              <span>Confirm Support for ₹{currentAmount}</span>
-              <Icon name="arrowright" size={16} />
+              <span>Confirm Support of ₹{currentAmount}</span>
+              <Icon name="arrowright" size={14} />
             </button>
           </form>
         </div>
@@ -1573,7 +1578,7 @@ const DonateModal = () => {
   );
 };
 
-// --- SERVICE DETAIL MODAL ---
+// --- SERVICE DETAIL MODAL (Mobile Responsive) ---
 const ServiceModal = () => {
   const { selectedService, setSelectedService, showToast } = useTrust();
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', message: '' });
@@ -1596,76 +1601,76 @@ const ServiceModal = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
-      <div className="bg-white w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 relative my-8 max-h-[90vh] flex flex-col">
-        <div className="relative h-52 sm:h-64 w-full overflow-hidden bg-slate-900">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
+      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 relative my-auto max-h-[90vh] flex flex-col">
+        <div className="relative h-44 sm:h-56 w-full overflow-hidden bg-slate-900 shrink-0">
           <img src={selectedService.image} alt={selectedService.title} className="w-full h-full object-cover opacity-80" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-          <button onClick={() => setSelectedService(null)} className="absolute top-4 right-4 bg-black/60 hover:bg-emerald-600 text-white p-2 rounded-full transition">
-            <Icon name="x" size={20} />
+          <button onClick={() => setSelectedService(null)} className="absolute top-3.5 right-3.5 bg-black/60 hover:bg-emerald-600 text-white p-1.5 rounded-full transition">
+            <Icon name="x" size={18} />
           </button>
-          <div className="absolute bottom-4 left-6 right-6 text-white">
-            <span className="inline-block bg-emerald-600 text-white text-xs font-bold font-heading uppercase tracking-wider px-3 py-1 rounded-full mb-2 shadow">
+          <div className="absolute bottom-3 left-4 right-4 text-white">
+            <span className="inline-block bg-emerald-600 text-white text-[10px] font-bold font-heading uppercase px-2.5 py-0.5 rounded-full mb-1">
               {selectedService.category}
             </span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-black font-heading">{selectedService.title}</h2>
+            <h2 className="text-lg sm:text-2xl font-black font-heading leading-tight">{selectedService.title}</h2>
           </div>
         </div>
 
-        <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-700">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-100 text-xs sm:text-sm">
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 text-slate-700 text-xs sm:text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-emerald-50/70 p-3 rounded-xl border border-emerald-100 text-xs">
             {selectedService.beneficiaries && (
               <div>
-                <span className="text-slate-500 block font-medium">Impact Reached</span>
-                <strong className="text-emerald-800 font-bold font-heading">{selectedService.beneficiaries}</strong>
+                <span className="text-slate-500 block text-[10px]">Impact</span>
+                <strong className="text-emerald-800 font-bold">{selectedService.beneficiaries}</strong>
               </div>
             )}
             {selectedService.duration && (
               <div>
-                <span className="text-slate-500 block font-medium">Duration</span>
-                <strong className="text-slate-900 font-bold font-heading">{selectedService.duration}</strong>
+                <span className="text-slate-500 block text-[10px]">Duration</span>
+                <strong className="text-slate-900 font-bold">{selectedService.duration}</strong>
               </div>
             )}
             {selectedService.location && (
               <div className="col-span-2 sm:col-span-1">
-                <span className="text-slate-500 block font-medium">Location</span>
-                <strong className="text-slate-900 font-bold font-heading">{selectedService.location}</strong>
+                <span className="text-slate-500 block text-[10px]">Location</span>
+                <strong className="text-slate-900 font-bold truncate block">{selectedService.location}</strong>
               </div>
             )}
           </div>
 
           <div>
-            <h3 className="text-base font-bold font-heading text-slate-900 mb-2 border-l-4 border-emerald-600 pl-2.5">Program Overview</h3>
-            <p className="text-sm sm:text-base leading-relaxed text-slate-600">{selectedService.fullDescription || selectedService.shortDescription}</p>
+            <h3 className="font-bold font-heading text-slate-900 mb-1 border-l-3 border-emerald-600 pl-2">Overview</h3>
+            <p className="leading-relaxed text-slate-600">{selectedService.fullDescription || selectedService.shortDescription}</p>
           </div>
 
           {selectedService.features && (
             <div>
-              <h3 className="text-base font-bold font-heading text-slate-900 mb-3 border-l-4 border-emerald-600 pl-2.5">Key Highlights</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <h3 className="font-bold font-heading text-slate-900 mb-2 border-l-3 border-emerald-600 pl-2">Program Features</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {selectedService.features.map((feat, idx) => (
-                  <div key={idx} className="flex items-start space-x-2.5 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                    <div className="p-1 rounded-full bg-emerald-100 text-emerald-600 mt-0.5">
-                      <Icon name="check" size={14} />
+                  <div key={idx} className="flex items-start space-x-2 bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs">
+                    <div className="p-0.5 rounded-full bg-emerald-100 text-emerald-600 mt-0.5 shrink-0">
+                      <Icon name="check" size={12} />
                     </div>
-                    <span className="text-xs sm:text-sm font-medium text-slate-700">{feat}</span>
+                    <span className="font-medium text-slate-700">{feat}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
-            <h3 className="text-base font-bold font-heading text-slate-900 mb-1">Apply for Free Enrollment</h3>
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+            <h3 className="font-bold font-heading text-slate-900 mb-1.5">Free Admission Application</h3>
+            <form onSubmit={handleSubmit} className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <input
                   type="text"
                   required
                   placeholder="Full Name *"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border rounded-xl"
+                  className="w-full px-3 py-2 text-xs border rounded-xl"
                 />
                 <input
                   type="tel"
@@ -1673,13 +1678,13 @@ const ServiceModal = () => {
                   placeholder="Phone Number *"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border rounded-xl"
+                  className="w-full px-3 py-2 text-xs border rounded-xl"
                 />
               </div>
-              <div className="flex justify-end space-x-3 pt-2">
-                <button type="button" onClick={() => setSelectedService(null)} className="px-4 py-2 text-sm font-semibold text-slate-600">Close</button>
-                <button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl text-sm font-bold font-heading shadow">
-                  {isSubmitting ? 'Submitting...' : 'Submit Free Application'}
+              <div className="flex justify-end space-x-2 pt-1">
+                <button type="button" onClick={() => setSelectedService(null)} className="px-3 py-1.5 text-xs font-semibold text-slate-600">Close</button>
+                <button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl text-xs font-bold font-heading shadow">
+                  {isSubmitting ? 'Submitting...' : 'Apply Free'}
                 </button>
               </div>
             </form>
@@ -1713,29 +1718,29 @@ const EventModal = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border my-8">
-        <div className="relative h-48 w-full bg-slate-900">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border my-auto max-h-[90vh] flex flex-col">
+        <div className="relative h-40 sm:h-48 w-full bg-slate-900 shrink-0">
           <img src={selectedEvent.image} alt={selectedEvent.title} className="w-full h-full object-cover opacity-80" />
-          <button onClick={() => setSelectedEvent(null)} className="absolute top-4 right-4 bg-black/60 text-white p-2 rounded-full">
-            <Icon name="x" size={20} />
+          <button onClick={() => setSelectedEvent(null)} className="absolute top-3.5 right-3.5 bg-black/60 text-white p-1.5 rounded-full">
+            <Icon name="x" size={18} />
           </button>
-          <div className="absolute bottom-4 left-6 right-6 text-white">
-            <h2 className="text-xl font-bold font-heading">{selectedEvent.title}</h2>
+          <div className="absolute bottom-3 left-4 right-4 text-white">
+            <h2 className="text-base sm:text-xl font-bold font-heading leading-tight">{selectedEvent.title}</h2>
           </div>
         </div>
-        <div className="p-6 space-y-4">
-          <p className="text-sm text-slate-600">{selectedEvent.description}</p>
+        <div className="p-4 sm:p-5 space-y-3 text-xs sm:text-sm overflow-y-auto">
+          <p className="text-slate-600 leading-relaxed">{selectedEvent.description}</p>
           <p className="text-xs text-slate-500">📍 {selectedEvent.location} | ⏰ {selectedEvent.time}</p>
           
           {selectedEvent.status === 'Upcoming' && (
-            <form onSubmit={handleRegister} className="space-y-3 pt-2">
-              <input type="text" required placeholder="Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full p-2.5 border rounded-xl text-sm" />
-              <input type="tel" required placeholder="Phone *" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full p-2.5 border rounded-xl text-sm" />
-              <div className="flex justify-end space-x-2">
-                <button type="button" onClick={() => setSelectedEvent(null)} className="px-4 py-2 text-sm">Cancel</button>
-                <button type="submit" className="bg-emerald-600 text-white px-5 py-2 rounded-xl text-sm font-bold font-heading shadow">
-                  {isSubmitting ? 'Registering...' : 'Confirm Free RSVP'}
+            <form onSubmit={handleRegister} className="space-y-2 pt-1">
+              <input type="text" required placeholder="Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full p-2 border rounded-xl text-xs" />
+              <input type="tel" required placeholder="Phone *" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full p-2 border rounded-xl text-xs" />
+              <div className="flex justify-end space-x-2 pt-1">
+                <button type="button" onClick={() => setSelectedEvent(null)} className="px-3 py-1.5 text-xs">Cancel</button>
+                <button type="submit" className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold font-heading shadow">
+                  {isSubmitting ? 'Registering...' : 'Confirm RSVP'}
                 </button>
               </div>
             </form>
@@ -1752,23 +1757,23 @@ const NewsModal = () => {
   if (!selectedNews) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden border my-8">
-        <div className="relative h-56 w-full bg-slate-900">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border my-auto max-h-[90vh] flex flex-col">
+        <div className="relative h-44 sm:h-52 w-full bg-slate-900 shrink-0">
           <img src={selectedNews.thumbnail} alt={selectedNews.title} className="w-full h-full object-cover opacity-80" />
-          <button onClick={() => setSelectedNews(null)} className="absolute top-4 right-4 bg-black/60 text-white p-2 rounded-full">
-            <Icon name="x" size={20} />
+          <button onClick={() => setSelectedNews(null)} className="absolute top-3.5 right-3.5 bg-black/60 text-white p-1.5 rounded-full">
+            <Icon name="x" size={18} />
           </button>
-          <div className="absolute bottom-4 left-6 right-6 text-white">
-            <span className="bg-emerald-600 text-xs px-2.5 py-0.5 rounded-full font-bold font-heading uppercase">{selectedNews.category}</span>
-            <h2 className="text-xl font-black font-heading mt-1">{selectedNews.title}</h2>
+          <div className="absolute bottom-3 left-4 right-4 text-white">
+            <span className="bg-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-bold font-heading uppercase">{selectedNews.category}</span>
+            <h2 className="text-base sm:text-xl font-black font-heading mt-1 leading-tight">{selectedNews.title}</h2>
           </div>
         </div>
-        <div className="p-6 space-y-4 text-sm text-slate-700">
-          <div className="text-xs text-slate-400">📅 {selectedNews.date} • {selectedNews.author || 'Trust Desk'}</div>
+        <div className="p-4 sm:p-5 space-y-3 text-xs sm:text-sm text-slate-700 overflow-y-auto">
+          <div className="text-[11px] text-slate-400">📅 {selectedNews.date} • {selectedNews.author || 'Trust Desk'}</div>
           <p className="whitespace-pre-line leading-relaxed">{selectedNews.content || selectedNews.shortDescription}</p>
-          <div className="flex justify-end pt-4">
-            <button onClick={() => setSelectedNews(null)} className="bg-slate-900 text-white text-xs px-5 py-2.5 rounded-xl font-bold font-heading">Close</button>
+          <div className="flex justify-end pt-2">
+            <button onClick={() => setSelectedNews(null)} className="bg-slate-900 text-white text-xs px-4 py-2 rounded-xl font-bold font-heading">Close</button>
           </div>
         </div>
       </div>
@@ -1792,27 +1797,27 @@ const LightboxModal = () => {
   };
 
   return (
-    <div onClick={() => setLightboxIndex(null)} className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-4 animate-fadeIn">
+    <div onClick={() => setLightboxIndex(null)} className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-3 sm:p-4 animate-fadeIn">
       <div className="flex justify-between items-center text-white" onClick={(e) => e.stopPropagation()}>
-        <span className="bg-emerald-600 text-xs px-3 py-1 rounded-full font-bold uppercase font-heading">{currentItem.category}</span>
+        <span className="bg-emerald-600 text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase font-heading">{currentItem.category}</span>
         <button onClick={() => setLightboxIndex(null)} className="bg-white/10 text-white p-2 rounded-full">
-          <Icon name="x" size={24} />
+          <Icon name="x" size={20} />
         </button>
       </div>
 
-      <div className="relative flex-1 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-        <button onClick={handlePrev} className="absolute left-2 bg-black/50 text-white p-3 rounded-full">
-          <Icon name="chevronleft" size={24} />
+      <div className="relative flex-1 flex items-center justify-center py-2" onClick={(e) => e.stopPropagation()}>
+        <button onClick={handlePrev} className="absolute left-2 bg-black/50 text-white p-2 sm:p-3 rounded-full z-10">
+          <Icon name="chevronleft" size={20} />
         </button>
-        <img src={currentItem.imageUrl} alt={currentItem.title} className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl" />
-        <button onClick={handleNext} className="absolute right-2 bg-black/50 text-white p-3 rounded-full">
-          <Icon name="chevronright" size={24} />
+        <img src={currentItem.imageUrl} alt={currentItem.title} className="max-h-[70vh] max-w-full object-contain rounded-xl shadow-2xl" />
+        <button onClick={handleNext} className="absolute right-2 bg-black/50 text-white p-2 sm:p-3 rounded-full z-10">
+          <Icon name="chevronright" size={20} />
         </button>
       </div>
 
-      <div className="text-center text-white p-4 bg-black/40 rounded-2xl max-w-xl mx-auto" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-bold font-heading">{currentItem.title}</h3>
-        <p className="text-xs text-slate-300">{currentItem.caption}</p>
+      <div className="text-center text-white p-3 bg-black/40 rounded-xl max-w-xl mx-auto w-full" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-bold font-heading text-xs sm:text-sm">{currentItem.title}</h3>
+        <p className="text-[11px] text-slate-300 line-clamp-2">{currentItem.caption}</p>
       </div>
     </div>
   );
@@ -1824,14 +1829,14 @@ const Toast = () => {
   if (!toast) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center space-x-3 px-5 py-3 rounded-2xl shadow-2xl border bg-slate-950 text-white text-sm font-medium animate-bounce-short">
+    <div className="fixed bottom-4 right-4 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-xl shadow-2xl border bg-slate-950 text-white text-xs font-medium max-w-[90vw] animate-fadeIn">
       <span className="text-emerald-400 font-bold">●</span>
-      <span>{toast.message}</span>
+      <span className="truncate">{toast.message}</span>
     </div>
   );
 };
 
-// --- FLOATING QUICK ACTION BUTTONS ---
+// --- FLOATING QUICK ACTION BUTTONS (Mobile Safe) ---
 const FloatingActions = () => {
   const { trustInfo } = useTrust();
   const [showTop, setShowTop] = useState(false);
@@ -1843,32 +1848,32 @@ const FloatingActions = () => {
   }, []);
 
   return (
-    <div className="fixed bottom-6 left-6 z-40 flex flex-col space-y-3">
+    <div className="fixed bottom-4 left-3 sm:bottom-6 sm:left-6 z-40 flex flex-col space-y-2.5">
       {/* WhatsApp Button */}
       <a
         href={trustInfo.socials.whatsapp}
         target="_blank"
         rel="noreferrer"
-        className="w-12 h-12 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition-transform"
+        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
         aria-label="WhatsApp Helpline"
       >
-        <Icon name="share" size={22} />
+        <Icon name="share" size={20} />
       </a>
 
       {/* Emergency Call Helpline */}
       <a
         href={`tel:${trustInfo.emergencyBloodHelpline}`}
-        className="w-12 h-12 rounded-full bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition-transform animate-pulse"
+        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center shadow-xl hover:scale-105 transition-transform animate-pulse"
         aria-label="Emergency Blood Call"
       >
-        <Icon name="heartpulse" size={22} />
+        <Icon name="heartpulse" size={20} />
       </a>
 
       {/* Scroll to Top */}
       {showTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-xl hover:bg-emerald-600 transition"
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-lg hover:bg-emerald-600 transition"
           aria-label="Scroll to top"
         >
           ↑
@@ -1887,7 +1892,7 @@ const HomePage = () => {
   const gallerySpotlight = gallery.slice(0, 8);
 
   return (
-    <div className="space-y-16 sm:space-y-24">
+    <div className="space-y-12 sm:space-y-20 w-full max-w-full overflow-hidden">
       {/* Hero Slider */}
       <HeroSlider />
 
@@ -1895,48 +1900,48 @@ const HomePage = () => {
       <HeroFeatureCards />
 
       {/* About Foundation & Founder Showcase */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-6 space-y-5" data-aos="fade-right">
-            <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3.5 py-1 rounded-full text-xs font-bold font-heading uppercase tracking-widest">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-6 space-y-4" data-aos="fade-right">
+            <div className="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold font-heading uppercase tracking-wider">
               <span>మేడిది సుబ్బయ్య ట్రస్ట్</span>
               <span>•</span>
-              <span>Welcome to Medidhisubbaiah Trust</span>
+              <span>About Us</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black font-heading text-slate-900 tracking-tight leading-tight">
+            <h2 className="text-2xl sm:text-4xl font-black font-heading text-slate-900 tracking-tight leading-tight">
               Serving Humanity With <br />
               <span className="text-emerald-600">Dignity, Care & Transparency</span>
             </h2>
-            <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
+            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
               Medidhisubbaiah Trust is dedicated to the social, economic, and educational upliftment of rural and urban communities. From organizing 100% free women vocational skills to 24/7 blood donor coordination, Annadhanam food distributions, summer drinking water kiosks, and sports meets—we work relentlessly at the grassroots.
             </p>
 
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <div className="text-emerald-600 font-black font-heading text-2xl">100% Free</div>
-                <div className="text-xs text-slate-600 font-bold font-heading mt-0.5">Welfare & Skill Training</div>
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                <div className="text-emerald-600 font-black font-heading text-xl sm:text-2xl">100% Free</div>
+                <div className="text-[11px] sm:text-xs text-slate-600 font-bold font-heading">Welfare & Skills</div>
               </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <div className="text-emerald-600 font-black font-heading text-2xl">80,000+</div>
-                <div className="text-xs text-slate-600 font-bold font-heading mt-0.5">Beneficiaries Reached</div>
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                <div className="text-emerald-600 font-black font-heading text-xl sm:text-2xl">80,000+</div>
+                <div className="text-[11px] sm:text-xs text-slate-600 font-bold font-heading">Beneficiaries</div>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 pt-2">
-              <button onClick={() => navigate('about')} className="bg-slate-900 hover:bg-emerald-600 text-white font-bold font-heading px-6 py-3 rounded-xl text-sm transition flex items-center space-x-2">
-                <span>About Our Mission</span>
-                <Icon name="arrowright" size={16} />
+            <div className="flex flex-col sm:flex-row gap-3 pt-1">
+              <button onClick={() => navigate('about')} className="w-full sm:w-auto bg-slate-900 hover:bg-emerald-600 text-white font-bold font-heading px-5 py-3 rounded-xl text-xs sm:text-sm transition flex items-center justify-center space-x-2">
+                <span>Our Mission & Legacy</span>
+                <Icon name="arrowright" size={14} />
               </button>
-              <button onClick={() => setIsDonateModalOpen(true)} className="donate-shine bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-6 py-3 rounded-xl text-sm shadow-md transition">
+              <button onClick={() => setIsDonateModalOpen(true)} className="donate-shine w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-5 py-3 rounded-xl text-xs sm:text-sm shadow transition">
                 Support Our Programs
               </button>
             </div>
           </div>
 
           <div className="lg:col-span-6" data-aos="fade-left">
-            <div className="relative flex items-center justify-center p-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-white rounded-3xl border border-emerald-200 shadow-xl">
-              <div className="text-center space-y-4">
-                <div className="w-44 h-44 sm:w-56 sm:h-56 mx-auto rounded-full p-2 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-2xl">
+            <div className="relative flex items-center justify-center p-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-white rounded-3xl border border-emerald-200 shadow-lg">
+              <div className="text-center space-y-3">
+                <div className="w-36 h-36 sm:w-48 sm:h-48 mx-auto rounded-full p-1.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-xl">
                   <img
                     src={trustInfo.logoUrl}
                     alt="Sri Medidhi Subbaiah Medallion Logo"
@@ -1944,9 +1949,9 @@ const HomePage = () => {
                   />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-black font-heading text-slate-900">శ్రీ మేడిది సుబ్బయ్య స్మారక ట్రస్ట్</h3>
-                  <p className="text-xs sm:text-sm font-bold text-emerald-800 font-heading mt-1">Sri Medidhisubbaiah Memorial Charitable Trust</p>
-                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Committed to preserving human dignity, self-reliance, and uplifting community welfare across generations.</p>
+                  <h3 className="text-lg sm:text-xl font-black font-heading text-slate-900">శ్రీ మేడిది సుబ్బయ్య స్మారక ట్రస్ట్</h3>
+                  <p className="text-xs font-bold text-emerald-800 font-heading mt-0.5">Sri Medidhisubbaiah Memorial Trust</p>
+                  <p className="text-[11px] text-slate-500 mt-1 max-w-xs mx-auto">Committed to preserving human dignity, self-reliance, and uplifting community welfare across generations.</p>
                 </div>
               </div>
             </div>
@@ -1958,70 +1963,70 @@ const HomePage = () => {
       <StatsCounter />
 
       {/* Featured Causes / Services */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-2">
           <div>
-            <span className="text-emerald-700 font-bold font-heading text-xs uppercase tracking-widest bg-emerald-50 px-3.5 py-1 rounded-full inline-block mb-2 border border-emerald-200">
+            <span className="text-emerald-700 font-bold font-heading text-[11px] sm:text-xs uppercase tracking-widest bg-emerald-50 px-3 py-0.5 rounded-full inline-block mb-1.5 border border-emerald-200">
               Our Core Initiatives
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black font-heading text-slate-900 tracking-tight">Welfare Causes & Programs</h2>
+            <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 tracking-tight">Welfare Causes & Programs</h2>
           </div>
-          <button onClick={() => navigate('services')} className="text-emerald-600 font-bold font-heading text-sm flex items-center space-x-1 hover:underline">
+          <button onClick={() => navigate('services')} className="text-emerald-600 font-bold font-heading text-xs sm:text-sm flex items-center space-x-1 hover:underline self-start sm:self-auto">
             <span>View All ({services.length}) Services</span>
-            <Icon name="arrowright" size={16} />
+            <Icon name="arrowright" size={14} />
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {featuredServices.map(s => <ServiceCard key={s.id} service={s} />)}
         </div>
       </section>
 
       {/* Upcoming Events */}
-      <section className="bg-slate-50 py-16 sm:py-20 border-y border-slate-200">
+      <section className="bg-slate-50 py-12 sm:py-16 border-y border-slate-200 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-2">
             <div>
-              <span className="text-emerald-700 font-bold font-heading text-xs uppercase tracking-widest bg-white border border-emerald-200 px-3.5 py-1 rounded-full inline-block mb-2">
+              <span className="text-emerald-700 font-bold font-heading text-[11px] sm:text-xs uppercase tracking-widest bg-white border border-emerald-200 px-3 py-0.5 rounded-full inline-block mb-1.5">
                 Join In Person
               </span>
-              <h2 className="text-3xl sm:text-4xl font-black font-heading text-slate-900 tracking-tight">Upcoming Drives & Events</h2>
+              <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 tracking-tight">Upcoming Drives & Events</h2>
             </div>
-            <button onClick={() => navigate('events')} className="text-emerald-600 font-bold font-heading text-sm flex items-center space-x-1 hover:underline">
+            <button onClick={() => navigate('events')} className="text-emerald-600 font-bold font-heading text-xs sm:text-sm flex items-center space-x-1 hover:underline self-start sm:self-auto">
               <span>View All Events</span>
-              <Icon name="arrowright" size={16} />
+              <Icon name="arrowright" size={14} />
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {upcomingEvents.map(e => <EventCard key={e.id} event={e} />)}
           </div>
         </div>
       </section>
 
       {/* Photo Gallery Spotlight */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-2">
           <div>
-            <span className="text-emerald-700 font-bold font-heading text-xs uppercase tracking-widest bg-emerald-50 px-3.5 py-1 rounded-full inline-block mb-2">
+            <span className="text-emerald-700 font-bold font-heading text-[11px] sm:text-xs uppercase tracking-widest bg-emerald-50 px-3 py-0.5 rounded-full inline-block mb-1.5">
               Visual Chronicles
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black font-heading text-slate-900 tracking-tight">Moments of Social Service</h2>
+            <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 tracking-tight">Moments of Social Service</h2>
           </div>
-          <button onClick={() => navigate('gallery')} className="text-emerald-600 font-bold font-heading text-sm flex items-center space-x-1 hover:underline">
-            <span>Explore Full Gallery</span>
-            <Icon name="arrowright" size={16} />
+          <button onClick={() => navigate('gallery')} className="text-emerald-600 font-bold font-heading text-xs sm:text-sm flex items-center space-x-1 hover:underline self-start sm:self-auto">
+            <span>Explore Gallery</span>
+            <Icon name="arrowright" size={14} />
           </button>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
           {gallerySpotlight.map((item, idx) => (
             <div
               key={item.id}
               onClick={() => setLightboxIndex(idx)}
-              className="group relative h-48 sm:h-56 rounded-2xl overflow-hidden cursor-pointer shadow-md bg-slate-900 border"
+              className="group relative h-36 sm:h-52 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer shadow bg-slate-900 border"
             >
-              <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent opacity-0 group-hover:opacity-100 transition p-4 flex flex-col justify-between text-white">
-                <span className="bg-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase self-start font-heading">{item.category}</span>
-                <p className="text-xs font-bold font-heading leading-tight line-clamp-2">{item.title}</p>
+              <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent opacity-0 group-hover:opacity-100 transition p-2.5 sm:p-4 flex flex-col justify-between text-white">
+                <span className="bg-emerald-600 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase self-start font-heading">{item.category}</span>
+                <p className="text-[11px] sm:text-xs font-bold font-heading leading-tight line-clamp-2">{item.title}</p>
               </div>
             </div>
           ))}
@@ -2029,23 +2034,23 @@ const HomePage = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="bg-emerald-50/50 py-16 sm:py-20 border-y border-emerald-100">
+      <section className="bg-emerald-50/50 py-12 sm:py-16 border-y border-emerald-100 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-emerald-700 font-bold font-heading text-xs uppercase tracking-widest bg-white border border-emerald-200 px-3.5 py-1 rounded-full inline-block mb-2">
+          <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+            <span className="text-emerald-700 font-bold font-heading text-[11px] sm:text-xs uppercase tracking-widest bg-white border border-emerald-200 px-3 py-0.5 rounded-full inline-block mb-1.5">
               Voices of Change
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black font-heading text-slate-900">What Our Community Says</h2>
+            <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900">What Our Community Says</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             {testimonials.map((t) => (
-              <div key={t.id} className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 shadow-md space-y-4 flex flex-col justify-between">
-                <p className="text-slate-600 text-sm leading-relaxed italic">"{t.quote}"</p>
-                <div className="flex items-center space-x-3 pt-4 border-t border-slate-100">
-                  <img src={t.image} alt={t.name} className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500" />
-                  <div>
-                    <h4 className="font-extrabold font-heading text-sm text-slate-900">{t.name}</h4>
-                    <p className="text-xs text-slate-500">{t.role}</p>
+              <div key={t.id} className="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-emerald-100 shadow-sm space-y-3 flex flex-col justify-between">
+                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed italic">"{t.quote}"</p>
+                <div className="flex items-center space-x-3 pt-3 border-t border-slate-100">
+                  <img src={t.image} alt={t.name} className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500 shrink-0" />
+                  <div className="min-w-0">
+                    <h4 className="font-extrabold font-heading text-xs sm:text-sm text-slate-900 truncate">{t.name}</h4>
+                    <p className="text-[11px] text-slate-500 truncate">{t.role}</p>
                   </div>
                 </div>
               </div>
@@ -2055,42 +2060,42 @@ const HomePage = () => {
       </section>
 
       {/* Latest News & Stories */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-2">
           <div>
-            <span className="text-emerald-700 font-bold font-heading text-xs uppercase tracking-widest bg-emerald-50 px-3.5 py-1 rounded-full inline-block mb-2">
+            <span className="text-emerald-700 font-bold font-heading text-[11px] sm:text-xs uppercase tracking-widest bg-emerald-50 px-3 py-0.5 rounded-full inline-block mb-1.5">
               Press & Media
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black font-heading text-slate-900 tracking-tight">Latest News & Stories</h2>
+            <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 tracking-tight">Latest News & Stories</h2>
           </div>
-          <button onClick={() => navigate('news')} className="text-emerald-600 font-bold font-heading text-sm flex items-center space-x-1 hover:underline">
+          <button onClick={() => navigate('news')} className="text-emerald-600 font-bold font-heading text-xs sm:text-sm flex items-center space-x-1 hover:underline self-start sm:self-auto">
             <span>Read All News</span>
-            <Icon name="arrowright" size={16} />
+            <Icon name="arrowright" size={14} />
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {latestNews.map(n => <NewsCard key={n.id} newsItem={n} />)}
         </div>
       </section>
 
-      {/* Big Impact Call To Action */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <div className="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 rounded-3xl p-8 sm:p-14 text-white shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8">
-          <div className="space-y-3 max-w-2xl text-center lg:text-left">
-            <span className="bg-white/20 text-white text-xs font-black font-heading uppercase tracking-wider px-3 py-1 rounded-full">
-              Together We Can Make A Difference
+      {/* Big Call To Action */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 w-full">
+        <div className="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 rounded-2xl sm:rounded-3xl p-6 sm:p-12 text-white shadow-xl flex flex-col lg:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl text-center lg:text-left">
+            <span className="bg-white/20 text-white text-[10px] sm:text-xs font-black font-heading uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+              Together We Make A Difference
             </span>
-            <h2 className="text-2xl sm:text-4xl font-black font-heading">Help Us Bring Light & Hope To Deserving Lives</h2>
-            <p className="text-emerald-100 text-sm sm:text-base leading-relaxed">
+            <h2 className="text-xl sm:text-3xl font-black font-heading">Help Us Bring Light & Hope To Deserving Lives</h2>
+            <p className="text-emerald-100 text-xs sm:text-sm leading-relaxed">
               Every voluntary hour, blood donation, and rupee helps a family eat, a woman learn tailoring, and a child attend school.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3.5 shrink-0">
-            <button onClick={() => setIsDonateModalOpen(true)} className="donate-shine bg-white text-emerald-800 font-black font-heading px-8 py-4 rounded-xl text-base shadow-2xl hover:bg-emerald-50">
+          <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto shrink-0">
+            <button onClick={() => setIsDonateModalOpen(true)} className="donate-shine w-full sm:w-auto bg-white text-emerald-800 font-black font-heading px-6 py-3.5 rounded-xl text-xs sm:text-sm shadow-xl hover:bg-emerald-50 text-center">
               Donate Online Now
             </button>
-            <button onClick={() => navigate('contact')} className="bg-slate-950/80 text-white font-bold font-heading px-7 py-4 rounded-xl text-base border border-white/20 hover:bg-slate-950">
-              Join as Volunteer
+            <button onClick={() => navigate('contact')} className="w-full sm:w-auto bg-slate-950/80 text-white font-bold font-heading px-6 py-3.5 rounded-xl text-xs sm:text-sm border border-white/20 hover:bg-slate-950 text-center">
+              Join Volunteer
             </button>
           </div>
         </div>
@@ -2099,7 +2104,7 @@ const HomePage = () => {
   );
 };
 
-// --- ABOUT PAGE ---
+// --- ABOUT PAGE (Mobile Contained) ---
 const AboutPage = () => {
   const { navigate, setIsDonateModalOpen, trustInfo } = useTrust();
   const objectives = [
@@ -2112,47 +2117,47 @@ const AboutPage = () => {
   ];
 
   return (
-    <div className="space-y-12 sm:space-y-16 py-8">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-14 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="max-w-2xl space-y-3">
-            <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-xs font-bold font-heading uppercase tracking-wider px-3.5 py-1 rounded-full inline-block">About Medidhisubbaiah Trust</span>
-            <h1 className="text-3xl sm:text-5xl font-black font-heading leading-tight">A Legacy of Selfless Service & <span className="text-emerald-400">Integrity</span></h1>
-            <p className="text-slate-300 text-base sm:text-lg mt-3 leading-relaxed">
+    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="max-w-2xl space-y-2.5">
+            <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block">About Medidhisubbaiah Trust</span>
+            <h1 className="text-2xl sm:text-4xl font-black font-heading leading-tight">A Legacy of Selfless Service & <span className="text-emerald-400">Integrity</span></h1>
+            <p className="text-slate-300 text-xs sm:text-base mt-1 leading-relaxed">
               Medidhisubbaiah Trust is a registered non-profit charitable social-service organization committed to creating equal opportunities, supporting vulnerable families, and empowering rural and urban youth through education and vocational training.
             </p>
           </div>
-          <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full p-2 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-2xl shrink-0">
+          <div className="w-28 h-28 sm:w-40 sm:h-40 rounded-full p-1.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-xl shrink-0">
             <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
           </div>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-emerald-50/60 border border-emerald-200 rounded-3xl p-8 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md"><Icon name="heart" size={24} /></div>
-            <h2 className="text-2xl font-black font-heading text-slate-900">Our Mission</h2>
-            <p className="text-slate-700 text-sm leading-relaxed">To alleviate poverty and vulnerability through holistic community interventions: providing 100% free livelihood training for women, facilitating prompt emergency blood donations, distributing nourishing food, supplying clean drinking water, and fostering youth potential through education and sports.</p>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow"><Icon name="heart" size={20} /></div>
+            <h2 className="text-xl sm:text-2xl font-black font-heading text-slate-900">Our Mission</h2>
+            <p className="text-slate-700 text-xs sm:text-sm leading-relaxed">To alleviate poverty and vulnerability through holistic community interventions: providing 100% free livelihood training for women, facilitating prompt emergency blood donations, distributing nourishing food, supplying clean drinking water, and fostering youth potential through education and sports.</p>
           </div>
-          <div className="bg-slate-900 text-white border border-slate-800 rounded-3xl p-8 space-y-4 shadow-xl">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md"><Icon name="eye" size={24} /></div>
-            <h2 className="text-2xl font-black font-heading text-white">Our Vision</h2>
-            <p className="text-slate-300 text-sm leading-relaxed">A compassionate, self-reliant society where no family suffers from hunger, no emergency patient loses life due to lack of blood, every woman has vocational independence, and every child possesses the resources to learn, compete, and flourish.</p>
+          <div className="bg-slate-900 text-white border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-3 shadow-xl">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow"><Icon name="eye" size={20} /></div>
+            <h2 className="text-xl sm:text-2xl font-black font-heading text-white">Our Vision</h2>
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">A compassionate, self-reliant society where no family suffers from hunger, no emergency patient loses life due to lack of blood, every woman has vocational independence, and every child possesses the resources to learn, compete, and flourish.</p>
           </div>
         </div>
       </section>
 
-      <section className="bg-slate-50 py-16 border-y border-slate-200">
+      <section className="bg-slate-50 py-12 sm:py-16 border-y border-slate-200 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900">Strategic Core Objectives</h2>
+          <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-black font-heading text-slate-900">Strategic Core Objectives</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {objectives.map((obj, idx) => (
-              <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Icon name={obj.icon} size={20} /></div>
-                <h3 className="font-bold font-heading text-base text-slate-900">{obj.title}</h3>
+              <div key={idx} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm space-y-2">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Icon name={obj.icon} size={18} /></div>
+                <h3 className="font-bold font-heading text-sm sm:text-base text-slate-900">{obj.title}</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">{obj.desc}</p>
               </div>
             ))}
@@ -2163,7 +2168,7 @@ const AboutPage = () => {
   );
 };
 
-// --- SERVICES PAGE ---
+// --- SERVICES PAGE (Mobile Safe) ---
 const ServicesPage = () => {
   const { services } = useTrust();
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -2180,24 +2185,24 @@ const ServicesPage = () => {
   }, [services, selectedCategory, searchQuery]);
 
   return (
-    <div className="space-y-12 sm:space-y-16 py-8">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-14 shadow-2xl">
-          <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-xs font-bold font-heading uppercase tracking-wider px-3.5 py-1 rounded-full inline-block mb-3">100% Free Welfare Services</span>
-          <h1 className="text-3xl sm:text-5xl font-black font-heading">Our Community <span className="text-emerald-400">Services & Causes</span></h1>
-          <p className="text-slate-300 text-base mt-2 max-w-2xl">Explore our core initiatives designed to foster livelihood self-reliance, ensure food security, save critical lives, and empower future generations.</p>
+    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
+          <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">100% Free Welfare Services</span>
+          <h1 className="text-2xl sm:text-4xl font-black font-heading">Our Community <span className="text-emerald-400">Services & Causes</span></h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">Explore our core initiatives designed to foster livelihood self-reliance, ensure food security, save critical lives, and empower future generations.</p>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-          <div className="flex items-center space-x-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 mb-6">
+          <div className="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1.5 md:pb-0 scrollbar-none">
             {categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold font-heading whitespace-nowrap transition ${
-                  selectedCategory === cat ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold font-heading whitespace-nowrap transition ${
+                  selectedCategory === cat ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
                 {cat}
@@ -2211,13 +2216,13 @@ const ServicesPage = () => {
               placeholder="Search services..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500"
             />
-            <div className="absolute left-3.5 top-3 text-slate-400"><Icon name="search" size={16} /></div>
+            <div className="absolute left-3 top-2.5 text-slate-400"><Icon name="search" size={14} /></div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filtered.map(s => <ServiceCard key={s.id} service={s} />)}
         </div>
       </section>
@@ -2225,7 +2230,7 @@ const ServicesPage = () => {
   );
 };
 
-// --- EVENTS PAGE ---
+// --- EVENTS PAGE (Mobile Safe) ---
 const EventsPage = () => {
   const { events } = useTrust();
   const [statusTab, setStatusTab] = useState('All');
@@ -2240,25 +2245,25 @@ const EventsPage = () => {
   }, [events, statusTab, searchQuery]);
 
   return (
-    <div className="space-y-12 sm:space-y-16 py-8">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-14 shadow-2xl">
-          <span className="bg-emerald-600/30 text-emerald-400 text-xs font-bold font-heading uppercase tracking-wider px-3.5 py-1 rounded-full inline-block mb-3">Community Programs</span>
-          <h1 className="text-3xl sm:text-5xl font-black font-heading">Trust Events & <span className="text-emerald-400">Welfare Camps</span></h1>
-          <p className="text-slate-300 text-base mt-2 max-w-2xl">Join our upcoming blood donation drives, sports meets, certificate convocations, and food distribution activities.</p>
+    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
+          <span className="bg-emerald-600/30 text-emerald-400 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">Community Programs</span>
+          <h1 className="text-2xl sm:text-4xl font-black font-heading">Trust Events & <span className="text-emerald-400">Welfare Camps</span></h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">Join our upcoming blood donation drives, sports meets, certificate convocations, and food distribution activities.</p>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-8">
-          <div className="flex bg-slate-100 p-1.5 rounded-xl">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm mb-6">
+          <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto justify-center">
             {['All', 'Upcoming', 'Completed'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setStatusTab(tab)}
-                className={`px-5 py-2 rounded-lg text-xs sm:text-sm font-bold font-heading transition ${statusTab === tab ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-600'}`}
+                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold font-heading transition ${statusTab === tab ? 'bg-emerald-600 text-white shadow' : 'text-slate-600'}`}
               >
-                {tab} Events
+                {tab}
               </button>
             ))}
           </div>
@@ -2269,13 +2274,13 @@ const EventsPage = () => {
               placeholder="Search events..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500"
             />
-            <div className="absolute left-3 top-2.5 text-slate-400"><Icon name="search" size={16} /></div>
+            <div className="absolute left-3 top-2.5 text-slate-400"><Icon name="search" size={14} /></div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filtered.map(e => <EventCard key={e.id} event={e} />)}
         </div>
       </section>
@@ -2287,17 +2292,17 @@ const EventsPage = () => {
 const NewsPage = () => {
   const { news } = useTrust();
   return (
-    <div className="space-y-12 sm:space-y-16 py-8">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-14 shadow-2xl">
-          <span className="bg-emerald-600/30 text-emerald-400 text-xs font-bold font-heading uppercase tracking-wider px-3.5 py-1 rounded-full inline-block mb-3">Press Releases</span>
-          <h1 className="text-3xl sm:text-5xl font-black font-heading">Trust News & <span className="text-emerald-400">Activity Stories</span></h1>
-          <p className="text-slate-300 text-base mt-2 max-w-2xl">Stay informed with verified reports, impact stories, and official announcements.</p>
+    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
+          <span className="bg-emerald-600/30 text-emerald-400 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">Press Releases</span>
+          <h1 className="text-2xl sm:text-4xl font-black font-heading">Trust News & <span className="text-emerald-400">Activity Stories</span></h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">Stay informed with verified reports, impact stories, and official announcements.</p>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {news.map(n => <NewsCard key={n.id} newsItem={n} />)}
         </div>
       </section>
@@ -2305,7 +2310,7 @@ const NewsPage = () => {
   );
 };
 
-// --- GALLERY PAGE ---
+// --- GALLERY PAGE (Mobile Responsive) ---
 const GalleryPage = () => {
   const { gallery, setLightboxIndex } = useTrust();
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -2317,23 +2322,23 @@ const GalleryPage = () => {
   }, [gallery, selectedCategory]);
 
   return (
-    <div className="space-y-12 sm:space-y-16 py-8">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-14 shadow-2xl">
-          <span className="bg-emerald-600/30 text-emerald-400 text-xs font-bold font-heading uppercase tracking-wider px-3.5 py-1 rounded-full inline-block mb-3">Visual Chronicles</span>
-          <h1 className="text-3xl sm:text-5xl font-black font-heading">Community <span className="text-emerald-400">Photo Gallery</span></h1>
-          <p className="text-slate-300 text-base mt-2 max-w-2xl">Authentic photographs capturing moments of community empowerment, blood drives, food service, and summer Chalivendram water kiosks.</p>
+    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
+          <span className="bg-emerald-600/30 text-emerald-400 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">Visual Chronicles</span>
+          <h1 className="text-2xl sm:text-4xl font-black font-heading">Community <span className="text-emerald-400">Photo Gallery</span></h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">Authentic photographs capturing moments of community empowerment, blood drives, food service, and summer Chalivendram water kiosks.</p>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-2 overflow-x-auto scrollbar-none mb-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-1.5 overflow-x-auto scrollbar-none mb-6">
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold font-heading whitespace-nowrap transition ${
-                selectedCategory === cat ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold font-heading whitespace-nowrap transition ${
+                selectedCategory === cat ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
               {cat}
@@ -2341,21 +2346,21 @@ const GalleryPage = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {filtered.map((item, idx) => {
             const masterIdx = gallery.findIndex(g => g.id === item.id);
             return (
               <div
                 key={item.id}
                 onClick={() => setLightboxIndex(masterIdx !== -1 ? masterIdx : idx)}
-                className="group relative rounded-3xl overflow-hidden bg-slate-900 border shadow-sm hover:shadow-2xl cursor-pointer transition h-72 sm:h-80"
+                className="group relative rounded-2xl overflow-hidden bg-slate-900 border shadow cursor-pointer transition h-48 sm:h-72"
               >
-                <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent p-4 flex flex-col justify-between text-white">
-                  <span className="bg-emerald-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full self-start uppercase font-heading">{item.category}</span>
+                <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent p-2.5 sm:p-4 flex flex-col justify-between text-white">
+                  <span className="bg-emerald-600 text-[9px] font-bold px-2 py-0.5 rounded-full self-start uppercase font-heading">{item.category}</span>
                   <div>
-                    <h3 className="font-bold font-heading text-sm leading-snug">{item.title}</h3>
-                    <p className="text-xs text-slate-300 line-clamp-1">{item.caption}</p>
+                    <h3 className="font-bold font-heading text-xs sm:text-sm leading-snug line-clamp-1">{item.title}</h3>
+                    <p className="text-[10px] text-slate-300 line-clamp-1">{item.caption}</p>
                   </div>
                 </div>
               </div>
@@ -2367,7 +2372,7 @@ const GalleryPage = () => {
   );
 };
 
-// --- CONTACT PAGE ---
+// --- CONTACT PAGE (Mobile Safe) ---
 const ContactPage = () => {
   const { trustInfo, submitContactForm } = useTrust();
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', subject: 'General Inquiry', message: '' });
@@ -2388,50 +2393,50 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="space-y-12 sm:space-y-16 py-8">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-14 shadow-2xl">
-          <span className="bg-emerald-600/30 text-emerald-400 text-xs font-bold font-heading uppercase tracking-wider px-3.5 py-1 rounded-full inline-block mb-3">Helpdesk</span>
-          <h1 className="text-3xl sm:text-5xl font-black font-heading">Contact <span className="text-emerald-400">Medidhisubbaiah Trust</span></h1>
-          <p className="text-slate-300 text-base mt-2 max-w-2xl">Have questions regarding free vocational training, blood donor coordination, or community relief? Reach out to us.</p>
+    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
+          <span className="bg-emerald-600/30 text-emerald-400 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">Helpdesk</span>
+          <h1 className="text-2xl sm:text-4xl font-black font-heading">Contact <span className="text-emerald-400">Medidhisubbaiah Trust</span></h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">Have questions regarding free vocational training, blood donor coordination, or community relief? Reach out to us.</p>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Icon name="mappin" size={20} /></div>
-            <h3 className="font-bold font-heading text-base text-slate-900">Headquarters</h3>
-            <p className="text-xs text-slate-600">{trustInfo.address}</p>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
+          <div className="bg-white p-4 sm:p-6 rounded-2xl border shadow-sm space-y-1.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Icon name="mappin" size={18} /></div>
+            <h3 className="font-bold font-heading text-sm sm:text-base text-slate-900">Headquarters</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">{trustInfo.address}</p>
           </div>
-          <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Icon name="phone" size={20} /></div>
-            <h3 className="font-bold font-heading text-base text-slate-900">Phone Helpdesk</h3>
+          <div className="bg-white p-4 sm:p-6 rounded-2xl border shadow-sm space-y-1.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Icon name="phone" size={18} /></div>
+            <h3 className="font-bold font-heading text-sm sm:text-base text-slate-900">Phone Helpdesk</h3>
             <p className="text-xs text-slate-600">{trustInfo.phone}</p>
           </div>
-          <div className="bg-emerald-50/70 p-6 rounded-3xl border border-emerald-200 shadow-sm space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center"><Icon name="heartpulse" size={20} /></div>
-            <h3 className="font-bold font-heading text-base text-emerald-950">24/7 Blood Line</h3>
-            <a href={`tel:${trustInfo.emergencyBloodHelpline}`} className="text-base font-black text-emerald-700 block">{trustInfo.emergencyBloodHelpline}</a>
+          <div className="bg-emerald-50/70 p-4 sm:p-6 rounded-2xl border border-emerald-200 shadow-sm space-y-1.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center"><Icon name="heartpulse" size={18} /></div>
+            <h3 className="font-bold font-heading text-sm sm:text-base text-emerald-950">24/7 Blood Line</h3>
+            <a href={`tel:${trustInfo.emergencyBloodHelpline}`} className="text-sm sm:text-base font-black text-emerald-700 block">{trustInfo.emergencyBloodHelpline}</a>
           </div>
-          <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Icon name="mail" size={20} /></div>
-            <h3 className="font-bold font-heading text-base text-slate-900">Email</h3>
-            <p className="text-xs text-slate-600">{trustInfo.email}</p>
+          <div className="bg-white p-4 sm:p-6 rounded-2xl border shadow-sm space-y-1.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Icon name="mail" size={18} /></div>
+            <h3 className="font-bold font-heading text-sm sm:text-base text-slate-900">Email</h3>
+            <p className="text-xs text-slate-600 truncate">{trustInfo.email}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-7 bg-white p-6 sm:p-10 rounded-3xl border shadow-md">
-            <h2 className="text-2xl font-black font-heading text-slate-900 mb-4">Send Us A Message</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input type="text" required placeholder="Full Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full p-2.5 text-sm border rounded-xl" />
-                <input type="tel" required placeholder="Phone Number *" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full p-2.5 text-sm border rounded-xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+          <div className="lg:col-span-7 bg-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl border shadow-sm">
+            <h2 className="text-xl sm:text-2xl font-black font-heading text-slate-900 mb-3">Send Us A Message</h2>
+            <form onSubmit={handleSubmit} className="space-y-3 text-xs sm:text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input type="text" required placeholder="Full Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full p-2.5 border rounded-xl" />
+                <input type="tel" required placeholder="Phone Number *" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full p-2.5 border rounded-xl" />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input type="email" placeholder="Email Address" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full p-2.5 text-sm border rounded-xl" />
-                <select value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} className="w-full p-2.5 text-sm border rounded-xl bg-white">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input type="email" placeholder="Email Address" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full p-2.5 border rounded-xl" />
+                <select value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} className="w-full p-2.5 border rounded-xl bg-white">
                   <option value="General Inquiry">General Inquiry</option>
                   <option value="Tailoring Program Admission">Free Tailoring Admission</option>
                   <option value="Maggam Work Course">Maggam Work Admission</option>
@@ -2439,15 +2444,15 @@ const ContactPage = () => {
                   <option value="Food & Grocery Support">Food / Grocery Support</option>
                 </select>
               </div>
-              <textarea rows="4" required placeholder="Your message or query in detail..." value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full p-2.5 text-sm border rounded-xl" />
-              <button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-8 py-3.5 rounded-xl text-sm shadow-lg">
+              <textarea rows="3" required placeholder="Your message or query in detail..." value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full p-2.5 border rounded-xl" />
+              <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-8 py-3 rounded-xl shadow">
                 {isSubmitting ? 'Sending...' : 'Submit Message'}
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 bg-white p-3 rounded-3xl border shadow-md space-y-4">
-            <div className="h-72 w-full rounded-2xl overflow-hidden bg-slate-100">
+          <div className="lg:col-span-5 bg-white p-3 rounded-2xl sm:rounded-3xl border shadow-sm space-y-2">
+            <div className="h-60 sm:h-72 w-full rounded-xl overflow-hidden bg-slate-100">
               <iframe
                 title="Trust Map"
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d122554.40939515949!2d79.94829762145025!3d14.442598715873998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bb3644f1c1f54cd%3A0xb5b7964b73b5f922!2sAndhra%20Pradesh!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
@@ -2456,7 +2461,7 @@ const ContactPage = () => {
                 loading="lazy"
               ></iframe>
             </div>
-            <p className="text-xs text-slate-600 px-3 pb-2 font-medium">📍 Visiting Hours: 8:30 AM - 6:30 PM (Mon - Sat)</p>
+            <p className="text-[11px] text-slate-600 px-2 pb-1 font-medium">📍 Visiting Hours: 8:30 AM - 6:30 PM (Mon - Sat)</p>
           </div>
         </div>
       </section>
@@ -2464,7 +2469,7 @@ const ContactPage = () => {
   );
 };
 
-// --- LOGIN PAGE ---
+// --- LOGIN PAGE (Mobile Safe) ---
 const LoginPage = () => {
   const { loginAdmin, trustInfo } = useTrust();
   const [username, setUsername] = useState('');
@@ -2486,24 +2491,24 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 bg-slate-50">
-      <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border shadow-xl">
-        <div className="text-center space-y-3">
-          <div className="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-xl mx-auto">
+    <div className="min-h-[75vh] flex items-center justify-center py-8 px-4 bg-slate-50 w-full max-w-full">
+      <div className="max-w-md w-full space-y-5 bg-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl border shadow-lg">
+        <div className="text-center space-y-2">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-lg mx-auto">
             <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-black font-heading text-slate-900">Administrator Portal</h2>
+            <h2 className="text-xl sm:text-2xl font-black font-heading text-slate-900">Administrator Portal</h2>
             <p className="text-xs text-slate-500">Authorized management access for Medidhisubbaiah Trust</p>
           </div>
         </div>
 
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs flex justify-between items-center">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-xs flex justify-between items-center">
           <div>
-            <span className="font-bold font-heading text-emerald-800 block">Demo Credentials:</span>
-            <span className="text-slate-600 font-mono text-[11px]">admin@medidhisubbaiah.org / trust2026</span>
+            <span className="font-bold font-heading text-emerald-800 block text-[11px]">Demo Login:</span>
+            <span className="text-slate-600 font-mono text-[10px]">admin@medidhisubbaiah.org / trust2026</span>
           </div>
-          <button type="button" onClick={handleFillDemo} className="bg-emerald-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-md">
+          <button type="button" onClick={handleFillDemo} className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-1 rounded-md">
             Auto Fill
           </button>
         </div>
@@ -2512,7 +2517,7 @@ const LoginPage = () => {
           <div className="bg-red-50 border border-red-300 text-red-700 px-3 py-2 rounded-xl text-xs">{errorMessage}</div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4 text-sm">
+        <form onSubmit={handleLogin} className="space-y-3 text-xs sm:text-sm">
           <div>
             <label className="font-bold font-heading block text-xs text-slate-700 mb-1">Email or Username</label>
             <input type="text" required value={username} onChange={(e) => setUsername(e.target.value)} className="w-full p-2.5 border rounded-xl" />
@@ -2520,13 +2525,13 @@ const LoginPage = () => {
           <div>
             <label className="font-bold font-heading block text-xs text-slate-700 mb-1">Password</label>
             <div className="relative">
-              <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2.5 pr-10 border rounded-xl" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-slate-400">
-                <Icon name={showPassword ? 'eyeoff' : 'eye'} size={16} />
+              <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2.5 pr-9 border rounded-xl" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2.5 top-2.5 text-slate-400">
+                <Icon name={showPassword ? 'eyeoff' : 'eye'} size={15} />
               </button>
             </div>
           </div>
-          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-3 rounded-xl shadow-lg transition">
+          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-2.5 rounded-xl shadow transition">
             Sign In to Admin Hub
           </button>
         </form>
@@ -2535,34 +2540,34 @@ const LoginPage = () => {
   );
 };
 
-// --- ADMIN MANAGEMENT HUB ---
+// --- ADMIN MANAGEMENT HUB (Mobile Safe) ---
 const AdminPage = () => {
   const { isAdminLoggedIn, logoutAdmin, services, deleteService, events, deleteEvent, news, deleteNews, gallery, deleteGalleryImage, inquiries, resetToFactoryDefaults, navigate } = useTrust();
   const [tab, setTab] = useState('services');
 
   if (!isAdminLoggedIn) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center space-y-4">
-        <h2 className="text-2xl font-bold font-heading">Admin Login Required</h2>
-        <button onClick={() => navigate('login')} className="bg-emerald-600 text-white px-6 py-2 rounded-xl text-sm font-bold">Login</button>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center space-y-3">
+        <h2 className="text-xl font-bold font-heading">Admin Login Required</h2>
+        <button onClick={() => navigate('login')} className="bg-emerald-600 text-white px-5 py-2 rounded-xl text-xs font-bold">Login</button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div className="bg-slate-900 text-white p-6 rounded-3xl flex justify-between items-center">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-4 w-full max-w-full overflow-hidden">
+      <div className="bg-slate-900 text-white p-4 sm:p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <span className="bg-emerald-600 text-xs px-2.5 py-0.5 rounded-full font-bold font-heading uppercase">Admin Hub</span>
-          <h1 className="text-2xl font-black font-heading mt-1">Medidhisubbaiah Trust Content Hub</h1>
+          <span className="bg-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-bold font-heading uppercase">Admin Hub</span>
+          <h1 className="text-xl font-black font-heading mt-0.5">Content Management Hub</h1>
         </div>
-        <div className="flex space-x-2">
-          <button onClick={resetToFactoryDefaults} className="bg-slate-800 text-xs px-3 py-2 rounded-xl border border-slate-700 font-heading">Reset Data</button>
-          <button onClick={logoutAdmin} className="bg-emerald-600 text-xs font-bold font-heading px-4 py-2 rounded-xl">Logout</button>
+        <div className="flex space-x-2 w-full sm:w-auto">
+          <button onClick={resetToFactoryDefaults} className="flex-1 sm:flex-none bg-slate-800 text-xs px-3 py-1.5 rounded-xl border border-slate-700 font-heading">Reset Data</button>
+          <button onClick={logoutAdmin} className="flex-1 sm:flex-none bg-emerald-600 text-xs font-bold font-heading px-4 py-1.5 rounded-xl">Logout</button>
         </div>
       </div>
 
-      <div className="flex space-x-2 bg-white p-2 rounded-2xl border shadow-sm overflow-x-auto">
+      <div className="flex space-x-1.5 bg-white p-2 rounded-xl border shadow-sm overflow-x-auto scrollbar-none">
         {[
           { id: 'services', label: `Services (${services.length})` },
           { id: 'events', label: `Events (${events.length})` },
@@ -2570,21 +2575,21 @@ const AdminPage = () => {
           { id: 'gallery', label: `Gallery (${gallery.length})` },
           { id: 'inquiries', label: `Inquiries (${inquiries.length})` }
         ].map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold font-heading whitespace-nowrap ${tab === t.id ? 'bg-emerald-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}`}>
+          <button key={t.id} onClick={() => setTab(t.id)} className={`px-3 py-1.5 rounded-lg text-xs font-bold font-heading whitespace-nowrap ${tab === t.id ? 'bg-emerald-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}`}>
             {t.label}
           </button>
         ))}
       </div>
 
       {tab === 'services' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {services.map(s => (
-            <div key={s.id} className="bg-white p-4 rounded-2xl border shadow-sm space-y-2">
-              <span className="text-xs font-bold text-emerald-600 font-heading">{s.category}</span>
-              <h3 className="font-bold font-heading text-base">{s.title}</h3>
+            <div key={s.id} className="bg-white p-3.5 rounded-xl border shadow-sm space-y-1.5">
+              <span className="text-[10px] font-bold text-emerald-600 font-heading">{s.category}</span>
+              <h3 className="font-bold font-heading text-sm">{s.title}</h3>
               <p className="text-xs text-slate-500 line-clamp-2">{s.shortDescription}</p>
-              <div className="flex justify-end pt-2">
-                <button onClick={() => deleteService(s.id)} className="text-xs text-red-600 font-bold hover:underline">Delete Service</button>
+              <div className="flex justify-end pt-1">
+                <button onClick={() => deleteService(s.id)} className="text-xs text-red-600 font-bold hover:underline">Delete</button>
               </div>
             </div>
           ))}
@@ -2592,14 +2597,14 @@ const AdminPage = () => {
       )}
 
       {tab === 'events' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {events.map(e => (
-            <div key={e.id} className="bg-white p-4 rounded-2xl border shadow-sm space-y-2">
-              <span className="text-xs font-bold text-emerald-600 font-heading">{e.status} • {e.date}</span>
-              <h3 className="font-bold font-heading text-base">{e.title}</h3>
-              <p className="text-xs text-slate-500">{e.location}</p>
-              <div className="flex justify-end pt-2">
-                <button onClick={() => deleteEvent(e.id)} className="text-xs text-red-600 font-bold hover:underline">Delete Event</button>
+            <div key={e.id} className="bg-white p-3.5 rounded-xl border shadow-sm space-y-1.5">
+              <span className="text-[10px] font-bold text-emerald-600 font-heading">{e.status} • {e.date}</span>
+              <h3 className="font-bold font-heading text-sm">{e.title}</h3>
+              <p className="text-xs text-slate-500 truncate">{e.location}</p>
+              <div className="flex justify-end pt-1">
+                <button onClick={() => deleteEvent(e.id)} className="text-xs text-red-600 font-bold hover:underline">Delete</button>
               </div>
             </div>
           ))}
@@ -2607,13 +2612,13 @@ const AdminPage = () => {
       )}
 
       {tab === 'news' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {news.map(n => (
-            <div key={n.id} className="bg-white p-4 rounded-2xl border shadow-sm space-y-2">
-              <span className="text-xs text-slate-400">{n.date}</span>
-              <h3 className="font-bold font-heading text-base">{n.title}</h3>
-              <div className="flex justify-end pt-2">
-                <button onClick={() => deleteNews(n.id)} className="text-xs text-red-600 font-bold hover:underline">Delete Article</button>
+            <div key={n.id} className="bg-white p-3.5 rounded-xl border shadow-sm space-y-1.5">
+              <span className="text-[10px] text-slate-400">{n.date}</span>
+              <h3 className="font-bold font-heading text-sm">{n.title}</h3>
+              <div className="flex justify-end pt-1">
+                <button onClick={() => deleteNews(n.id)} className="text-xs text-red-600 font-bold hover:underline">Delete</button>
               </div>
             </div>
           ))}
@@ -2621,13 +2626,13 @@ const AdminPage = () => {
       )}
 
       {tab === 'gallery' && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
           {gallery.map(g => (
-            <div key={g.id} className="bg-white rounded-2xl overflow-hidden border shadow-sm relative">
-              <img src={g.imageUrl} alt={g.title} className="w-full h-36 object-cover" />
-              <div className="p-2.5 flex justify-between items-center">
-                <span className="text-xs font-bold truncate font-heading">{g.title}</span>
-                <button onClick={() => deleteGalleryImage(g.id)} className="text-xs text-red-600 font-bold">Delete</button>
+            <div key={g.id} className="bg-white rounded-xl overflow-hidden border shadow-sm">
+              <img src={g.imageUrl} alt={g.title} className="w-full h-28 object-cover" />
+              <div className="p-2 flex justify-between items-center">
+                <span className="text-[11px] font-bold truncate font-heading">{g.title}</span>
+                <button onClick={() => deleteGalleryImage(g.id)} className="text-xs text-red-600 font-bold">Del</button>
               </div>
             </div>
           ))}
@@ -2635,69 +2640,69 @@ const AdminPage = () => {
       )}
 
       {tab === 'inquiries' && (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {inquiries.length > 0 ? inquiries.map(inq => (
-            <div key={inq.id} className="bg-white p-4 rounded-2xl border shadow-sm space-y-1 text-sm">
-              <div className="flex justify-between font-bold font-heading"><span>{inq.name} ({inq.phone})</span><span className="text-xs text-slate-400">{inq.submittedAt}</span></div>
-              <p className="text-xs text-emerald-600 font-semibold">{inq.subject}</p>
-              <p className="text-xs text-slate-700 bg-slate-50 p-2 rounded-lg">"{inq.message}"</p>
+            <div key={inq.id} className="bg-white p-3.5 rounded-xl border shadow-sm space-y-1 text-xs">
+              <div className="flex justify-between font-bold font-heading"><span>{inq.name} ({inq.phone})</span><span className="text-[10px] text-slate-400">{inq.submittedAt}</span></div>
+              <p className="text-emerald-600 font-semibold">{inq.subject}</p>
+              <p className="text-slate-700 bg-slate-50 p-2 rounded-lg leading-relaxed">"{inq.message}"</p>
             </div>
-          )) : <div className="p-8 text-center bg-white rounded-2xl text-slate-400 text-sm">No inquiries received yet.</div>}
+          )) : <div className="p-6 text-center bg-white rounded-xl text-slate-400 text-xs">No inquiries received yet.</div>}
         </div>
       )}
     </div>
   );
 };
 
-// --- RICH FOOTER WITH EMBLEM LOGO ---
+// --- RICH FOOTER (Mobile Contained) ---
 const Footer = () => {
   const { navigate, trustInfo, services, setIsDonateModalOpen } = useTrust();
   return (
-    <footer className="bg-slate-950 text-slate-300 pt-16 pb-8 border-t border-slate-800">
+    <footer className="bg-slate-950 text-slate-300 pt-12 pb-6 border-t border-slate-800 w-full max-w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800">
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center space-x-3.5 cursor-pointer" onClick={() => navigate('home')}>
-              <div className="w-14 h-14 rounded-full p-0.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-xl shrink-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 pb-8 border-b border-slate-800">
+          <div className="sm:col-span-2 space-y-3">
+            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('home')}>
+              <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-lg shrink-0">
                 <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
               </div>
-              <div>
-                <span className="font-bold text-xl text-white tracking-tight font-heading">Medidhisubbaiah <span className="text-emerald-400">Trust</span></span>
-                <p className="text-xs text-emerald-300 font-bold font-heading">మేడిది సుబ్బయ్య ట్రస్ట్ • {trustInfo.registration}</p>
+              <div className="min-w-0">
+                <span className="font-bold text-lg text-white tracking-tight font-heading block truncate">Medidhisubbaiah <span className="text-emerald-400">Trust</span></span>
+                <p className="text-xs text-emerald-300 font-bold font-heading truncate">మేడిది సుబ్బయ్య ట్రస్ట్</p>
               </div>
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
               Medidhisubbaiah Trust is dedicated to uplifting underprivileged families, empowering women through free vocational training, providing life-saving healthcare and blood donor support, and fostering education for every child.
             </p>
-            <div className="bg-emerald-950/40 border border-emerald-800/40 rounded-2xl p-4 flex items-center space-x-3">
-              <div className="p-2.5 bg-emerald-600 text-white rounded-xl"><Icon name="heartpulse" size={22} /></div>
-              <div>
-                <div className="text-xs text-emerald-300 font-bold font-heading">24/7 Blood Donation Emergency Helpline</div>
-                <a href={`tel:${trustInfo.emergencyBloodHelpline}`} className="text-white font-black text-base hover:text-emerald-300 font-heading">{trustInfo.emergencyBloodHelpline}</a>
+            <div className="bg-emerald-950/40 border border-emerald-800/40 rounded-2xl p-3 flex items-center space-x-2.5">
+              <div className="p-2 bg-emerald-600 text-white rounded-xl shrink-0"><Icon name="heartpulse" size={18} /></div>
+              <div className="min-w-0">
+                <div className="text-[10px] text-emerald-300 font-bold font-heading">24/7 Blood Emergency Hotline</div>
+                <a href={`tel:${trustInfo.emergencyBloodHelpline}`} className="text-white font-black text-sm hover:text-emerald-300 font-heading truncate block">{trustInfo.emergencyBloodHelpline}</a>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="text-white font-bold font-heading text-sm uppercase tracking-wider border-l-2 border-emerald-500 pl-2.5">Quick Links</h3>
-            <ul className="space-y-2 text-sm text-slate-400">
+          <div className="space-y-2.5">
+            <h3 className="text-white font-bold font-heading text-xs uppercase tracking-wider border-l-2 border-emerald-500 pl-2">Quick Links</h3>
+            <ul className="space-y-1.5 text-xs text-slate-400">
               {['home', 'about', 'services', 'events', 'news', 'gallery', 'contact', 'login'].map(r => (
                 <li key={r}>
-                  <button onClick={() => navigate(r)} className="hover:text-emerald-400 capitalize flex items-center space-x-1.5 transition font-medium">
-                    <Icon name="chevronright" size={13} className="text-emerald-500" />
-                    <span>{r === 'login' ? 'Admin Portal' : r === 'about' ? 'About Us' : r === 'services' ? 'Our Services' : r === 'news' ? 'Media & News' : r}</span>
+                  <button onClick={() => navigate(r)} className="hover:text-emerald-400 capitalize flex items-center space-x-1 transition font-medium">
+                    <Icon name="chevronright" size={11} className="text-emerald-500" />
+                    <span>{r === 'login' ? 'Admin' : r === 'about' ? 'About Us' : r === 'services' ? 'Our Services' : r === 'news' ? 'Media & News' : r}</span>
                   </button>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="text-white font-bold font-heading text-sm uppercase tracking-wider border-l-2 border-emerald-500 pl-2.5">Welfare Causes</h3>
-            <ul className="space-y-2 text-sm text-slate-400">
+          <div className="space-y-2.5">
+            <h3 className="text-white font-bold font-heading text-xs uppercase tracking-wider border-l-2 border-emerald-500 pl-2">Core Causes</h3>
+            <ul className="space-y-1.5 text-xs text-slate-400">
               {services.slice(0, 5).map(s => (
                 <li key={s.id}>
-                  <button onClick={() => navigate('services')} className="hover:text-emerald-400 text-left truncate block max-w-[200px]">
+                  <button onClick={() => navigate('services')} className="hover:text-emerald-400 text-left truncate block max-w-full">
                     • {s.title}
                   </button>
                 </li>
@@ -2705,21 +2710,21 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="text-white font-bold font-heading text-sm uppercase tracking-wider border-l-2 border-emerald-500 pl-2.5">Contact Us</h3>
+          <div className="space-y-2.5 sm:col-span-2 lg:col-span-1">
+            <h3 className="text-white font-bold font-heading text-xs uppercase tracking-wider border-l-2 border-emerald-500 pl-2">Contact & Donate</h3>
             <p className="text-xs text-slate-400 leading-relaxed">{trustInfo.address}</p>
             <p className="text-xs text-emerald-400 font-bold">{trustInfo.phone}</p>
-            <p className="text-xs text-slate-300">{trustInfo.email}</p>
-            <div className="pt-2">
-              <button onClick={() => setIsDonateModalOpen(true)} className="donate-shine w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-2.5 rounded-xl text-xs shadow-md transition">
+            <p className="text-xs text-slate-300 truncate">{trustInfo.email}</p>
+            <div className="pt-1">
+              <button onClick={() => setIsDonateModalOpen(true)} className="donate-shine w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-2.5 rounded-xl text-xs shadow transition text-center">
                 Donate Online
               </button>
             </div>
           </div>
         </div>
 
-        <div className="pt-8 text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} Medidhisubbaiah Trust (మేడిది సుబ్బయ్య ట్రస్ట్). All Rights Reserved. Committed to selfless social service and transparency.
+        <div className="pt-6 text-center text-[11px] text-slate-500">
+          © {new Date().getFullYear()} Medidhisubbaiah Trust (మేడిది సుబ్బయ్య ట్రస్ట్). All Rights Reserved.
         </div>
       </div>
     </footer>
@@ -2753,9 +2758,9 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-slate-900 font-sans selection:bg-emerald-600 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-white text-slate-900 font-sans selection:bg-emerald-600 selection:text-white w-full max-w-full overflow-x-hidden">
       <Navbar />
-      <main className="flex-1">{renderPage()}</main>
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">{renderPage()}</main>
       <ServiceModal />
       <EventModal />
       <NewsModal />
