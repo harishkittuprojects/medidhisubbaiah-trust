@@ -1095,9 +1095,11 @@ const TrustProvider = ({ children }) => {
   };
 
   const [currentRoute, setCurrentRoute] = useState(() => {
-    const path = window.location.pathname.replace(/^\/+/, '');
-    if (path === 'admin') return 'admin';
-    return normalizeRoute(window.location.hash || path);
+    const hash = (window.location.hash || '').replace(/^[#\/]+/, '');
+    if (hash) return normalizeRoute(hash);
+    const path = (window.location.pathname || '').replace(/^\/+/, '');
+    if (path) return normalizeRoute(path);
+    return 'home';
   });
 
   const sanitizeUrl = (u) => {
@@ -1278,13 +1280,20 @@ const TrustProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const handleHashChange = () => {
-      const clean = normalizeRoute(window.location.hash);
+    const handleLocationChange = () => {
+      const hash = (window.location.hash || '').replace(/^[#\/]+/, '');
+      const path = (window.location.pathname || '').replace(/^\/+/, '');
+      const target = hash || path || 'home';
+      const clean = normalizeRoute(target);
       setCurrentRoute(clean);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
   }, []);
 
   const loginAdmin = async (email, password, remember = true) => {
