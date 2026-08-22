@@ -2140,14 +2140,32 @@ const AboutPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
             <div className="lg:col-span-5 p-6 sm:p-8 bg-gradient-to-br from-emerald-50 via-teal-50 to-white flex justify-center items-center">
               <div className="relative group max-w-sm w-full">
+                {/* Director & Treasurer Top Badges */}
+                <div className="grid grid-cols-2 gap-2 mb-2.5 text-center">
+                  <div className="bg-emerald-700 text-white py-1.5 px-2 rounded-xl shadow-md border border-emerald-600">
+                    <span className="block text-[10px] font-black uppercase tracking-wider text-emerald-200 font-heading">Director</span>
+                    <span className="block text-xs font-bold font-heading truncate">Sri M. Venkateshwar Rao</span>
+                  </div>
+                  <div className="bg-teal-800 text-white py-1.5 px-2 rounded-xl shadow-md border border-teal-700">
+                    <span className="block text-[10px] font-black uppercase tracking-wider text-teal-200 font-heading">Treasurer</span>
+                    <span className="block text-xs font-bold font-heading truncate">Smt. M. Varalakshmi</span>
+                  </div>
+                </div>
+
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-white">
                   <img
                     src="./leadership.png"
-                    alt="Medidhi Venkateshwar Rao (Director) & Medidhi Varalakshmi (Treasurer)"
+                    alt="Director Sri Medidhi Venkateshwar Rao & Treasurer Smt. Medidhi Varalakshmi"
                     className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                   />
+                  {/* Floating role indicator chips at bottom of photo */}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent p-2.5 pt-6 flex justify-between items-end text-white text-[11px] font-bold font-heading">
+                    <span className="bg-emerald-600/95 backdrop-blur-sm px-2.5 py-0.5 rounded-lg shadow">Director</span>
+                    <span className="bg-teal-600/95 backdrop-blur-sm px-2.5 py-0.5 rounded-lg shadow">Treasurer</span>
+                  </div>
                 </div>
-                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-emerald-700 text-white text-[11px] sm:text-xs font-bold font-heading px-4 py-1 rounded-full shadow-lg whitespace-nowrap">
+
+                <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 bg-emerald-700 text-white text-[11px] sm:text-xs font-bold font-heading px-4 py-1 rounded-full shadow-xl whitespace-nowrap z-10 border-2 border-white">
                   10+ Years of Selfless Service
                 </div>
               </div>
