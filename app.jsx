@@ -974,6 +974,36 @@ function Icon({ name, className = "w-5 h-5", size = 20, color = "currentColor" }
   return iconMap[key] || iconMap.heart;
 }
 
+// --- INITIAL SEED DONATION LOGS ---
+const initialDonations = [
+  {
+    id: "1",
+    donor_name: "Srikanth Verma",
+    amount: "5000",
+    phone: "+91 98480 22334",
+    pan_number: "ABCDE1234F",
+    transaction_id: "UPI/SBI/422891002341",
+    screenshot_url: "assets/gallery/trust_work_page_01.jpg",
+    cause: "Free Tailoring Machines & Kits",
+    status: "Verified / 80G Issued",
+    date: "2026-08-20",
+    created_at: "2026-08-20T10:30:00.000Z"
+  },
+  {
+    id: "2",
+    donor_name: "Kavitha R.",
+    amount: "2500",
+    phone: "+91 94401 55667",
+    pan_number: "BKJPR9981K",
+    transaction_id: "UPI/HDFC/422998112233",
+    screenshot_url: "assets/gallery/trust_work_page_02.jpg",
+    cause: "24/7 Blood Donation Camps & Healthcare",
+    status: "Pending Verification",
+    date: "2026-08-22",
+    created_at: "2026-08-22T15:15:00.000Z"
+  }
+];
+
 // --- CLOUDINARY UPLOADER COMPONENT ---
 const CloudinaryUploader = ({ label = "Upload Media", onUploaded, acceptedTypes = "image/*,video/*,application/pdf", currentUrl = "" }) => {
   const [isUploading, setIsUploading] = useState(false);
@@ -1181,6 +1211,15 @@ const TrustProvider = ({ children }) => {
     }
   });
 
+  const [donations, setDonations] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mst_donations_v2');
+      return saved ? JSON.parse(saved) : initialDonations;
+    } catch {
+      return initialDonations;
+    }
+  });
+
   const [leadership, setLeadership] = useState(() => {
     try {
       const saved = localStorage.getItem('mst_leadership');
@@ -1233,6 +1272,9 @@ const TrustProvider = ({ children }) => {
     localStorage.setItem('mst_inquiries', JSON.stringify(inquiries));
   }, [inquiries]);
   useEffect(() => {
+    localStorage.setItem('mst_donations_v2', JSON.stringify(donations));
+  }, [donations]);
+  useEffect(() => {
     localStorage.setItem('mst_leadership', JSON.stringify(leadership));
   }, [leadership]);
 
@@ -1278,6 +1320,13 @@ const TrustProvider = ({ children }) => {
       const { data: inqs, error: errInqs } = await supabaseClient.from('inquiries').select('*').order('created_at', { ascending: false });
       if (!errInqs && inqs && inqs.length > 0) {
         setInquiries(inqs);
+        anyFound = true;
+      }
+
+      // 6. Donations
+      const { data: dons, error: errDons } = await supabaseClient.from('donations').select('*').order('created_at', { ascending: false });
+      if (!errDons && dons && dons.length > 0) {
+        setDonations(dons);
         anyFound = true;
       }
 
@@ -1619,18 +1668,54 @@ const TrustProvider = ({ children }) => {
   };
 
   const submitDonationLog = async (donationData) => {
+    const id = String(Date.now());
+    const dateStr = new Date().toISOString().split('T')[0];
     const donationItem = {
       ...donationData,
-      id: String(Date.now()),
+      id,
+      date: donationData.date || dateStr,
+      status: donationData.status || 'Pending Verification',
+      cause: donationData.cause || 'General Trust Seva',
       created_at: new Date().toISOString()
     };
-    showToast('Thank you for your generous support!', 'success');
+
+    setDonations(prev => [donationItem, ...prev]);
+    showToast('Thank you! Your donation and payment receipt have been recorded successfully.', 'success');
 
     if (supabaseClient) {
       try {
-        await supabaseClient.from('donations').insert(donationItem);
+        await supabaseClient.from('donations').upsert(donationItem);
       } catch (err) {
         console.warn('Supabase donation insert notice:', err);
+      }
+    }
+    return donationItem;
+  };
+
+  const updateDonationStatus = async (id, status) => {
+    const stringId = String(id);
+    setDonations(prev => prev.map(d => String(d.id) === stringId ? { ...d, status } : d));
+    showToast(`Donation status updated to "${status}"`, 'success');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('donations').update({ status }).eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase donation status update error:', err);
+      }
+    }
+  };
+
+  const deleteDonation = async (id) => {
+    const stringId = String(id);
+    setDonations(prev => prev.filter(d => String(d.id) !== stringId));
+    showToast('Donation record deleted.', 'info');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('donations').delete().eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase donation delete error:', err);
       }
     }
   };
@@ -1657,6 +1742,7 @@ const TrustProvider = ({ children }) => {
       news,
       gallery,
       inquiries,
+      donations,
       leadership,
       updateLeadership,
       stats: initialStats,
@@ -1693,6 +1779,8 @@ const TrustProvider = ({ children }) => {
       submitContactForm,
       deleteInquiry,
       submitDonationLog,
+      updateDonationStatus,
+      deleteDonation,
       resetToFactoryDefaults,
       supabaseConnected,
       supabaseStatusMsg,
@@ -2892,7 +2980,6 @@ const LoginPage = () => {
   );
 };
 
-// --- ADMIN MANAGEMENT HUB (FULL CRUD FOR EVENTS, GALLERY, NEWS, SERVICES & CLOUDINARY/SUPABASE) ---
 const AdminPage = () => {
 const {
     isAdminLoggedIn,
@@ -2917,6 +3004,9 @@ const {
     updateLeadership,
     inquiries,
     deleteInquiry,
+    donations,
+    updateDonationStatus,
+    deleteDonation,
     supabaseConnected,
     supabaseStatusMsg,
     fetchSupabaseData,
@@ -2926,6 +3016,11 @@ const {
   } = useTrust();
 
   const [activeTab, setActiveTab] = useState('events');
+
+  // Donation Management States
+  const [viewingReceipt, setViewingReceipt] = useState(null);
+  const [donationSearch, setDonationSearch] = useState('');
+  const [donationStatusFilter, setDonationStatusFilter] = useState('all');
 
   // Modal Editing States
   const [editingEvent, setEditingEvent] = useState(null);
@@ -3158,18 +3253,34 @@ CREATE TABLE IF NOT EXISTS public.inquiries (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS public.donations (
+  id TEXT PRIMARY KEY,
+  donor_name TEXT NOT NULL,
+  amount TEXT NOT NULL,
+  phone TEXT,
+  pan_number TEXT,
+  transaction_id TEXT,
+  screenshot_url TEXT,
+  cause TEXT DEFAULT 'General Trust Seva',
+  status TEXT DEFAULT 'Pending Verification',
+  date TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Enable RLS and create public policies
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.news ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.donations ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public events" ON public.events FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public news" ON public.news FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public gallery" ON public.gallery FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public services" ON public.services FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Public inquiries" ON public.inquiries FOR ALL USING (true) WITH CHECK (true);`;
+CREATE POLICY "Public inquiries" ON public.inquiries FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public donations" ON public.donations FOR ALL USING (true) WITH CHECK (true);`;
 
     navigator.clipboard.writeText(sql);
     showToast('Supabase SQL Schema copied to clipboard!', 'success');
@@ -3210,6 +3321,7 @@ CREATE POLICY "Public inquiries" ON public.inquiries FOR ALL USING (true) WITH C
         <div className="flex space-x-1.5 overflow-x-auto scrollbar-none pb-1">
           {[
             { id: 'events', label: 'Events', count: events.length, icon: 'calendar' },
+            { id: 'donations', label: 'Donations & Receipts', count: donations.length, icon: 'heart' },
             { id: 'gallery', label: 'Gallery', count: gallery.length, icon: 'image' },
             { id: 'news', label: 'News', count: news.length, icon: 'filetext' },
             { id: 'services', label: 'Services', count: services.length, icon: 'scissors' },
@@ -3276,6 +3388,7 @@ CREATE POLICY "Public inquiries" ON public.inquiries FOR ALL USING (true) WITH C
 
             {[
               { id: 'events', label: 'Events & Drives', count: events.length, icon: 'calendar' },
+              { id: 'donations', label: 'Donation Records & 80G', count: donations.length, icon: 'heart' },
               { id: 'gallery', label: 'Gallery & Videos', count: gallery.length, icon: 'image' },
               { id: 'news', label: 'Media & News', count: news.length, icon: 'filetext' },
               { id: 'services', label: 'Services & Causes', count: services.length, icon: 'scissors' },
@@ -4104,6 +4217,373 @@ CREATE POLICY "Public inquiries" ON public.inquiries FOR ALL USING (true) WITH C
         </div>
       )}
 
+      {/* --- TAB: DONATION RECORDS & 80G RECEIPTS --- */}
+      {activeTab === 'donations' && (
+        <div className="space-y-5 animate-fadeIn">
+          {/* Header & Stats Bar */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h2 className="text-xl font-black font-heading text-slate-900">Donation Records & 80G Receipts</h2>
+              <p className="text-xs text-slate-500">View online donations, verify uploaded payment screenshots, and track 80G tax exemptions.</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="bg-emerald-100 text-emerald-800 text-xs font-bold font-heading px-3 py-1 rounded-full flex items-center space-x-1">
+                <Icon name="heart" size={13} />
+                <span>{donations.length} Total Records</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Metrics Overview Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 font-heading block">Total Donated</span>
+              <span className="text-xl font-black font-heading text-emerald-700">
+                ₹{donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0).toLocaleString('en-IN')}
+              </span>
+              <span className="text-[10px] text-slate-500 block">Across all causes</span>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 font-heading block">Total Donors</span>
+              <span className="text-xl font-black font-heading text-slate-900">
+                {donations.length}
+              </span>
+              <span className="text-[10px] text-slate-500 block">Registered entries</span>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 font-heading block">Verified / 80G Done</span>
+              <span className="text-xl font-black font-heading text-emerald-600">
+                {donations.filter(d => d.status === 'Verified / 80G Issued' || d.status === 'Verified').length}
+              </span>
+              <span className="text-[10px] text-slate-500 block">Payment verified</span>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 font-heading block">Pending Review</span>
+              <span className="text-xl font-black font-heading text-amber-600">
+                {donations.filter(d => d.status === 'Pending Verification' || !d.status).length}
+              </span>
+              <span className="text-[10px] text-slate-500 block">Awaiting receipt check</span>
+            </div>
+          </div>
+
+          {/* Search & Filter Toolbar */}
+          <div className="flex flex-col sm:flex-row gap-2 justify-between items-stretch sm:items-center bg-white p-3 rounded-2xl border border-slate-200">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search donors by name, phone, PAN, or transaction ID..."
+                value={donationSearch}
+                onChange={(e) => setDonationSearch(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500"
+              />
+              <span className="absolute left-3 top-2.5 text-slate-400">
+                <Icon name="search" size={14} />
+              </span>
+            </div>
+
+            <div className="flex space-x-1 overflow-x-auto shrink-0">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'pending', label: 'Pending' },
+                { id: 'verified', label: 'Verified / 80G' }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setDonationStatusFilter(f.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold font-heading transition ${
+                    donationStatusFilter === f.id
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Donations List Cards */}
+          {(() => {
+            const filtered = donations.filter(d => {
+              const query = donationSearch.toLowerCase().trim();
+              const matchesSearch = !query ||
+                (d.donor_name && d.donor_name.toLowerCase().includes(query)) ||
+                (d.phone && d.phone.toLowerCase().includes(query)) ||
+                (d.pan_number && d.pan_number.toLowerCase().includes(query)) ||
+                (d.transaction_id && d.transaction_id.toLowerCase().includes(query)) ||
+                (d.cause && d.cause.toLowerCase().includes(query));
+
+              if (!matchesSearch) return false;
+              if (donationStatusFilter === 'pending') return d.status === 'Pending Verification' || !d.status;
+              if (donationStatusFilter === 'verified') return d.status === 'Verified / 80G Issued' || d.status === 'Verified';
+              return true;
+            });
+
+            if (filtered.length === 0) {
+              return (
+                <div className="bg-white p-12 rounded-2xl border border-dashed border-slate-300 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                    <Icon name="heart" size={24} />
+                  </div>
+                  <h3 className="font-black font-heading text-slate-800 text-base">No Donation Records Found</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    When donors submit contributions on the website, their details, transaction IDs, and uploaded payment screenshots will appear here.
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filtered.map(d => {
+                  const isVerified = d.status === 'Verified / 80G Issued' || d.status === 'Verified';
+                  return (
+                    <div key={d.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3.5 flex flex-col justify-between hover:border-emerald-300 transition">
+                      <div className="space-y-3">
+                        {/* Top: Name, Amount & Status */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xl font-black font-heading text-emerald-700">
+                                ₹{parseFloat(d.amount || 0).toLocaleString('en-IN')}
+                              </span>
+                              <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full font-heading ${
+                                isVerified ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+                              }`}>
+                                {isVerified ? '✓ Verified / 80G Done' : '⏳ Pending Verification'}
+                              </span>
+                            </div>
+                            <h3 className="text-base font-black font-heading text-slate-900 mt-1">{d.donor_name || 'Anonymous Donor'}</h3>
+                            <span className="text-xs text-slate-500 block">{d.cause || 'General Trust Seva'}</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono shrink-0">{d.date || 'Recent'}</span>
+                        </div>
+
+                        {/* Donor Information Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block uppercase font-heading">Phone / WhatsApp</span>
+                            {d.phone ? (
+                              <div className="flex items-center space-x-1.5 font-mono text-slate-800 font-semibold">
+                                <a href={`tel:${d.phone}`} className="hover:underline">{d.phone}</a>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic">Not provided</span>
+                            )}
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block uppercase font-heading">PAN Number (80G)</span>
+                            {d.pan_number ? (
+                              <div className="flex items-center space-x-1 font-mono text-slate-800 font-semibold">
+                                <span>{d.pan_number}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(d.pan_number);
+                                    showToast('PAN copied: ' + d.pan_number);
+                                  }}
+                                  className="text-slate-400 hover:text-emerald-600 p-0.5"
+                                  title="Copy PAN"
+                                >
+                                  <Icon name="copy" size={11} />
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic">No PAN specified</span>
+                            )}
+                          </div>
+
+                          <div className="sm:col-span-2 pt-1 border-t border-slate-200/60">
+                            <span className="text-[10px] font-bold text-slate-400 block uppercase font-heading">UPI / UTR Transaction ID</span>
+                            {d.transaction_id ? (
+                              <div className="flex items-center space-x-1.5 font-mono text-slate-800 text-xs break-all">
+                                <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded font-bold">{d.transaction_id}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(d.transaction_id);
+                                    showToast('Transaction ID copied: ' + d.transaction_id);
+                                  }}
+                                  className="text-slate-400 hover:text-emerald-600 p-0.5"
+                                  title="Copy Transaction ID"
+                                >
+                                  <Icon name="copy" size={11} />
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic">No UTR specified</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* --- PAYMENT SCREENSHOT PROOF CARD --- */}
+                        <div className="space-y-1.5">
+                          <span className="text-[11px] font-bold font-heading text-slate-800 flex items-center space-x-1">
+                            <Icon name="image" size={13} className="text-emerald-600" />
+                            <span>Payment Screenshot / Proof:</span>
+                          </span>
+
+                          {d.screenshot_url ? (
+                            <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between gap-3">
+                              <div
+                                onClick={() => setViewingReceipt(d)}
+                                className="flex items-center space-x-2.5 cursor-pointer group min-w-0"
+                              >
+                                <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-emerald-300 bg-white shrink-0 shadow-sm">
+                                  <img
+                                    src={d.screenshot_url}
+                                    alt="Receipt"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition"
+                                  />
+                                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white">
+                                    <Icon name="search" size={14} />
+                                  </div>
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="text-xs font-bold text-emerald-950 font-heading block group-hover:text-emerald-700 transition truncate">
+                                    Click to View Screenshot
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-mono block truncate">
+                                    {d.screenshot_url}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => setViewingReceipt(d)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold font-heading px-3 py-1.5 rounded-lg shadow shrink-0 flex items-center space-x-1"
+                              >
+                                <Icon name="eye" size={12} />
+                                <span>Preview</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="p-2.5 bg-slate-50 rounded-xl border text-center text-xs text-slate-400 italic">
+                              No screenshot uploaded with this entry
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card Footer Actions */}
+                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex space-x-1.5">
+                          {d.phone && (
+                            <a
+                              href={`https://wa.me/${d.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(d.donor_name || '')},%20thank%20you%20for%20your%20donation%20of%20Rs.%20${encodeURIComponent(d.amount || '')}%20to%20Medidhisubbaiah%20Trust.`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded-lg text-xs font-bold font-heading flex items-center space-x-1 transition"
+                            >
+                              <Icon name="phone" size={11} />
+                              <span>WhatsApp</span>
+                            </a>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => updateDonationStatus(d.id, isVerified ? 'Pending Verification' : 'Verified / 80G Issued')}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold font-heading transition shadow-sm flex items-center space-x-1 ${
+                              isVerified
+                                ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                                : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                            }`}
+                          >
+                            <Icon name={isVerified ? 'x' : 'check'} size={12} />
+                            <span>{isVerified ? 'Mark as Pending' : 'Approve & Mark Verified'}</span>
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => deleteDonation(d.id)}
+                          className="text-xs text-red-600 hover:bg-red-50 font-bold px-2.5 py-1 rounded-lg transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* --- MODAL: FULL PAYMENT SCREENSHOT VIEWER --- */}
+      {viewingReceipt && (
+        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 space-y-4 shadow-2xl border my-8 max-h-[92vh] overflow-y-auto">
+            <div className="flex justify-between items-start pb-2 border-b border-slate-100">
+              <div>
+                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full font-heading">
+                  Payment Verification Proof
+                </span>
+                <h3 className="text-lg font-black font-heading text-slate-900 mt-1">
+                  {viewingReceipt.donor_name} • <span className="text-emerald-600">₹{viewingReceipt.amount}</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {viewingReceipt.date} • {viewingReceipt.cause || 'General Trust Seva'} • UTR: {viewingReceipt.transaction_id || 'N/A'}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewingReceipt(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 transition"
+              >
+                <Icon name="x" size={20} />
+              </button>
+            </div>
+
+            <div className="rounded-2xl overflow-hidden bg-slate-950 p-2 flex items-center justify-center min-h-[300px]">
+              <img
+                src={viewingReceipt.screenshot_url}
+                alt="Full Payment Screenshot"
+                className="max-h-[65vh] max-w-full object-contain rounded-xl shadow-lg"
+              />
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+              <a
+                href={viewingReceipt.screenshot_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-emerald-700 hover:underline font-bold font-heading flex items-center space-x-1"
+              >
+                <Icon name="external" size={13} />
+                <span>Open Screenshot in Full Resolution</span>
+              </a>
+
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newStatus = viewingReceipt.status === 'Verified / 80G Issued' || viewingReceipt.status === 'Verified' ? 'Pending Verification' : 'Verified / 80G Issued';
+                    updateDonationStatus(viewingReceipt.id, newStatus);
+                    setViewingReceipt({ ...viewingReceipt, status: newStatus });
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold font-heading px-4 py-2 rounded-xl shadow transition"
+                >
+                  {viewingReceipt.status === 'Verified / 80G Issued' || viewingReceipt.status === 'Verified' ? 'Mark as Pending' : 'Approve & Issue 80G'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingReceipt(null)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold font-heading px-4 py-2 rounded-xl transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* --- MODAL: EVENT CREATE / EDIT --- */}
       {isEventModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
@@ -4772,78 +5252,308 @@ const LightboxModal = () => {
 
 // --- DONATION MODAL ---
 const DonateModal = () => {
-  const { isDonateModalOpen, setIsDonateModalOpen, trustInfo, submitDonationLog } = useTrust();
+  const { isDonateModalOpen, setIsDonateModalOpen, trustInfo, submitDonationLog, showToast } = useTrust();
   const [amount, setAmount] = useState('1000');
+  const [customAmount, setCustomAmount] = useState('');
   const [donorName, setDonorName] = useState('');
   const [phone, setPhone] = useState('');
   const [pan, setPan] = useState('');
+  const [transactionId, setTransactionId] = useState('');
+  const [cause, setCause] = useState('General Trust Seva');
+  const [screenshotUrl, setScreenshotUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isDonateModalOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleScreenshotChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
+
+    try {
+      // Direct Cloudinary upload
+      const res = await uploadToCloudinary(file, (p) => setUploadProgress(p));
+      setScreenshotUrl(res.url);
+      showToast('Payment screenshot attached successfully!', 'success');
+    } catch (err) {
+      console.warn('Cloudinary upload warning:', err);
+      // Fallback to FileReader base64
+      const reader = new FileReader();
+      reader.onload = () => {
+        setScreenshotUrl(reader.result);
+        showToast('Payment screenshot attached!', 'info');
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    submitDonationLog({ donor_name: donorName, amount, phone, pan_number: pan });
-    setIsDonateModalOpen(false);
-    setDonorName('');
-    setPhone('');
-    setPan('');
+    const finalAmount = customAmount.trim() ? customAmount.trim() : amount;
+    if (!finalAmount || parseFloat(finalAmount) <= 0) {
+      alert('Please enter a valid donation amount.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await submitDonationLog({
+        donor_name: donorName,
+        amount: finalAmount,
+        phone,
+        pan_number: pan,
+        transaction_id: transactionId,
+        cause,
+        screenshot_url: screenshotUrl,
+        status: 'Pending Verification'
+      });
+      setIsDonateModalOpen(false);
+      setDonorName('');
+      setPhone('');
+      setPan('');
+      setTransactionId('');
+      setScreenshotUrl('');
+      setCustomAmount('');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fadeIn">
-      <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl border my-8">
-        <div className="flex justify-between items-start pb-2 border-b">
+      <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-7 space-y-4 shadow-2xl border my-8 max-h-[92vh] overflow-y-auto">
+        <div className="flex justify-between items-start pb-2 border-b border-slate-100">
           <div>
             <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full font-heading">
-              80G Tax-Exempt
+              80G Tax-Exempt Seva
             </span>
-            <h3 className="text-xl font-black font-heading text-slate-900 mt-1">Support Our Seva</h3>
+            <h3 className="text-xl font-black font-heading text-slate-900 mt-1">Support Our Noble Mission</h3>
+            <p className="text-xs text-slate-500">Every rupee supports free tailoring, 24/7 blood helpline & food seva.</p>
           </div>
-          <button onClick={() => setIsDonateModalOpen(false)} className="p-1 rounded-xl text-slate-400 hover:bg-slate-100">
+          <button onClick={() => setIsDonateModalOpen(false)} className="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 transition">
             <Icon name="x" size={20} />
           </button>
         </div>
 
-        {/* UPI ID Quick Copy */}
-        <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 flex justify-between items-center">
-          <div>
+        {/* Official UPI Details Card */}
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-3.5 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
+          <div className="min-w-0">
             <span className="text-[10px] font-bold text-emerald-800 uppercase block font-heading">Official SBI UPI ID:</span>
-            <span className="font-mono text-xs font-bold text-slate-800">{trustInfo.upiId}</span>
+            <span className="font-mono text-sm font-bold text-slate-900 select-all">{trustInfo.upiId}</span>
+            <span className="text-[10px] text-slate-500 block">Bank: State Bank of India • Medidhisubbaiah Trust</span>
           </div>
           <button
             type="button"
             onClick={() => {
               navigator.clipboard.writeText(trustInfo.upiId);
-              alert('UPI ID copied!');
+              showToast('UPI ID copied to clipboard: ' + trustInfo.upiId, 'success');
             }}
-            className="bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shadow"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold font-heading px-3.5 py-2 rounded-xl shadow shrink-0 flex items-center space-x-1.5 transition"
           >
-            Copy UPI
+            <Icon name="copy" size={13} />
+            <span>Copy UPI</span>
           </button>
         </div>
 
-        {/* Quick Amount Buttons */}
-        <div className="grid grid-cols-4 gap-2">
-          {['500', '1000', '2500', '5000'].map(amt => (
-            <button
-              key={amt}
-              type="button"
-              onClick={() => setAmount(amt)}
-              className={`py-2 rounded-xl text-xs font-bold font-heading border transition ${
-                amount === amt ? 'bg-emerald-600 text-white border-emerald-600 shadow' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              ₹{amt}
-            </button>
-          ))}
+        {/* Quick Amount Selection */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-bold font-heading text-slate-700">Select Donation Amount (₹)</label>
+          <div className="grid grid-cols-4 gap-2">
+            {['500', '1000', '2500', '5000'].map(amt => (
+              <button
+                key={amt}
+                type="button"
+                onClick={() => {
+                  setAmount(amt);
+                  setCustomAmount('');
+                }}
+                className={`py-2 rounded-xl text-xs font-bold font-heading border transition ${
+                  amount === amt && !customAmount
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200'
+                }`}
+              >
+                ₹{amt}
+              </button>
+            ))}
+          </div>
+          <input
+            type="number"
+            placeholder="Or enter custom amount in ₹"
+            value={customAmount}
+            onChange={(e) => {
+              setCustomAmount(e.target.value);
+              if (e.target.value) setAmount(e.target.value);
+            }}
+            className="w-full p-2.5 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-2.5 text-xs">
-          <input type="text" required placeholder="Full Name *" value={donorName} onChange={(e) => setDonorName(e.target.value)} className="w-full p-2.5 border rounded-xl" />
-          <input type="tel" required placeholder="Phone Number *" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full p-2.5 border rounded-xl" />
-          <input type="text" placeholder="PAN Number (For 80G Receipt)" value={pan} onChange={(e) => setPan(e.target.value)} className="w-full p-2.5 border rounded-xl" />
-          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-2.5 rounded-xl shadow">
-            Record Donation & Receipt
+        <form onSubmit={handleSubmit} className="space-y-3 text-xs">
+          {/* Cause Selector */}
+          <div>
+            <label className="block font-bold font-heading text-slate-700 mb-1">Choose Seva / Cause</label>
+            <select
+              value={cause}
+              onChange={(e) => setCause(e.target.value)}
+              className="w-full p-2.5 border rounded-xl bg-white focus:ring-2 focus:ring-emerald-500 text-xs font-medium text-slate-800"
+            >
+              <option value="General Trust Seva">General Trust Community Welfare</option>
+              <option value="Free Tailoring & Maggam Training">100% Free Tailoring & Maggam Training for Women</option>
+              <option value="24/7 Emergency Blood Helpline">24/7 Emergency Blood Helpline & Medical Camps</option>
+              <option value="Weekly Annadhanam & Grocery Kits">Weekly Annadhanam Food Drives & Ration Kits</option>
+              <option value="Summer Drinking Water Chalivendram">Summer Chalivendram Drinking Water Kiosks</option>
+              <option value="Educational Kits & Youth Sports">Educational Kits & Rural Youth Sports Tournaments</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label className="block font-bold font-heading text-slate-700 mb-1">Donor Full Name *</label>
+              <input
+                type="text"
+                required
+                placeholder="Srikanth Verma"
+                value={donorName}
+                onChange={(e) => setDonorName(e.target.value)}
+                className="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block font-bold font-heading text-slate-700 mb-1">Phone Number (WhatsApp) *</label>
+              <input
+                type="tel"
+                required
+                placeholder="+91 98480 22334"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label className="block font-bold font-heading text-slate-700 mb-1">PAN Number (For 80G Tax Exemption)</label>
+              <input
+                type="text"
+                placeholder="e.g. ABCDE1234F"
+                value={pan}
+                onChange={(e) => setPan(e.target.value.toUpperCase())}
+                className="w-full p-2.5 border rounded-xl uppercase font-mono text-xs focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block font-bold font-heading text-slate-700 mb-1">UPI / UTR Transaction ID</label>
+              <input
+                type="text"
+                placeholder="e.g. 422891002341"
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+                className="w-full p-2.5 border rounded-xl font-mono text-xs focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          {/* --- PAYMENT SCREENSHOT UPLOAD OPTION --- */}
+          <div className="bg-slate-50 p-3.5 rounded-2xl border border-dashed border-emerald-300 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="font-bold font-heading text-xs text-slate-900 flex items-center space-x-1.5">
+                <Icon name="image" size={15} className="text-emerald-600" />
+                <span>Upload Payment Screenshot / Transfer Receipt</span>
+              </label>
+              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full font-heading">
+                Instant Verification
+              </span>
+            </div>
+
+            <p className="text-[11px] text-slate-500 leading-snug">
+              Attach a screenshot of your successful UPI / GPay / PhonePe / NetBanking transfer for faster 80G receipt generation.
+            </p>
+
+            {screenshotUrl ? (
+              <div className="relative bg-white p-2.5 rounded-xl border border-emerald-200 flex items-center justify-between">
+                <div className="flex items-center space-x-3 min-w-0">
+                  <img
+                    src={screenshotUrl}
+                    alt="Payment Proof Preview"
+                    className="w-12 h-12 object-cover rounded-lg border shrink-0 bg-slate-100"
+                  />
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-emerald-800 block font-heading truncate">
+                      ✅ Payment Screenshot Attached
+                    </span>
+                    <a
+                      href={screenshotUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-emerald-600 hover:underline font-mono truncate block"
+                    >
+                      View Attached Image
+                    </a>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setScreenshotUrl('')}
+                  className="text-xs text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition shrink-0 font-bold"
+                  title="Remove screenshot"
+                >
+                  <Icon name="trash" size={15} />
+                </button>
+              </div>
+            ) : (
+              <div>
+                <label className="cursor-pointer flex flex-col items-center justify-center p-4 bg-white border border-slate-200 hover:border-emerald-500 rounded-xl transition group">
+                  <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-1 group-hover:scale-110 transition">
+                    <Icon name="cloud" size={18} />
+                  </div>
+                  <span className="text-xs font-bold font-heading text-slate-800">
+                    {isUploading ? `Uploading... ${uploadProgress}%` : 'Tap to Upload Screenshot / Receipt'}
+                  </span>
+                  <span className="text-[10px] text-slate-400">Supports JPG, PNG, WebP</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleScreenshotChange}
+                    disabled={isUploading}
+                    className="hidden"
+                  />
+                </label>
+
+                {isUploading && (
+                  <div className="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                    <div
+                      className="bg-emerald-600 h-1.5 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting || isUploading}
+            className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-extrabold font-heading py-3 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs sm:text-sm"
+          >
+            {isSubmitting ? (
+              <span>Submitting Details...</span>
+            ) : (
+              <>
+                <Icon name="heart" size={16} />
+                <span>Submit Donation & Request 80G Receipt</span>
+              </>
+            )}
           </button>
         </form>
       </div>

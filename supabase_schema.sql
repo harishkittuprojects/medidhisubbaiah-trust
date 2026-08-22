@@ -95,15 +95,18 @@ CREATE TABLE IF NOT EXISTS public.service_applications (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 7. Create Donations Log Table
+-- 7. Create Donations & Payment Receipts Table
 CREATE TABLE IF NOT EXISTS public.donations (
     id TEXT PRIMARY KEY,
-    donor_name TEXT,
-    amount NUMERIC,
+    donor_name TEXT NOT NULL,
+    amount TEXT NOT NULL,
     phone TEXT,
     pan_number TEXT,
-    utr_reference TEXT,
-    cause TEXT,
+    transaction_id TEXT,
+    screenshot_url TEXT,
+    cause TEXT DEFAULT 'General Trust Seva',
+    status TEXT DEFAULT 'Pending Verification',
+    date TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
