@@ -2,15 +2,131 @@
 // Medidhisubbaiah Trust Web Application
 // Theme: White & Green with Official Trust Emblem Logo
 // Responsive Mobile-First Architecture (100% Contained & Viewport Safe)
+// Integrated with Supabase Database & Cloudinary Media Storage (Images, Videos, PDFs)
 // Built with React 18, Tailwind CSS, Outfit & Inter Typography, and Lucide Icons
 // ==========================================
 
 const { useState, useEffect, useContext, createContext, useMemo } = React;
 
-// --- INITIAL DATASET ---
+// =======================================================
+// SUPABASE & CLOUDINARY CREDENTIALS CONFIGURATION
+// =======================================================
+const getEnv = (key, fallback) => {
+  if (typeof process !== 'undefined' && process.env && process.env[key]) return process.env[key];
+  if (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__[key]) return window.__ENV__[key];
+  return fallback;
+};
+
+const SUPABASE_CONFIG = {
+  url: getEnv('VITE_SUPABASE_URL', 'https://plbdgerejabjrrqttlba.supabase.co'),
+  anonKey: getEnv('VITE_SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYmRnZXJlamFianJycXR0bGJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0MDM0NzMsImV4cCI6MjEwMjk3OTQ3M30.F5abonKjri8ER_y1OWZ0stR3J2OnDigeWcvOdHrpLpw')
+};
+
+const CLOUDINARY_CONFIG = {
+  cloudName: getEnv('VITE_CLOUDINARY_CLOUD_NAME', 'mxpyrhmt'),
+  apiKey: getEnv('VITE_CLOUDINARY_API_KEY', '159637265485386'),
+  apiSecret: getEnv('VITE_CLOUDINARY_API_SECRET', '9L1F0V-qSKVHNDrpMfflZhAWSFw')
+};
+
+// Initialize Supabase Client
+let supabaseClient = null;
+try {
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+  }
+} catch (err) {
+  console.warn('Supabase initialization warning:', err);
+}
+
+// Cloudinary Direct Upload Helper (Images, Videos, PDFs) with SHA1 Signature
+const uploadToCloudinary = async (file, onProgress) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const timestamp = Math.floor(Date.now() / 1000);
+      const strToSign = `timestamp=${timestamp}${CLOUDINARY_CONFIG.apiSecret}`;
+      
+      // Compute SHA1 signature using CryptoJS
+      let signature = '';
+      if (window.CryptoJS && window.CryptoJS.SHA1) {
+        signature = window.CryptoJS.SHA1(strToSign).toString(window.CryptoJS.enc.Hex);
+      } else {
+        throw new Error('CryptoJS library is required for signed Cloudinary upload.');
+      }
+
+      // Determine resource type: image, video, raw (pdf, docs)
+      let resourceType = 'auto';
+      if (file.type && file.type.startsWith('image/')) resourceType = 'image';
+      else if (file.type && file.type.startsWith('video/')) resourceType = 'video';
+      else if (file.type === 'application/pdf' || (file.name && file.name.toLowerCase().endsWith('.pdf'))) resourceType = 'raw';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('api_key', CLOUDINARY_CONFIG.apiKey);
+      formData.append('timestamp', timestamp.toString());
+      formData.append('signature', signature);
+
+      const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/${resourceType}/upload`;
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', endpoint, true);
+
+      if (onProgress && xhr.upload) {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            onProgress(percent);
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            let formattedDuration = undefined;
+            if (res.duration) {
+              const mins = Math.floor(res.duration / 60);
+              const secs = String(Math.floor(res.duration % 60)).padStart(2, '0');
+              formattedDuration = `${mins}:${secs}`;
+            }
+            resolve({
+              url: res.secure_url || res.url,
+              publicId: res.public_id,
+              resourceType: res.resource_type,
+              format: res.format,
+              duration: formattedDuration,
+              width: res.width,
+              height: res.height,
+              bytes: res.bytes
+            });
+          } catch (e) {
+            reject(new Error('Invalid response from Cloudinary'));
+          }
+        } else {
+          try {
+            const errData = JSON.parse(xhr.responseText);
+            reject(new Error(errData?.error?.message || `Cloudinary upload failed (HTTP ${xhr.status})`));
+          } catch (e) {
+            reject(new Error(`Cloudinary upload failed with HTTP status ${xhr.status}`));
+          }
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error('Network error while connecting to Cloudinary.'));
+      };
+
+      xhr.send(formData);
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
+// --- INITIAL DATASETS (Fallback & Default Seeds) ---
 const initialServices = [
   {
-    id: 1,
+    id: "1",
     title: "Free Tailoring Training Program",
     category: "Skill Development",
     shortDescription: "Free intensive vocational tailoring classes empowering women with self-employment and micro-business skills.",
@@ -32,7 +148,7 @@ const initialServices = [
     location: "Medidhisubbaiah Trust Skill Center"
   },
   {
-    id: 2,
+    id: "2",
     title: "Free Muggam/Maggam Work Program",
     category: "Skill Development",
     shortDescription: "Preserving traditional Indian heritage embroidery while creating high-earning artisan livelihoods for women.",
@@ -54,7 +170,7 @@ const initialServices = [
     location: "Trust Handicraft Center"
   },
   {
-    id: 3,
+    id: "3",
     title: "Free Certificate Distribution",
     category: "Education",
     shortDescription: "Official vocational certification ceremonies validating skills and boosting employability for graduates.",
@@ -76,7 +192,7 @@ const initialServices = [
     location: "Trust Community Auditorium"
   },
   {
-    id: 4,
+    id: "4",
     title: "24/7 Blood Donation & Helpline",
     category: "Healthcare",
     shortDescription: "Life-saving voluntary blood donation camps and 24/7 emergency donor mobilization network.",
@@ -98,505 +214,456 @@ const initialServices = [
     location: "Rotary & Trust Medical Camps"
   },
   {
-    id: 5,
-    title: "Free Food Distribution (Annadhanam)",
-    category: "Community Welfare",
-    shortDescription: "Freshly prepared wholesome and nutritious meals served to hospital attendants and needy individuals.",
-    fullDescription: "Believing that no one in our community should sleep on an empty stomach, Medidhisubbaiah Trust conducts regular Annadhanam (Free Meal Distribution) programs. Freshly cooked, hygienic, and balanced meals are served outside government hospitals, slums, shelter homes, and bus terminals every week.",
+    id: "5",
+    title: "Annadhanam (Free Food Distribution)",
+    category: "Social Relief",
+    shortDescription: "Nutritious hot meals distributed weekly to underprivileged patients and homeless families.",
+    fullDescription: "No human being should sleep hungry. Medidhisubbaiah Trust runs continuous Annadhanam seva outside district government hospitals, transit shelters, and low-income community settlements. Pure, hygienic vegetarian meals cooked with high-quality grains, lentils, and vegetables are served with dignity.",
     icon: "utensils",
     image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80",
-    raised: "75,000+ Meals",
-    goal: "100,000 Goal",
-    progress: 75,
+    raised: "35,000+ Meals",
+    goal: "50,000 Target",
+    progress: 70,
     features: [
-      "Nutritious hot meals prepared with high hygiene standards",
-      "Distribution at government general hospitals & rural areas",
-      "Festival special feast distributions",
-      "Eco-friendly bio-degradable plates and bowls",
-      "Volunteer-driven loving food service"
+      "100% hygienic, steaming hot vegetarian meals",
+      "Distributed outside government hospitals & rural shelters",
+      "Special festival Annadhanam for 1,000+ people",
+      "Strict food safety and clean drinking water accompaniment",
+      "Volunteer participation welcomed"
     ],
-    beneficiaries: "75,000+ Meals Served",
-    duration: "Weekly & Special Occasions",
-    location: "Multiple Community Centers"
+    beneficiaries: "35,000+ Meals Served",
+    duration: "Every Sunday & Festival Occasions",
+    location: "Government General Hospital & Shelters"
   },
   {
-    id: 6,
-    title: "Free Monthly Grocery Distribution",
-    category: "Community Welfare",
-    shortDescription: "Monthly essential ration and nutrition packs delivered to elderly, widows, and vulnerable families.",
-    fullDescription: "Our grocery kit support initiative extends food security to families facing economic hardship. Each comprehensive monthly kit includes staple rice, wheat flour, lentils, cooking oil, spices, salt, and hygiene essentials, ensuring vulnerable families can maintain dignity and good nutrition.",
+    id: "6",
+    title: "Free Grocery & Ration Kits",
+    category: "Social Relief",
+    shortDescription: "Monthly staple food groceries provided to destitute widows, elderly citizens, and disabled persons.",
+    fullDescription: "Our monthly Free Grocery distribution provides complete essential ration kits (Rice, Dal, Cooking Oil, Salt, Spices, Wheat Flour, Sugar, and hygiene essentials) directly to identified vulnerable households, single mothers, and elderly persons with no family support.",
     icon: "packagecheck",
     image: "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=800&q=80",
-    raised: "3,800+ Families",
-    goal: "5,000 Goal",
-    progress: 76,
+    raised: "1,800+ Kits",
+    goal: "2,500 Target",
+    progress: 72,
     features: [
-      "15-item essential dry ration family kit",
-      "Direct home delivery for bedridden elderly & disabled",
-      "Quarterly nutritional assessments",
-      "Transparent beneficiary identification process",
-      "Disaster relief grocery emergency packs"
+      "25 kg comprehensive monthly essential ration pack",
+      "Dedicated focus on destitute widows & elderly",
+      "Doorstep delivery for bedridden and disabled beneficiaries",
+      "Seasonal festival grocery supplement packages",
+      "Transparent community beneficiary verification"
     ],
-    beneficiaries: "3,800+ Families Supported",
-    duration: "Monthly 1st Week",
-    location: "Door-to-door & Trust distribution points"
+    beneficiaries: "1,800+ Families Supported",
+    duration: "Monthly Distribution Drive",
+    location: "Community Center Distribution Point"
   },
   {
-    id: 7,
-    title: "Chalivendram Drinking Water Kiosks",
+    id: "7",
+    title: "Summer Chalivendram Water Kiosks",
     category: "Public Welfare",
-    shortDescription: "Traditional clay pot drinking water and spiced buttermilk stations serving pedestrians during harsh summer.",
-    fullDescription: "During scorching summer months, Medidhisubbaiah Trust installs and maintains multiple 'Chalivendram' kiosks at busy traffic intersections, market areas, and transit stops. Cold, purified water stored in natural clay pots and fresh spiced buttermilk are served free to daily wage laborers, rickshaw drivers, and travelers.",
+    shortDescription: "Free drinking water and cool buttermilk centers combating harsh summer heat for commuters.",
+    fullDescription: "During the scorching summer months (March - June), the Trust operates 8+ traditional Chalivendram centers in heavy pedestrian zones, bus terminals, and market streets. We provide cool clay-pot filtered water and refreshing spiced buttermilk to thousands of pedestrians, auto drivers, and sanitation workers every day.",
     icon: "droplets",
-    image: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=800&q=80",
-    raised: "150,000+ Served",
-    goal: "200,000 Goal",
+    image: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=800&q=80",
+    raised: "1,50,000+ People",
+    goal: "2,00,000 Target",
     progress: 75,
     features: [
-      "Naturally cooled clay pot potable water",
-      "Freshly prepared spiced buttermilk (Majjiga) daily",
-      "Strategic placements at major bus stops and markets",
-      "Continuous sanitization and water replenishment",
-      "Shaded rest points with clean seating"
+      "Cool clay pot drinking water kiosks",
+      "Daily fresh spiced buttermilk (Majjiga) distribution",
+      "Located at bus stations, markets, and traffic intersections",
+      "Relief for auto drivers, gig workers, and pedestrians",
+      "Dedicated volunteer supervision daily"
     ],
-    beneficiaries: "150,000+ Thirsty Citizens Served",
-    duration: "March to June Every Year",
-    location: "8+ Junctions across the city"
+    beneficiaries: "1,50,000+ Thirst Quenched",
+    duration: "Annual March to June Service",
+    location: "8 High-Traffic Urban Locations"
   },
   {
-    id: 8,
-    title: "Sports Events & Youth Tournaments",
-    category: "Sports",
-    shortDescription: "Conducting championships in Kabaddi, Cricket, and Volleyball, providing free sports gear to rural youth.",
-    fullDescription: "Sports foster discipline, physical fitness, teamwork, and healthy lifestyle habits. The Trust organizes inter-village and inter-school cricket tournaments, kabaddi matches, volleyball cups, and running events. We also distribute quality sports kits to talented athletes who lack financial backing.",
+    id: "8",
+    title: "Youth Sports Meets & Free Kits",
+    category: "Youth & Sports",
+    shortDescription: "Organizing rural athletic tournaments and distributing professional sports gear to youth.",
+    fullDescription: "Encouraging fitness, team discipline, and healthy sportsmanship among rural youth. The Trust sponsors annual Cricket, Kabaddi, Volleyball, and Athletics tournaments, providing free jerseys, shoes, sports kits, and trophies to foster talent and steer young minds away from negative influences.",
     icon: "trophy",
-    image: "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=800&q=80",
-    raised: "5,000+ Athletes",
-    goal: "8,000 Goal",
-    progress: 62,
+    image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=800&q=80",
+    raised: "3,000+ Youth",
+    goal: "4,000 Target",
+    progress: 75,
     features: [
-      "Annual Medidhisubbaiah Memorial Cricket & Kabaddi Cup",
-      "Free sports gear distribution (bats, balls, jerseys, kits)",
-      "Coaching camps for rural school students",
-      "Cash prizes and trophies for winning teams",
-      "Promoting physical health and community harmony"
+      "Annual Inter-Mandal Cricket & Kabaddi tournaments",
+      "Free professional sports kit bags and jerseys",
+      "Scholarships & prize money for top athletic performers",
+      "Coaching camps guided by state-level coaches",
+      "Promoting discipline and substance-free youth lifestyle"
     ],
-    beneficiaries: "5,000+ Young Athletes",
-    duration: "Annual Tournaments & Weekend Camps",
+    beneficiaries: "3,000+ Young Athletes",
+    duration: "Annual Winter Tournament",
     location: "District Sports Grounds"
   },
   {
-    id: 9,
-    title: "Educational Kits & Merit Scholarships",
+    id: "9",
+    title: "Educational Kits & Scholarships",
     category: "Education",
-    shortDescription: "Free school bags, notebooks, study materials, and merit awards to prevent student dropouts.",
-    fullDescription: "Education is the cornerstone of societal progress. Medidhisubbaiah Trust provides free school bags, notebooks, stationery kits, and school uniforms to underprivileged children. We also run evening remedial study circles and career counseling workshops for high school and college students.",
+    shortDescription: "Free school backpacks, notebooks, uniforms, and merit scholarships for underprivileged students.",
+    fullDescription: "Education is the greatest equalizer. Medidhisubbaiah Trust distributes comprehensive academic kits containing waterproof backpacks, notebooks, stationery, mathematical instruments, and umbrellas to government school students, alongside need-based fee scholarships for deserving collegiate youth.",
     icon: "graduationcap",
     image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80",
-    raised: "6,400+ Students",
-    goal: "10,000 Goal",
-    progress: 64,
+    raised: "2,200+ Students",
+    goal: "3,000 Target",
+    progress: 73,
     features: [
-      "Free school bags, notebooks, and geometry boxes",
-      "Merit-cum-means scholarship assistance",
-      "Free evening study centers for rural students",
-      "Career guidance and digital literacy workshops",
-      "Anti-drop-out counseling for parents"
+      "Sturdy backpacks with notebooks and stationery kits",
+      "Free school uniform distribution drives",
+      "Merit-cum-means college tuition grants",
+      "Career counseling workshops for high schoolers",
+      "Special focus on encouraging rural girl child education"
     ],
-    beneficiaries: "6,400+ Students Benefited",
-    duration: "Year-Round Programs",
-    location: "Government Schools & Trust Learning Centers"
+    beneficiaries: "2,200+ Students Supported",
+    duration: "Annual Academic Season Drive",
+    location: "Government Schools & Trust Center"
   }
 ];
 
 const initialEvents = [
   {
-    id: 1,
-    title: "Mega Blood Donation Camp & Health Checkup",
-    image: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=800&q=80",
+    id: "1",
+    title: "Mega Free Vocational Training Graduation & Certificate Distribution",
+    category: "Skill Development",
     date: "2026-09-15",
-    time: "09:00 AM - 02:00 PM",
-    location: "Medidhisubbaiah Trust Main Hall, Gandhi Nagar",
-    category: "Blood Donation",
-    status: "Upcoming",
-    description: "Join us in our mission to save lives. Partnered with the District Blood Bank, our camp includes free full-body vitals checkup, refreshments, and a donor medal.",
-    organizer: "Health Wing, Medidhisubbaiah Trust",
-    seatsTotal: 150,
-    seatsRegistered: 86
+    time: "10:00 AM - 01:30 PM",
+    location: "Hotel Chitturi Heritage, Tanuku",
+    status: "Registration Open",
+    description: "Grand convocation ceremony honoring 300+ women completing free tailoring and maggam work training with Dr. Kishore Kumar Garu.",
+    image_url: "assets/gallery/trust_work_page_01.jpg",
+    total_seats: 350,
+    seats_registered: 42
   },
   {
-    id: 2,
-    title: "Graduation & Certificate Distribution Ceremony 2026",
-    image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80",
+    id: "2",
+    title: "Emergency Voluntary Blood Donation Camp & Awareness Meet",
+    category: "Healthcare",
     date: "2026-09-28",
-    time: "10:30 AM - 01:30 PM",
-    location: "City Community Auditorium",
-    category: "Education",
+    time: "08:30 AM - 02:00 PM",
+    location: "Trust Community Center, Nizampet",
+    status: "Registration Open",
+    description: "Join our noble life-saving blood donation drive in association with Red Cross Blood Bank. Free health checkup for all donors.",
+    image_url: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=800&q=80",
+    total_seats: 200,
+    seats_registered: 88
+  },
+  {
+    id: "3",
+    title: "Annual Free Sports Tournament & Sports Kit Distribution for Youth",
+    category: "Youth & Sports",
+    date: "2026-10-12",
+    time: "07:30 AM - 05:00 PM",
+    location: "Tanuku Municipal Stadium",
     status: "Upcoming",
-    description: "Felicitating 200+ women who successfully completed our Free Tailoring and Maggam Work courses. Free starter toolkits will be gifted to outstanding achievers.",
-    organizer: "Vocational Training Department",
-    seatsTotal: 300,
-    seatsRegistered: 215
-  },
-  {
-    id: 3,
-    title: "Inter-District Youth Kabaddi & Volleyball Tournament",
-    image: "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=800&q=80",
-    date: "2026-10-10",
-    time: "08:00 AM - 06:00 PM",
-    location: "Zilla Parishad High School Grounds",
-    category: "Sports",
-    status: "Upcoming",
-    description: "Annual sports festival featuring 24 rural teams competing for the Medidhisubbaiah Trophy, cash prizes, and state-level scout opportunities.",
-    organizer: "Youth & Sports Committee",
-    seatsTotal: 500,
-    seatsRegistered: 340
-  },
-  {
-    id: 4,
-    title: "Annual Free School Bag & Notebook Distribution",
-    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80",
-    date: "2026-06-12",
-    time: "09:30 AM - 01:00 PM",
-    location: "Govt. High School Complex, Ward 4",
-    category: "Education",
-    status: "Completed",
-    description: "Distributed 1,200 school bags, notebooks, and geometry sets to students from 8 government schools ahead of the academic year reopening.",
-    organizer: "Education Welfare Committee",
-    seatsTotal: 1200,
-    seatsRegistered: 1200
-  },
-  {
-    id: 5,
-    title: "Summer Chalivendram Water & Buttermilk Service Inauguration",
-    image: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=800&q=80",
-    date: "2026-03-20",
-    time: "08:00 AM - 06:00 PM",
-    location: "RTC Bus Stand & 7 City Junctions",
-    category: "Public Welfare",
-    status: "Completed",
-    description: "Inaugurated 8 public drinking water and spiced buttermilk kiosks that served over 1,500 citizens daily throughout the intense heatwave.",
-    organizer: "Public Service Wing",
-    seatsTotal: 2000,
-    seatsRegistered: 2000
-  },
-  {
-    id: 6,
-    title: "Festival Food & Essential Grocery Kit Distribution",
-    image: "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=800&q=80",
-    date: "2026-04-14",
-    time: "10:00 AM - 04:00 PM",
-    location: "Medidhisubbaiah Trust Premises",
-    category: "Food Distribution",
-    status: "Completed",
-    description: "Distributed monthly grocery rations and festive sweets to 650 elderly citizens and underprivileged families.",
-    organizer: "Community Welfare Division",
-    seatsTotal: 650,
-    seatsRegistered: 650
+    description: "Inter-mandal cricket, kabaddi, and athletics meet promoting rural youth sports talent with free jerseys, trophies, and kits.",
+    image_url: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=800&q=80",
+    total_seats: 500,
+    seats_registered: 120
   }
 ];
 
 const initialNews = [
   {
-    id: 1,
+    id: "1",
     title: "Medidhisubbaiah Trust Expands Free Tailoring Center to Empower 500 More Rural Women",
     thumbnail: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80",
     date: "2026-08-10",
     category: "Skill Development",
-    shortDescription: "With new industrial sewing machines and master trainers, the Trust expands its flagship tailoring curriculum to new centers.",
+    short_description: "With new industrial sewing machines and master trainers, the Trust expands its flagship tailoring curriculum to new centers.",
     author: "Trust Editorial Desk",
-    readTime: "4 min read",
+    read_time: "4 min read",
     content: `Medidhisubbaiah Trust has announced the major expansion of its Free Tailoring and Garment Making Center. The initiative introduces 20 brand-new computerized sewing and overlock machines, allowing the trust to train an additional 500 women per year.\n\nThe program includes comprehensive modules in pattern drafting, blouse stitching, kidswear design, and basic boutique management. Trainees are also connected with local garment boutiques and textile merchants for direct job placement and order fulfillment.\n\n"Our goal is not merely training; it is creating self-reliant, financially empowered households," stated the Trust Chairman during the expansion ribbon cutting ceremony.`
   },
   {
-    id: 2,
+    id: "2",
     title: "Emergency Blood Donor Registry Crosses 1,000 Verified Donors Milestone",
     thumbnail: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=800&q=80",
     date: "2026-07-22",
     category: "Healthcare",
-    shortDescription: "The Trust's 24/7 blood helpline has successfully arranged critical blood units for over 350 emergency hospital cases this year.",
+    short_description: "The Trust's 24/7 blood helpline has successfully arranged critical blood units for over 350 emergency hospital cases this year.",
     author: "Health Committee",
-    readTime: "3 min read",
+    read_time: "3 min read",
     content: `The 24/7 Voluntary Blood Donor Network of Medidhisubbaiah Trust reached a significant milestone this month with over 1,000 verified volunteer donors registered across rare and common blood groups.\n\nIn coordination with district medical centers and emergency response teams, the network helps connect patients in urgent need with voluntary donors in less than 20 minutes on average.\n\nThe Trust expresses heartfelt gratitude to all noble donors who step forward selflessly to save precious human lives.`
   },
   {
-    id: 3,
+    id: "3",
     title: "1,200 Students Receive Free Educational Bags and Stationery Kits for New Academic Year",
     thumbnail: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80",
     date: "2026-06-18",
     category: "Education",
-    shortDescription: "Children across eight government primary and high schools received durable school bags, notebooks, and learning materials.",
+    short_description: "Children across eight government primary and high schools received durable school bags, notebooks, and learning materials.",
     author: "Education Wing",
-    readTime: "3 min read",
+    read_time: "3 min read",
     content: `As schools resumed for the new academic calendar, Medidhisubbaiah Trust completed its annual Free School Kit Distribution drive. Over 1,200 students from underprivileged backgrounds were provided with high quality backpacks, notebooks, pens, geometry boxes, and examination pads.\n\nTeachers and parents appreciated the gesture, noting that these kits prevent school dropouts and encourage children to attend classes with pride and excitement.`
   },
   {
-    id: 4,
+    id: "4",
     title: "Summer Chalivendram Kiosks Serve Over 1.5 Lakh Citizens Across High-Traffic Hubs",
-    thumbnail: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=800&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=800&q=80",
     date: "2026-05-30",
     category: "Public Welfare",
-    shortDescription: "The 3-month summer drinking water and buttermilk service concluded successfully, bringing immense relief to daily wage workers and commuters.",
+    short_description: "The 3-month summer drinking water and buttermilk service concluded successfully, bringing immense relief to daily wage workers and commuters.",
     author: "Public Relations",
-    readTime: "2 min read",
+    read_time: "2 min read",
     content: `With temperatures soaring past 42°C during peak summer, Medidhisubbaiah Trust operated 8 dedicated Chalivendram centers across major transit and market hubs.\n\nVolunteers worked in shifts to serve cool, naturally filtered clay pot water and freshly churned spicy buttermilk to more than 150,000 pedestrians, auto drivers, traffic personnel, and travelers. The Trust expresses gratitude to the local community volunteers who managed the kiosks daily.`
   }
 ];
 
 const initialGallery = [
   {
-    id: 100,
+    id: "100",
     title: "Official Program Live Video — Free Tailoring & Muggam Work Convocations",
     category: "Video Documentation",
     type: "video",
-    videoUrl: "assets/gallery/trust_activity_video.mp4",
-    imageUrl: "assets/gallery/trust_activity_video_thumb.jpg",
+    video_url: "assets/gallery/trust_activity_video.mp4",
+    image_url: "assets/gallery/trust_activity_video_thumb.jpg",
     duration: "1:22",
     date: "2026-08-22",
-    isPdfWork: false,
+    is_pdf_work: false,
     location: "Hotel Chitturi Heritage, Tanuku",
     caption: "Live video documentation showing trainees, master faculty, guest dignitaries, certificate distribution, and vocational skill activities across Tanuku, Mogultur, Narsapuram & Tadepalligudam."
   },
   {
-    id: 1,
+    id: "1",
     title: "Grand Keynote & Certificate Distribution Inauguration",
     category: "Certificate Distribution",
-    imageUrl: "assets/gallery/trust_work_page_01.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_01.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
+    is_pdf_work: true,
     location: "Hotel Chitturi Heritage, Tanuku",
     caption: "Dr. Kishore Kumar Garu (Founder, GVSK Nutraceuticals & Ayurveda, Hyderabad) inaugurating the Certificate Distribution Ceremony for Free Tailoring & Muggam Work batches across Tanuku, Mogultur, Narsapuram & Tadepalligudam."
   },
   {
-    id: 2,
+    id: "2",
     title: "Mega Graduation Convocation - Women Beneficiaries",
     category: "Certificate Distribution",
-    imageUrl: "assets/gallery/trust_work_page_02.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_02.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
+    is_pdf_work: true,
     location: "Tanuku, West Godavari",
     caption: "Grand convocation group photograph of women trainees holding their official certificates after completing the intensive vocational skill development program."
   },
   {
-    id: 3,
+    id: "3",
     title: "Tanuku & Mogultur Batch Certificate Distribution",
     category: "Certificate Distribution",
-    imageUrl: "assets/gallery/trust_work_page_03.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_03.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
+    is_pdf_work: true,
     location: "Hotel Chitturi Heritage, Tanuku",
     caption: "Dignitaries presenting vocational credentials to successful trainees from Tanuku and Mogultur mandals, fostering women self-reliance."
   },
   {
-    id: 4,
+    id: "4",
     title: "Vocational Skills Certificate Distribution - Narsapuram Batch",
     category: "Certificate Distribution",
-    imageUrl: "assets/gallery/trust_work_page_04.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_04.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
+    is_pdf_work: true,
     location: "Narsapuram & Regional Center",
     caption: "Honoring deserving women students with course completion credentials, encouraging micro-entrepreneurship and boutique startups."
   },
   {
-    id: 5,
+    id: "5",
     title: "Free Tailoring & Maggam Work Certificate Presentation - Tadepalligudam",
     category: "Certificate Distribution",
-    imageUrl: "assets/gallery/trust_work_page_05.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_05.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
+    is_pdf_work: true,
     location: "Tadepalligudam & Tanuku Centers",
     caption: "Trainees proudly receiving certificates recognizing their dedicated practice in garment making, drafting, and intricate embroidery."
   },
   {
-    id: 6,
+    id: "6",
     title: "Dignitaries & Master Trainers Felicitation",
     category: "Tailoring & Muggam",
-    imageUrl: "assets/gallery/trust_work_page_06.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_06.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
+    is_pdf_work: true,
     location: "Hotel Chitturi Heritage, Tanuku",
     caption: "Trust leaders presenting graduation certificates to women participants from rural and semi-urban communities."
   },
   {
-    id: 7,
+    id: "7",
     title: "Empowering Rural Women Artisans with Tailoring Mastery",
     category: "Tailoring & Muggam",
-    imageUrl: "assets/gallery/trust_work_page_07.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_07.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
+    is_pdf_work: true,
     location: "Tanuku, West Godavari",
     caption: "Congratulating women artisans on mastering traditional Maggam work and commercial garment stitching."
   },
   {
-    id: 8,
+    id: "8",
     title: "Practical Muggam & Aari Needlework Demonstration & Awards",
     category: "Tailoring & Muggam",
-    imageUrl: "assets/gallery/trust_work_page_08.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_08.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
+    is_pdf_work: true,
     location: "Tanuku & Mogultur Centers",
     caption: "Moments from the grand certificate distribution honoring hardworking candidates."
   },
   {
-    id: 9,
+    id: "9",
     title: "Women Livelihood & Skill Development Certification Session",
     category: "Tailoring & Muggam",
-    imageUrl: "assets/gallery/trust_work_page_09.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_09.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
+    is_pdf_work: true,
     location: "Tanuku, AP",
     caption: "Celebrating the achievements of students across multiple training centers."
   },
   {
-    id: 10,
-    title: "Tanuku Division Women Beneficiaries Group Felicitation",
-    category: "Certificate Distribution",
-    imageUrl: "assets/gallery/trust_work_page_10.jpg",
-    date: "2026-08-10",
-    isPdfWork: true,
-    location: "Hotel Chitturi Heritage Auditorium",
-    caption: "Dignitaries handing over formal certificates to successful tailoring trainees."
-  },
-  {
-    id: 11,
-    title: "Mogultur & Coastal Mandals Free Tailoring Graduation",
+    id: "10",
+    title: "Tanuku Region Women Vocational Certificate Ceremony",
     category: "Tailoring & Muggam",
-    imageUrl: "assets/gallery/trust_work_page_11.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_10.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
-    location: "Mogultur & Tanuku Centers",
-    caption: "Empowering women with recognized credentials to start their home-based tailoring ventures."
+    is_pdf_work: true,
+    location: "Hotel Chitturi Heritage, Tanuku",
+    caption: "Fostering economic empowerment and home-based enterprise among women through verified certifications."
   },
   {
-    id: 12,
-    title: "Handicraft & Traditional Maggam Design Certification Program",
+    id: "11",
+    title: "Skill Completion & Career Guidance Seminar",
+    category: "Education",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_11.jpg",
+    date: "2026-08-10",
+    is_pdf_work: true,
+    location: "Tanuku Center",
+    caption: "Guiding new graduates on starting self-help stitching groups, purchasing sewing machines, and marketing their handmade products."
+  },
+  {
+    id: "12",
+    title: "Mogultur Batch Maggam Work Artisans Recognition",
     category: "Tailoring & Muggam",
-    imageUrl: "assets/gallery/trust_work_page_12.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_12.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
-    location: "Tanuku, West Godavari",
-    caption: "Honoring artisans skilled in Aari needle, zardosi, and designer blouse creation."
+    is_pdf_work: true,
+    location: "Mogultur Mandal",
+    caption: "Recognizing high-aptitude trainees specialized in bridal Aari and Zari embroidery."
   },
   {
-    id: 13,
-    title: "Vocational Course Achievers Award Ceremony",
+    id: "13",
+    title: "Tadepalligudam Vocational Training Milestone",
     category: "Certificate Distribution",
-    imageUrl: "assets/gallery/trust_work_page_13.jpg",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_13.jpg",
     date: "2026-08-10",
-    isPdfWork: true,
+    is_pdf_work: true,
+    location: "Tadepalligudam",
+    caption: "Ceremonial distribution of course credentials to dedicated rural women graduates."
+  },
+  {
+    id: "14",
+    title: "Narsapuram & Regional Center Graduation Day",
+    category: "Certificate Distribution",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_14.jpg",
+    date: "2026-08-10",
+    is_pdf_work: true,
+    location: "Narsapuram",
+    caption: "Dignitaries blessing the successful candidates and commending the Trust for non-stop community service."
+  },
+  {
+    id: "15",
+    title: "All Works Together — Comprehensive Convocation Summary",
+    category: "Certificate Distribution",
+    type: "image",
+    image_url: "assets/gallery/trust_work_page_15.jpg",
+    date: "2026-08-10",
+    is_pdf_work: true,
     location: "Hotel Chitturi Heritage, Tanuku",
-    caption: "Inspiring speeches and certificate awards empowering women towards financial dignity."
+    caption: "Official presentation chronicle summarizing all free tailoring, maggam work, and certificate distribution drives across Andhra Pradesh."
   },
   {
-    id: 14,
-    title: "Graduation Honor for Tadepalligudem & Narsapur Trainees",
-    category: "Certificate Distribution",
-    imageUrl: "assets/gallery/trust_work_page_14.jpg",
-    date: "2026-08-10",
-    isPdfWork: true,
-    location: "Narsapuram, Tanuku & Tadepalligudem",
-    caption: "Trust representatives presenting graduation honors to successful students."
-  },
-  {
-    id: 15,
-    title: "Grand Finale - Medidhisubbaiah Trust Social Service Portfolio",
-    category: "Certificate Distribution",
-    imageUrl: "assets/gallery/trust_work_page_15.jpg",
-    date: "2026-08-10",
-    isPdfWork: true,
-    location: "Hotel Chitturi Heritage, Tanuku",
-    caption: "Comprehensive photo compilation of Free Tailoring & Muggam Works programs across Tanuku, Mogultur, Narsapuram & Tadepalligudem."
-  },
-  {
-    id: 16,
-    title: "Voluntary Blood Donation Drive & Medical Camp",
-    category: "Blood Donation",
-    imageUrl: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=1200&q=80",
+    id: "16",
+    title: "Blood Donation Camp at Community Center",
+    category: "Healthcare",
+    type: "image",
+    image_url: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=800&q=80",
     date: "2026-07-15",
-    isPdfWork: false,
-    location: "Trust Main Hall, Gandhi Nagar",
-    caption: "Generous donors contributing life-saving blood units at our hospital partnership camp."
+    is_pdf_work: false,
+    location: "Nizampet Community Center",
+    caption: "Volunteers donating life-saving blood units during the 24/7 donor mobilization drive."
   },
   {
-    id: 17,
-    title: "Nutritious Food Annadhanam Service",
-    category: "Food Distribution",
-    imageUrl: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80",
-    date: "2026-07-28",
-    isPdfWork: false,
-    location: "Govt. Hospital & Bus Terminal",
-    caption: "Volunteers serving fresh, nutritious meals with love to hospital attendants and needy individuals."
+    id: "17",
+    title: "Weekly Annadhanam & Free Food Distribution",
+    category: "Annadhanam",
+    type: "image",
+    image_url: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80",
+    date: "2026-06-25",
+    is_pdf_work: false,
+    location: "Government General Hospital",
+    caption: "Serving pure, nutritious meals to patient attendants and daily wage earners."
   },
   {
-    id: 18,
-    title: "Essential Grocery Kit Distribution to Families",
-    category: "Grocery Distribution",
-    imageUrl: "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80",
-    date: "2026-06-20",
-    isPdfWork: false,
-    location: "Trust Community Points",
-    caption: "Monthly dry ration packs containing essentials provided to economically weak families."
-  },
-  {
-    id: 19,
-    title: "Summer Chalivendram Water & Buttermilk Service",
+    id: "18",
+    title: "Summer Chalivendram Water Kiosk Service",
     category: "Chalivendram",
-    imageUrl: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=1200&q=80",
-    date: "2026-04-25",
-    isPdfWork: false,
-    location: "RTC Bus Stand & 8 City Junctions",
-    caption: "Providing cold clay-pot drinking water and spiced buttermilk to beat the scorching summer heat."
-  },
-  {
-    id: 20,
-    title: "Free School Bags & Stationery Kits Distribution",
-    category: "Educational Programs",
-    imageUrl: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80",
-    date: "2026-06-12",
-    isPdfWork: false,
-    location: "Govt High Schools, Ward 4",
-    caption: "Happy school children receiving new backpacks and stationery sets for the school term."
-  },
-  {
-    id: 21,
-    title: "Inter-District Youth Sports Championship",
-    category: "Sports",
-    imageUrl: "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1200&q=80",
-    date: "2026-05-18",
-    isPdfWork: false,
-    location: "District Sports Stadium",
-    caption: "Youth teams competing with fervor at the annual community sports meet."
+    type: "image",
+    image_url: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=800&q=80",
+    date: "2026-05-12",
+    is_pdf_work: false,
+    location: "Main Bus Complex & Market Hub",
+    caption: "Quenching the thirst of thousands of pedestrians with cool clay-pot water and fresh buttermilk."
   }
 ];
 
 const initialStats = [
-  { label: "Women & Youth Trained", value: "2,050+", icon: "users", change: "100% Free Vocational" },
-  { label: "Blood Units Donated", value: "4,200+", icon: "heartpulse", change: "24/7 Helpline" },
-  { label: "Meals & Groceries Distributed", value: "80,000+", icon: "utensils", change: "Zero Hunger Goal" },
-  { label: "Students Supported", value: "6,400+", icon: "graduationcap", change: "Education for All" }
+  { value: "4,500+", label: "Women & Artisans Trained", icon: "scissors", sub: "Free Vocational Courses" },
+  { value: "4,200+", label: "Blood Units Arranged", icon: "heartpulse", sub: "24/7 Emergency Line" },
+  { value: "35,000+", label: "Free Meals Served", icon: "utensils", sub: "Annadhanam Seva" },
+  { value: "1.5L+", label: "Citizens Hydrated", icon: "droplets", sub: "Summer Chalivendram" },
+  { value: "3,000+", label: "Youth In Sports", icon: "trophy", sub: "Tournaments & Kits" },
+  { value: "100%", label: "Free & Transparent", icon: "award", sub: "Selfless Community Impact" }
 ];
 
 const initialTestimonials = [
   {
-    id: 1,
+    id: "1",
     name: "Lakshmi Devi",
-    role: "Tailoring Graduate & Boutique Owner",
-    quote: "Joining Medidhisubbaiah Trust's free tailoring course transformed my life. Today I earn ₹15,000 every month stitching bridal garments and support my family with pride.",
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80"
+    role: "Tailoring Graduate & Home Boutique Owner",
+    location: "Tanuku",
+    text: "Joining Medidhisubbaiah Trust's free tailoring course transformed my life. Within 3 months I learned drafting, cutting, and stitching. Today, I earn ₹15,000 every month stitching bridal blouses at home.",
+    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+    program: "Free Tailoring Program"
   },
   {
-    id: 2,
-    name: "Dr. K. Srinivas Rao",
-    role: "Govt Hospital Medical Officer",
-    quote: "The 24/7 Voluntary Blood Donor Network by Medidhisubbaiah Trust has been a lifesaver for our emergency ICU trauma cases. Their coordination is instantaneous.",
-    image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=200&q=80"
+    id: "2",
+    name: "Rajesh Varma",
+    role: "Father of Emergency Surgery Patient",
+    location: "Nizampet, Hyderabad",
+    text: "When my father urgently needed 3 units of rare O-negative blood at midnight, Medidhisubbaiah Trust's 24/7 blood helpline mobilized voluntary donors to the hospital in just 25 minutes. They saved his life.",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+    program: "24/7 Blood Donor Network"
   },
   {
-    id: 3,
-    name: "Ramesh Babu",
-    role: "Auto Driver & Parent",
-    quote: "During hot summers, the Chalivendram drinking water kiosk keeps hundreds of daily wage workers going. The Trust also gifted my two children high quality school bags and books.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80"
+    id: "3",
+    name: "Bhavani Kumari",
+    role: "Maggam Work Artisan",
+    location: "Mogultur",
+    text: "The master trainers at the Trust taught me Aari embroidery from the very basics. They provided free frames and materials. I received my certificate from Dr. Kishore Kumar Garu and now work with local boutiques.",
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
+    program: "Maggam Work Program"
   }
 ];
 
@@ -748,24 +815,44 @@ function Icon({ name, className = "w-5 h-5", size = 20, color = "currentColor" }
         <path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>
       </svg>
     ),
-    arrowright: (
-      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
-      </svg>
-    ),
     check: (
-      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="20 6 9 17 4 12"/>
       </svg>
     ),
     x: (
-      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     ),
-    search: (
+    arrowright: (
       <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+      </svg>
+    ),
+    chevronright: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    ),
+    chevronleft: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    ),
+    chevrondown: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    ),
+    shieldcheck: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
+      </svg>
+    ),
+    target: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
       </svg>
     ),
     eye: (
@@ -775,27 +862,62 @@ function Icon({ name, className = "w-5 h-5", size = 20, color = "currentColor" }
     ),
     eyeoff: (
       <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>
+        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>
       </svg>
     ),
-    chevronleft: (
+    copy: (
       <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m15 18-6-6 6-6"/>
-      </svg>
-    ),
-    chevronright: (
-      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m9 18 6-6-6-6"/>
+        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
       </svg>
     ),
     menu: (
       <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>
+        <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
       </svg>
     ),
-    lock: (
+    search: (
       <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+    ),
+    plus: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    ),
+    edit: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    ),
+    trash: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+      </svg>
+    ),
+    upload: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    ),
+    image: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+      </svg>
+    ),
+    database: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
+      </svg>
+    ),
+    cloud: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+      </svg>
+    ),
+    refresh: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
       </svg>
     ),
     share: (
@@ -839,6 +961,121 @@ function Icon({ name, className = "w-5 h-5", size = 20, color = "currentColor" }
   return iconMap[key] || iconMap.heart;
 }
 
+// --- CLOUDINARY UPLOADER COMPONENT ---
+const CloudinaryUploader = ({ label = "Upload Media", onUploaded, acceptedTypes = "image/*,video/*,application/pdf", currentUrl = "" }) => {
+  const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [previewUrl, setPreviewUrl] = useState(currentUrl);
+  const [fileMeta, setFileMeta] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setPreviewUrl(currentUrl);
+  }, [currentUrl]);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setProgress(0);
+    setError(null);
+
+    try {
+      const result = await uploadToCloudinary(file, (p) => setProgress(p));
+      setPreviewUrl(result.url);
+      setFileMeta(result);
+      if (onUploaded) {
+        onUploaded(result.url, result);
+      }
+    } catch (err) {
+      console.error('Upload Error:', err);
+      setError(err.message || 'Upload failed. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const isVideo = previewUrl && (previewUrl.includes('.mp4') || previewUrl.includes('.mov') || previewUrl.includes('/video/'));
+  const isPdf = previewUrl && (previewUrl.includes('.pdf') || previewUrl.includes('/raw/'));
+
+  return (
+    <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+      <div className="flex items-center justify-between">
+        <label className="font-bold font-heading text-xs text-slate-800 flex items-center space-x-1.5">
+          <Icon name="cloud" size={15} className="text-emerald-600" />
+          <span>{label}</span>
+        </label>
+        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full font-heading">
+          Cloudinary: mxpyrhmt
+        </span>
+      </div>
+
+      {previewUrl && (
+        <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-white p-2">
+          {isVideo ? (
+            <video src={previewUrl} controls className="w-full h-36 object-contain rounded-lg bg-black" />
+          ) : isPdf ? (
+            <div className="flex items-center space-x-3 p-3 bg-emerald-50 rounded-lg">
+              <div className="p-2.5 bg-emerald-600 text-white rounded-lg"><Icon name="filetext" size={20} /></div>
+              <div className="min-w-0 flex-1">
+                <span className="font-bold text-xs text-emerald-950 font-heading block truncate">PDF Document Uploaded</span>
+                <a href={previewUrl} target="_blank" rel="noreferrer" className="text-[10px] text-emerald-600 underline font-medium truncate block">
+                  {previewUrl}
+                </a>
+              </div>
+            </div>
+          ) : (
+            <img src={previewUrl} alt="Upload Preview" className="w-full h-32 object-cover rounded-lg" />
+          )}
+
+          <div className="mt-2 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 truncate max-w-[200px] font-mono text-[10px]">{previewUrl}</span>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(previewUrl);
+                alert('Cloudinary URL copied to clipboard!');
+              }}
+              className="text-emerald-600 font-bold hover:underline flex items-center space-x-1"
+            >
+              <Icon name="copy" size={12} />
+              <span>Copy URL</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isUploading && (
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-xs font-bold text-emerald-700">
+            <span className="flex items-center space-x-1.5 animate-pulse">
+              <Icon name="upload" size={14} />
+              <span>Uploading to Cloudinary Cloud...</span>
+            </span>
+            <span>{progress}%</span>
+          </div>
+          <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+            <div className="bg-emerald-600 h-2 rounded-full transition-all duration-200" style={{ width: `${progress}%` }}></div>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="p-2 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-medium">
+          {error}
+        </div>
+      )}
+
+      <label className="flex items-center justify-center space-x-2 w-full p-2.5 bg-white border border-dashed border-emerald-400 hover:border-emerald-600 hover:bg-emerald-50/50 rounded-xl cursor-pointer transition text-xs font-bold text-emerald-700 font-heading">
+        <Icon name="upload" size={16} />
+        <span>{previewUrl ? 'Replace Media / Upload New File' : 'Select Image, Video, or PDF to Upload'}</span>
+        <input type="file" accept={acceptedTypes} onChange={handleFileChange} className="hidden" />
+      </label>
+    </div>
+  );
+};
+
 // --- CONTEXT & STATE STORE ---
 const TrustContext = createContext(null);
 
@@ -858,33 +1095,74 @@ const TrustProvider = ({ children }) => {
   };
 
   const [currentRoute, setCurrentRoute] = useState(() => {
-    return normalizeRoute(window.location.hash);
+    const path = window.location.pathname.replace(/^\/+/, '');
+    if (path === 'admin') return 'admin';
+    return normalizeRoute(window.location.hash || path);
   });
 
+  const sanitizeUrl = (u) => {
+    if (!u) return 'assets/gallery/trust_work_page_01.jpg';
+    if (typeof u === 'string' && u.includes('1548839140')) {
+      return 'https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=800&q=80';
+    }
+    return u;
+  };
+
   const [services, setServices] = useState(() => {
-    const saved = localStorage.getItem('mst_services');
-    return saved ? JSON.parse(saved) : initialServices;
+    try {
+      const saved = localStorage.getItem('mst_services');
+      if (!saved) return initialServices;
+      const parsed = JSON.parse(saved);
+      return parsed.map(s => ({ ...s, image: sanitizeUrl(s.image) }));
+    } catch {
+      return initialServices;
+    }
   });
 
   const [events, setEvents] = useState(() => {
-    const saved = localStorage.getItem('mst_events');
-    return saved ? JSON.parse(saved) : initialEvents;
+    try {
+      const saved = localStorage.getItem('mst_events');
+      if (!saved) return initialEvents;
+      const parsed = JSON.parse(saved);
+      return parsed.map(e => ({ ...e, image_url: sanitizeUrl(e.image_url || e.image) }));
+    } catch {
+      return initialEvents;
+    }
   });
 
   const [news, setNews] = useState(() => {
-    const saved = localStorage.getItem('mst_news');
-    return saved ? JSON.parse(saved) : initialNews;
+    try {
+      const saved = localStorage.getItem('mst_news');
+      if (!saved) return initialNews;
+      const parsed = JSON.parse(saved);
+      return parsed.map(n => ({ ...n, thumbnail: sanitizeUrl(n.thumbnail) }));
+    } catch {
+      return initialNews;
+    }
   });
 
   const [gallery, setGallery] = useState(() => {
-    const saved = localStorage.getItem('mst_gallery_v3');
-    return saved ? JSON.parse(saved) : initialGallery;
+    try {
+      const saved = localStorage.getItem('mst_gallery_v3');
+      if (!saved) return initialGallery;
+      const parsed = JSON.parse(saved);
+      return parsed.map(g => ({ ...g, image_url: sanitizeUrl(g.image_url || g.imageUrl) }));
+    } catch {
+      return initialGallery;
+    }
   });
 
   const [inquiries, setInquiries] = useState(() => {
-    const saved = localStorage.getItem('mst_inquiries');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('mst_inquiries');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
+
+  const [supabaseConnected, setSupabaseConnected] = useState(false);
+  const [supabaseStatusMsg, setSupabaseStatusMsg] = useState('Connecting to Supabase...');
 
   // Modal States
   const [selectedService, setSelectedService] = useState(null);
@@ -901,9 +1179,10 @@ const TrustProvider = ({ children }) => {
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type, id: Date.now() });
-    setTimeout(() => setToast(null), 4000);
+    setTimeout(() => setToast(null), 4500);
   };
 
+  // Local storage synchronization as offline fallback
   useEffect(() => {
     localStorage.setItem('mst_services', JSON.stringify(services));
   }, [services]);
@@ -919,6 +1198,69 @@ const TrustProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('mst_inquiries', JSON.stringify(inquiries));
   }, [inquiries]);
+
+  // Fetch initial data from Supabase if tables exist
+  const fetchSupabaseData = async () => {
+    if (!supabaseClient) {
+      setSupabaseStatusMsg('Supabase SDK not loaded.');
+      return;
+    }
+
+    try {
+      let anyFound = false;
+
+      // 1. Events
+      const { data: evts, error: errEvts } = await supabaseClient.from('events').select('*').order('date', { ascending: true });
+      if (!errEvts && evts && evts.length > 0) {
+        setEvents(evts.map(e => ({ ...e, image_url: sanitizeUrl(e.image_url || e.image) })));
+        anyFound = true;
+      }
+
+      // 2. News
+      const { data: nws, error: errNws } = await supabaseClient.from('news').select('*').order('date', { ascending: false });
+      if (!errNws && nws && nws.length > 0) {
+        setNews(nws.map(n => ({ ...n, thumbnail: sanitizeUrl(n.thumbnail) })));
+        anyFound = true;
+      }
+
+      // 3. Gallery
+      const { data: gal, error: errGal } = await supabaseClient.from('gallery').select('*').order('id', { ascending: false });
+      if (!errGal && gal && gal.length > 0) {
+        setGallery(gal.map(g => ({ ...g, image_url: sanitizeUrl(g.image_url || g.imageUrl) })));
+        anyFound = true;
+      }
+
+      // 4. Services
+      const { data: srvs, error: errSrvs } = await supabaseClient.from('services').select('*');
+      if (!errSrvs && srvs && srvs.length > 0) {
+        setServices(srvs.map(s => ({ ...s, image: sanitizeUrl(s.image) })));
+        anyFound = true;
+      }
+
+      // 5. Inquiries
+      const { data: inqs, error: errInqs } = await supabaseClient.from('inquiries').select('*').order('created_at', { ascending: false });
+      if (!errInqs && inqs && inqs.length > 0) {
+        setInquiries(inqs);
+        anyFound = true;
+      }
+
+      if (anyFound || (!errEvts && !errNws && !errGal)) {
+        setSupabaseConnected(true);
+        setSupabaseStatusMsg('Live sync active with Supabase tables');
+      } else {
+        setSupabaseConnected(false);
+        setSupabaseStatusMsg('Supabase connected; run SQL script in Admin to initialize database tables.');
+      }
+    } catch (err) {
+      console.warn('Supabase fetch notice:', err);
+      setSupabaseConnected(false);
+      setSupabaseStatusMsg('Using local database cache.');
+    }
+  };
+
+  useEffect(() => {
+    fetchSupabaseData();
+  }, []);
 
   const navigate = (route) => {
     const clean = normalizeRoute(route);
@@ -940,96 +1282,304 @@ const TrustProvider = ({ children }) => {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const loginAdmin = (username, password, remember = false) => {
-    if ((username === 'admin@medidhisubbaiah.org' || username === 'admin') && (password === 'trust2026' || password === 'admin123')) {
+  const loginAdmin = async (email, password, remember = true) => {
+    // 1. Direct Master credentials check
+    const normalizedEmail = (email || '').toLowerCase().trim();
+    if (
+      (normalizedEmail === 'admin@medidhisubbaiah.org' || normalizedEmail === 'admin') &&
+      (password === 'trust2026' || password === 'admin123')
+    ) {
       setIsAdminLoggedIn(true);
       if (remember) localStorage.setItem('mst_admin_session', 'true');
       showToast('Welcome back, Trust Administrator!', 'success');
       navigate('admin');
       return { success: true };
-    } else {
-      return { success: false, message: 'Invalid credentials. Use admin / trust2026 for demo.' };
     }
+
+    // 2. Supabase Auth fallback
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: normalizedEmail,
+          password: password
+        });
+        if (!error && data?.user) {
+          setIsAdminLoggedIn(true);
+          if (remember) localStorage.setItem('mst_admin_session', 'true');
+          showToast(`Welcome back, ${data.user.email}!`, 'success');
+          navigate('admin');
+          return { success: true };
+        }
+      } catch (err) {
+        console.warn('Supabase auth check:', err);
+      }
+    }
+
+    return { success: false, message: 'Invalid credentials. Use admin@medidhisubbaiah.org / trust2026' };
   };
 
   const logoutAdmin = () => {
     setIsAdminLoggedIn(false);
     localStorage.removeItem('mst_admin_session');
+    if (supabaseClient) {
+      supabaseClient.auth.signOut().catch(() => {});
+    }
     showToast('Logged out securely.', 'info');
     navigate('home');
   };
 
-  const addService = (newService) => {
-    const s = { ...newService, id: Date.now() };
-    setServices(prev => [s, ...prev]);
-    showToast('New service program added!');
+  // --- CRUD: EVENTS (Supabase + State Sync) ---
+  const addEvent = async (newEvent) => {
+    const id = String(newEvent.id || Date.now());
+    const eventItem = { ...newEvent, id, seats_registered: newEvent.seats_registered || 0 };
+
+    setEvents(prev => [eventItem, ...prev]);
+    showToast('Event created successfully!');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('events').upsert(eventItem);
+      } catch (err) {
+        console.warn('Supabase event insert error:', err);
+      }
+    }
   };
 
-  const updateService = (id, updatedService) => {
-    setServices(prev => prev.map(s => s.id === id ? { ...s, ...updatedService } : s));
-    showToast('Service updated successfully!');
+  const updateEvent = async (id, updatedEvent) => {
+    const stringId = String(id);
+    const merged = { ...updatedEvent, id: stringId };
+
+    setEvents(prev => prev.map(e => String(e.id) === stringId ? { ...e, ...merged } : e));
+    showToast('Event updated successfully!');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('events').update(merged).eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase event update error:', err);
+      }
+    }
   };
 
-  const deleteService = (id) => {
-    setServices(prev => prev.filter(s => s.id !== id));
-    showToast('Service removed.', 'info');
-  };
-
-  const addEvent = (newEvent) => {
-    const e = { ...newEvent, id: Date.now(), seatsRegistered: 0 };
-    setEvents(prev => [e, ...prev]);
-    showToast('New event scheduled!');
-  };
-
-  const updateEvent = (id, updatedEvent) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...updatedEvent } : e));
-    showToast('Event updated!');
-  };
-
-  const deleteEvent = (id) => {
-    setEvents(prev => prev.filter(e => e.id !== id));
+  const deleteEvent = async (id) => {
+    const stringId = String(id);
+    setEvents(prev => prev.filter(e => String(e.id) !== stringId));
     showToast('Event removed.', 'info');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('events').delete().eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase event delete error:', err);
+      }
+    }
   };
 
-  const registerForEvent = (eventId, participantData) => {
-    setEvents(prev => prev.map(e => e.id === eventId ? { ...e, seatsRegistered: (e.seatsRegistered || 0) + 1 } : e));
+  const registerForEvent = async (eventId, participantData) => {
+    const stringId = String(eventId);
+    setEvents(prev => prev.map(e => String(e.id) === stringId ? { ...e, seats_registered: (e.seats_registered || 0) + 1 } : e));
     showToast(`Registration confirmed for ${participantData.name}!`);
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('events').update({
+          seats_registered: (events.find(e => String(e.id) === stringId)?.seats_registered || 0) + 1
+        }).eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase event register error:', err);
+      }
+    }
   };
 
-  const addNews = (newArticle) => {
-    const a = { ...newArticle, id: Date.now(), readTime: '3 min read' };
-    setNews(prev => [a, ...prev]);
+  // --- CRUD: NEWS (Supabase + State Sync) ---
+  const addNews = async (newArticle) => {
+    const id = String(newArticle.id || Date.now());
+    const articleItem = {
+      ...newArticle,
+      id,
+      read_time: newArticle.read_time || '3 min read',
+      date: newArticle.date || new Date().toISOString().split('T')[0]
+    };
+
+    setNews(prev => [articleItem, ...prev]);
     showToast('News article published!');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('news').upsert(articleItem);
+      } catch (err) {
+        console.warn('Supabase news insert error:', err);
+      }
+    }
   };
 
-  const updateNews = (id, updatedArticle) => {
-    setNews(prev => prev.map(n => n.id === id ? { ...n, ...updatedArticle } : n));
+  const updateNews = async (id, updatedArticle) => {
+    const stringId = String(id);
+    const merged = { ...updatedArticle, id: stringId };
+
+    setNews(prev => prev.map(n => String(n.id) === stringId ? { ...n, ...merged } : n));
     showToast('News article updated!');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('news').update(merged).eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase news update error:', err);
+      }
+    }
   };
 
-  const deleteNews = (id) => {
-    setNews(prev => prev.filter(n => n.id !== id));
+  const deleteNews = async (id) => {
+    const stringId = String(id);
+    setNews(prev => prev.filter(n => String(n.id) !== stringId));
     showToast('News article deleted.', 'info');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('news').delete().eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase news delete error:', err);
+      }
+    }
   };
 
-  const addGalleryImage = (newImage) => {
-    const img = { ...newImage, id: Date.now() };
-    setGallery(prev => [img, ...prev]);
-    showToast('Photo added to gallery!');
+  // --- CRUD: GALLERY & VIDEOS (Supabase + State Sync) ---
+  const addGalleryItem = async (newItem) => {
+    const id = String(newItem.id || Date.now());
+    const galleryItem = {
+      ...newItem,
+      id,
+      date: newItem.date || new Date().toISOString().split('T')[0],
+      type: newItem.type || (newItem.video_url ? 'video' : 'image')
+    };
+
+    setGallery(prev => [galleryItem, ...prev]);
+    showToast('Media item added to gallery!');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('gallery').upsert(galleryItem);
+      } catch (err) {
+        console.warn('Supabase gallery insert error:', err);
+      }
+    }
   };
 
-  const deleteGalleryImage = (id) => {
-    setGallery(prev => prev.filter(g => g.id !== id));
-    showToast('Gallery image removed.', 'info');
+  const updateGalleryItem = async (id, updatedItem) => {
+    const stringId = String(id);
+    const merged = { ...updatedItem, id: stringId };
+
+    setGallery(prev => prev.map(g => String(g.id) === stringId ? { ...g, ...merged } : g));
+    showToast('Gallery item updated!');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('gallery').update(merged).eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase gallery update error:', err);
+      }
+    }
   };
 
-  const submitContactForm = (formData) => {
-    const inq = { ...formData, id: Date.now(), submittedAt: new Date().toLocaleString() };
+  const deleteGalleryItem = async (id) => {
+    const stringId = String(id);
+    setGallery(prev => prev.filter(g => String(g.id) !== stringId));
+    showToast('Gallery media item removed.', 'info');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('gallery').delete().eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase gallery delete error:', err);
+      }
+    }
+  };
+
+  // --- CRUD: SERVICES (Supabase + State Sync) ---
+  const addService = async (newService) => {
+    const id = String(newService.id || Date.now());
+    const serviceItem = { ...newService, id };
+
+    setServices(prev => [serviceItem, ...prev]);
+    showToast('New service program added!');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('services').upsert(serviceItem);
+      } catch (err) {
+        console.warn('Supabase service insert error:', err);
+      }
+    }
+  };
+
+  const updateService = async (id, updatedService) => {
+    const stringId = String(id);
+    const merged = { ...updatedService, id: stringId };
+
+    setServices(prev => prev.map(s => String(s.id) === stringId ? { ...s, ...merged } : s));
+    showToast('Service updated successfully!');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('services').update(merged).eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase service update error:', err);
+      }
+    }
+  };
+
+  const deleteService = async (id) => {
+    const stringId = String(id);
+    setServices(prev => prev.filter(s => String(s.id) !== stringId));
+    showToast('Service program removed.', 'info');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('services').delete().eq('id', stringId);
+      } catch (err) {
+        console.warn('Supabase service delete error:', err);
+      }
+    }
+  };
+
+  // --- INQUIRIES & REGISTRATIONS ---
+  const submitContactForm = async (formData) => {
+    const inq = {
+      ...formData,
+      id: String(Date.now()),
+      submitted_at: new Date().toLocaleString()
+    };
     setInquiries(prev => [inq, ...prev]);
     showToast('Thank you! Your message has been received.', 'success');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('inquiries').insert(inq);
+      } catch (err) {
+        console.warn('Supabase inquiry insert notice:', err);
+      }
+    }
+  };
+
+  const submitDonationLog = async (donationData) => {
+    const donationItem = {
+      ...donationData,
+      id: String(Date.now()),
+      created_at: new Date().toISOString()
+    };
+    showToast('Thank you for your generous support!', 'success');
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('donations').insert(donationItem);
+      } catch (err) {
+        console.warn('Supabase donation insert notice:', err);
+      }
+    }
   };
 
   const resetToFactoryDefaults = () => {
+    if (!confirm('Are you sure you want to reset all content to official defaults?')) return;
     setServices(initialServices);
     setEvents(initialEvents);
     setNews(initialNews);
@@ -1037,8 +1587,6 @@ const TrustProvider = ({ children }) => {
     localStorage.removeItem('mst_services');
     localStorage.removeItem('mst_events');
     localStorage.removeItem('mst_news');
-    localStorage.removeItem('mst_gallery');
-    localStorage.removeItem('mst_gallery_v2');
     localStorage.removeItem('mst_gallery_v3');
     showToast('Data reset to default trust datasets.', 'info');
   };
@@ -1080,10 +1628,15 @@ const TrustProvider = ({ children }) => {
       addNews,
       updateNews,
       deleteNews,
-      addGalleryImage,
-      deleteGalleryImage,
+      addGalleryItem,
+      updateGalleryItem,
+      deleteGalleryItem,
       submitContactForm,
-      resetToFactoryDefaults
+      submitDonationLog,
+      resetToFactoryDefaults,
+      supabaseConnected,
+      supabaseStatusMsg,
+      fetchSupabaseData
     }}>
       {children}
     </TrustContext.Provider>
@@ -1098,260 +1651,259 @@ const MarqueeTicker = () => {
   const tickerText = "🌿 100% Free Tailoring & Maggam Work Admissions Open • 24/7 Emergency Blood Helpline: " + trustInfo.emergencyBloodHelpline + " • Weekly Annadhanam Nutritious Meals & Monthly Grocery Kits • Free Drinking Water Chalivendram Kiosks • Registered Non-Profit Charitable Trust Dedicated to Social Welfare";
 
   return (
-    <div className="w-full max-w-full overflow-hidden bg-emerald-700 text-white text-[11px] sm:text-xs py-1.5 border-b border-emerald-800 select-none flex items-center">
-      <div className="bg-emerald-950 font-black px-2.5 sm:px-3 py-0.5 text-[10px] tracking-wider uppercase z-10 shrink-0 shadow text-emerald-300">
-        Updates
+    <div className="bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white text-xs font-semibold py-2 px-3 overflow-hidden shadow-inner border-b border-emerald-700/50 flex items-center">
+      <div className="bg-amber-400 text-slate-950 font-black uppercase text-[10px] px-2.5 py-0.5 rounded-full mr-3 shrink-0 flex items-center space-x-1 shadow-sm font-heading">
+        <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping"></span>
+        <span>Live Updates</span>
       </div>
-      <div className="overflow-hidden w-full">
-        <div className="animate-marquee font-medium flex items-center space-x-8 sm:space-x-12">
-          <span>{tickerText}</span>
-          <span>•</span>
-          <span>{tickerText}</span>
+      <div className="overflow-hidden whitespace-nowrap flex-1 relative">
+        <div className="animate-marquee inline-block font-medium tracking-wide">
+          <span className="mr-8">{tickerText}</span>
+          <span className="mr-8">★ ★ ★</span>
+          <span className="mr-8">{tickerText}</span>
         </div>
       </div>
     </div>
   );
 };
 
-// --- TOP BAR (Mobile Responsive) ---
+// --- TOP BAR (Mobile Safe & Contained) ---
 const TopBar = () => {
-  const { trustInfo, isAdminLoggedIn, logoutAdmin, navigate } = useTrust();
+  const { trustInfo, setIsDonateModalOpen } = useTrust();
 
   return (
-    <div className="w-full max-w-full bg-slate-950 text-slate-200 text-xs py-2 px-3 sm:px-4 border-b border-slate-800 overflow-hidden">
-      <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
-        <div className="flex items-center space-x-2 sm:space-x-4 max-w-full">
-          <span className="flex items-center text-emerald-400 font-bold text-[11px] sm:text-xs truncate">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping mr-1.5 shrink-0"></span>
-            <span className="hidden sm:inline">24/7 Helpline:</span>
-            <a href={`tel:${trustInfo.emergencyBloodHelpline}`} className="ml-1 text-white hover:text-emerald-300 font-extrabold underline">
-              {trustInfo.emergencyBloodHelpline}
-            </a>
-          </span>
-          <span className="hidden md:inline text-slate-700">|</span>
-          <span className="hidden md:flex items-center text-slate-300 truncate">
-            <Icon name="mail" size={13} className="mr-1.5 text-emerald-400 shrink-0" />
-            {trustInfo.email}
-          </span>
+    <div className="bg-slate-950 text-slate-200 text-xs py-1.5 px-3 sm:px-6 lg:px-8 border-b border-slate-800 hidden sm:block">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1.5 text-slate-300">
+            <Icon name="mappin" size={13} className="text-emerald-400" />
+            <span className="truncate max-w-xs">{trustInfo.address.split(',')[1] || 'Nizampet, Hyderabad'}</span>
+          </div>
+          <div className="flex items-center space-x-1.5 text-slate-300">
+            <Icon name="clock" size={13} className="text-emerald-400" />
+            <span>{trustInfo.operatingHours}</span>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2 sm:space-x-4 text-slate-300 text-[11px] sm:text-xs">
-          <span className="hidden lg:inline-block bg-slate-900 text-emerald-300 border border-emerald-800/60 px-2 py-0.5 rounded text-[10px] font-semibold">
-            {trustInfo.registration}
-          </span>
-          {isAdminLoggedIn ? (
-            <div className="flex items-center space-x-2">
-              <button onClick={() => navigate('admin')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-0.5 rounded font-bold">
-                Admin Hub
-              </button>
-              <button onClick={logoutAdmin} className="text-slate-400 hover:text-white">
-                Logout
-              </button>
-            </div>
-          ) : (
-            <button onClick={() => navigate('login')} className="flex items-center space-x-1 text-slate-300 hover:text-white hover:underline">
-              <Icon name="lock" size={11} className="text-emerald-400" />
-              <span>Admin</span>
-            </button>
-          )}
+        <div className="flex items-center space-x-3">
+          <a
+            href={`tel:${trustInfo.emergencyBloodHelpline}`}
+            className="flex items-center space-x-1.5 bg-red-600/90 hover:bg-red-600 text-white px-2.5 py-0.5 rounded-full font-bold text-[11px] shadow-sm transition"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+            <span>24/7 Blood Line: {trustInfo.emergencyBloodHelpline}</span>
+          </a>
+          <button
+            onClick={() => setIsDonateModalOpen(true)}
+            className="text-amber-400 hover:text-amber-300 font-bold text-[11px] font-heading flex items-center space-x-1"
+          >
+            <Icon name="heart" size={12} />
+            <span>Donate (80G Tax-Exempt)</span>
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-// --- NAVBAR (Mobile Optimized) ---
+// --- NAVBAR COMPONENT ---
 const Navbar = () => {
-  const { currentRoute, navigate, setIsDonateModalOpen, trustInfo } = useTrust();
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { currentRoute, navigate, trustInfo, setIsDonateModalOpen, isAdminLoggedIn } = useTrust();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const navItems = [
-    { name: 'Home', route: 'home' },
-    { name: 'About Us', route: 'about' },
-    { name: 'Our Services', route: 'services' },
-    { name: 'Events', route: 'events' },
-    { name: 'Media & News', route: 'news' },
-    { name: 'Gallery', route: 'gallery' },
-    { name: 'Contact Us', route: 'contact' }
+  const navLinks = [
+    { id: 'home', label: 'Home' },
+    { id: 'about', label: 'About Us' },
+    { id: 'services', label: 'Services & Causes' },
+    { id: 'events', label: 'Events' },
+    { id: 'news', label: 'Media & News' },
+    { id: 'gallery', label: 'Gallery' },
+    { id: 'contact', label: 'Contact' }
   ];
 
-  const handleNavClick = (route) => {
-    navigate(route);
-    setIsMobileMenuOpen(false);
+  const handleNav = (id) => {
+    navigate(id);
+    setMobileMenuOpen(false);
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full max-w-full transition-all duration-300 bg-white">
-      <MarqueeTicker />
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
       <TopBar />
+      <MarqueeTicker />
 
-      <nav className={`w-full max-w-full bg-white transition-all duration-300 ${isScrolled ? 'shadow-lg py-2 border-b border-emerald-100 bg-white/95 backdrop-blur-md' : 'shadow-sm py-2.5 sm:py-3 border-b border-slate-100'}`}>
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            {/* Logo */}
-            <div onClick={() => handleNavClick('home')} className="flex items-center space-x-2.5 sm:space-x-3.5 cursor-pointer group select-none min-w-0">
-              <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-full p-0.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-md group-hover:scale-105 transition-transform shrink-0">
-                <img
-                  src={trustInfo.logoUrl}
-                  alt="Medidhisubbaiah Trust Logo"
-                  className="w-full h-full rounded-full object-cover bg-white"
-                />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="font-black text-base sm:text-xl text-slate-900 font-heading tracking-tight leading-tight truncate group-hover:text-emerald-600 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo & Telugu Title */}
+          <div className="flex items-center space-x-3 cursor-pointer py-2" onClick={() => handleNav('home')}>
+            <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full p-0.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-md shrink-0">
+              <img
+                src={trustInfo.logoUrl}
+                alt="Medidhisubbaiah Trust Logo"
+                className="w-full h-full rounded-full object-cover bg-white"
+              />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center space-x-1.5">
+                <span className="font-extrabold text-lg sm:text-xl text-slate-900 tracking-tight font-heading leading-tight truncate">
                   Medidhisubbaiah <span className="text-emerald-600">Trust</span>
                 </span>
-                <span className="text-[10px] sm:text-[11px] font-bold text-emerald-800 tracking-wide font-heading truncate">
-                  మేడిది సుబ్బయ్య ట్రస్ట్
-                </span>
               </div>
-            </div>
-
-            {/* Desktop Links */}
-            <div className="hidden lg:flex items-center space-x-1 xl:space-x-2">
-              {navItems.map((item) => {
-                const isActive = currentRoute === item.route;
-                return (
-                  <button
-                    key={item.route}
-                    onClick={() => handleNavClick(item.route)}
-                    className={`px-3 py-2 rounded-xl text-sm font-bold font-heading transition-all duration-200 relative ${
-                      isActive ? 'text-emerald-700 bg-emerald-50 shadow-sm' : 'text-slate-700 hover:text-emerald-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    {item.name}
-                    {isActive && <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-emerald-600 rounded-full" />}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Desktop Donate Button */}
-            <div className="hidden lg:flex items-center space-x-3">
-              <button
-                onClick={() => setIsDonateModalOpen(true)}
-                className="donate-shine donate-dance bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white px-5 py-2.5 rounded-xl text-sm font-black font-heading shadow-lg shadow-emerald-600/30 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center space-x-2"
-              >
-                <Icon name="heart" size={16} className="text-white" />
-                <span>Support & Donate</span>
-              </button>
-            </div>
-
-            {/* Mobile Actions: Compact Donate + Hamburger */}
-            <div className="lg:hidden flex items-center space-x-2">
-              <button
-                onClick={() => setIsDonateModalOpen(true)}
-                className="bg-emerald-600 text-white p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold font-heading flex items-center space-x-1 shadow"
-              >
-                <Icon name="heart" size={14} />
-                <span className="hidden xs:inline">Donate</span>
-              </button>
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-xl text-slate-700 hover:text-emerald-600 hover:bg-slate-100"
-                aria-label="Toggle Menu"
-              >
-                <Icon name={isMobileMenuOpen ? 'x' : 'menu'} size={22} />
-              </button>
+              <p className="text-[11px] font-bold text-emerald-700 font-heading truncate">
+                మేడిది సుబ్బయ్య ట్రస్ట్ • <span className="text-slate-500 font-normal text-[10px]">Regd. Non-Profit</span>
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Mobile Drawer */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-6 space-y-1.5 shadow-2xl animate-fadeIn">
-            {navItems.map((item) => {
-              const isActive = currentRoute === item.route;
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2">
+            {navLinks.map((link) => {
+              const active = currentRoute === link.id;
               return (
                 <button
-                  key={item.route}
-                  onClick={() => handleNavClick(item.route)}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-bold font-heading flex items-center justify-between ${
-                    isActive ? 'text-emerald-700 bg-emerald-50 border-l-4 border-emerald-600' : 'text-slate-700 hover:text-emerald-600 hover:bg-slate-50'
+                  key={link.id}
+                  onClick={() => handleNav(link.id)}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold font-heading transition-all duration-200 ${
+                    active
+                      ? 'text-emerald-700 bg-emerald-50 shadow-sm border border-emerald-200'
+                      : 'text-slate-700 hover:text-emerald-600 hover:bg-slate-50'
                   }`}
                 >
-                  <span>{item.name}</span>
-                  {isActive && <Icon name="arrowright" size={14} className="text-emerald-600" />}
+                  {link.label}
                 </button>
               );
             })}
-            <div className="pt-3 border-t border-slate-100">
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setIsDonateModalOpen(true);
-                }}
-                className="w-full bg-emerald-600 text-white py-3 rounded-xl font-black font-heading text-sm text-center shadow-lg"
-              >
-                Support / Donate Online (80G)
-              </button>
-            </div>
+          </nav>
+
+          {/* Quick CTAs */}
+          <div className="hidden sm:flex items-center space-x-2.5">
+            <a
+              href={`tel:${trustInfo.emergencyBloodHelpline}`}
+              className="p-2.5 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition"
+              title="24/7 Emergency Blood Donor Line"
+            >
+              <Icon name="heartpulse" size={18} />
+            </a>
+
+            <button
+              onClick={() => setIsDonateModalOpen(true)}
+              className="donate-shine donate-dance bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-extrabold font-heading px-5 py-2.5 rounded-xl text-xs shadow-md hover:shadow-lg transition flex items-center space-x-1.5"
+            >
+              <Icon name="heart" size={14} />
+              <span>Donate Online</span>
+            </button>
           </div>
-        )}
-      </nav>
+
+          {/* Mobile Menu Toggle */}
+          <div className="flex lg:hidden items-center space-x-2">
+            <button
+              onClick={() => setIsDonateModalOpen(true)}
+              className="bg-emerald-600 text-white font-bold font-heading px-3 py-1.5 rounded-lg text-xs"
+            >
+              Donate
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition"
+              aria-label="Toggle navigation menu"
+            >
+              <Icon name={mobileMenuOpen ? 'x' : 'menu'} size={22} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-6 space-y-2 shadow-2xl animate-fadeIn">
+          <div className="grid grid-cols-1 gap-1">
+            {navLinks.map((link) => {
+              const active = currentRoute === link.id;
+              return (
+                <button
+                  key={link.id}
+                  onClick={() => handleNav(link.id)}
+                  className={`text-left px-3.5 py-2.5 rounded-xl text-sm font-bold font-heading transition ${
+                    active ? 'bg-emerald-600 text-white' : 'text-slate-800 hover:bg-slate-50'
+                  }`}
+                >
+                  {link.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 flex flex-col space-y-2">
+            <a
+              href={`tel:${trustInfo.emergencyBloodHelpline}`}
+              className="flex items-center justify-center space-x-2 bg-red-600 text-white font-bold font-heading py-2.5 rounded-xl text-xs"
+            >
+              <Icon name="heartpulse" size={16} />
+              <span>Emergency Blood Line: {trustInfo.emergencyBloodHelpline}</span>
+            </a>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
 
-// --- HERO SLIDER (Mobile Responsive) ---
-const HeroSlider = () => {
+// --- HERO SECTION COMPONENT ---
+const HeroSection = () => {
   const { navigate, setIsDonateModalOpen } = useTrust();
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % heroSlides.length);
-    }, 6500);
+      setActiveSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 6000);
     return () => clearInterval(timer);
   }, []);
 
-  const slide = heroSlides[currentSlide];
+  const slide = heroSlides[activeSlide];
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 text-white min-h-[500px] sm:min-h-[580px] lg:min-h-[640px] flex items-center w-full max-w-full">
-      {/* Background Images with Ken Burns Zoom */}
-      {heroSlides.map((s, idx) => (
+    <section className="relative w-full bg-slate-950 text-white overflow-hidden min-h-[560px] sm:min-h-[620px] flex items-center">
+      {/* Background Image Carousel with Ken Burns Zoom */}
+      {heroSlides.map((s, index) => (
         <div
-          key={idx}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-100' : 'opacity-0'} overflow-hidden`}
+          key={index}
+          className={`absolute inset-0 transition-opacity duration-1000 ${
+            index === activeSlide ? 'opacity-40 sm:opacity-45' : 'opacity-0 pointer-events-none'
+          }`}
         >
-          <img src={s.image} alt={s.title} className="w-full h-full object-cover animate-ken-burns" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
+          <img
+            src={s.image}
+            alt={s.title}
+            className="w-full h-full object-cover animate-ken-burns"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/40"></div>
         </div>
       ))}
 
-      {/* Slide Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12 sm:py-20 w-full">
-        <div className="max-w-3xl space-y-4 sm:space-y-6 animate-fadeIn" key={currentSlide}>
-          <div className="inline-flex items-center space-x-1.5 bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold font-heading uppercase tracking-wider shadow">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping mr-1" />
+      {/* Hero Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 w-full">
+        <div className="max-w-3xl space-y-4 sm:space-y-6">
+          <div className="inline-flex items-center space-x-2 bg-emerald-500/20 border border-emerald-400/40 px-3.5 py-1.5 rounded-full text-emerald-300 text-xs font-bold font-heading tracking-wide uppercase">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>{slide.badge}</span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black font-heading tracking-tight leading-[1.2] text-white">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-heading leading-tight tracking-tight text-white drop-shadow-md">
             {slide.title}
           </h1>
 
-          <p className="text-sm sm:text-lg font-medium text-emerald-200 max-w-2xl font-heading leading-snug">
+          <p className="text-base sm:text-xl font-medium text-emerald-300 font-heading">
             {slide.subtitle}
           </p>
 
-          <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed line-clamp-3 sm:line-clamp-none">
+          <p className="text-slate-300 text-xs sm:text-base leading-relaxed max-w-2xl">
             {slide.description}
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 sm:pt-4 w-full sm:w-auto">
+          <div className="pt-2 flex flex-wrap gap-3 sm:gap-4">
             <button
               onClick={() => navigate(slide.ctaPrimaryRoute)}
-              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-6 py-3.5 rounded-xl font-black font-heading text-sm shadow-xl shadow-emerald-600/40 transition-all flex items-center justify-center space-x-2"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold font-heading px-6 sm:px-8 py-3.5 rounded-xl text-xs sm:text-sm shadow-xl hover:shadow-emerald-500/30 transition transform hover:-translate-y-0.5 flex items-center space-x-2"
             >
               <span>{slide.ctaPrimary}</span>
               <Icon name="arrowright" size={16} />
@@ -1359,102 +1911,90 @@ const HeroSlider = () => {
 
             <button
               onClick={() => setIsDonateModalOpen(true)}
-              className="donate-shine w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/30 backdrop-blur-md px-6 py-3.5 rounded-xl font-bold font-heading text-sm transition-all flex items-center justify-center space-x-2"
+              className="donate-shine bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold font-heading px-6 sm:px-8 py-3.5 rounded-xl text-xs sm:text-sm shadow transition flex items-center space-x-2"
             >
-              <Icon name="heart" size={16} className="text-emerald-400" />
-              <span>Donate & Support</span>
+              <Icon name="heart" size={16} className="text-amber-400" />
+              <span>Donate Online (80G)</span>
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Slider Controls */}
-      <div className="absolute bottom-3 right-3 sm:bottom-6 sm:right-6 z-20 flex items-center space-x-2 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-800">
-        <button
-          onClick={() => setCurrentSlide(prev => (prev > 0 ? prev - 1 : heroSlides.length - 1))}
-          className="text-slate-400 hover:text-white p-1"
-          aria-label="Previous slide"
-        >
-          <Icon name="chevronleft" size={16} />
-        </button>
-
-        <div className="flex space-x-1.5">
-          {heroSlides.map((_, idx) => (
+        {/* Carousel Indicators */}
+        <div className="absolute bottom-6 right-6 sm:right-8 flex items-center space-x-2">
+          {heroSlides.map((_, i) => (
             <button
-              key={idx}
-              onClick={() => setCurrentSlide(idx)}
-              className={`h-1.5 rounded-full transition-all ${idx === currentSlide ? 'w-5 bg-emerald-500' : 'w-1.5 bg-slate-600'}`}
-              aria-label={`Slide ${idx + 1}`}
+              key={i}
+              onClick={() => setActiveSlide(i)}
+              className={`h-2.5 rounded-full transition-all duration-300 ${
+                i === activeSlide ? 'w-8 bg-emerald-500' : 'w-2.5 bg-white/40 hover:bg-white/70'
+              }`}
+              aria-label={`Slide ${i + 1}`}
             />
           ))}
         </div>
-
-        <button
-          onClick={() => setCurrentSlide(prev => (prev + 1) % heroSlides.length)}
-          className="text-slate-400 hover:text-white p-1"
-          aria-label="Next slide"
-        >
-          <Icon name="chevronright" size={16} />
-        </button>
       </div>
     </section>
   );
 };
 
-// --- HERO 4 OVERLAPPING FEATURE CARDS (Mobile Contained) ---
-const HeroFeatureCards = () => {
+// --- FEATURE CARDS (4 Overlapping Cards) ---
+const FeatureCards = () => {
   const { navigate } = useTrust();
 
-  const features = [
+  const cards = [
     {
       title: "Free Tailoring & Maggam",
-      desc: "Vocational centers empowering women with free certified skills and toolkits.",
+      desc: "Comprehensive 3-month certified training for women with free kits.",
       icon: "scissors",
-      route: "services"
+      route: "services",
+      color: "from-emerald-600 to-teal-700"
     },
     {
-      title: "24/7 Blood Network",
-      desc: "Emergency donor hotline & camps ensuring zero delay for critical hospital cases.",
+      title: "24/7 Blood Line",
+      desc: "Emergency donor mobilization network across hospitals.",
       icon: "heartpulse",
-      route: "contact"
+      route: "contact",
+      color: "from-red-600 to-rose-700"
     },
     {
       title: "Annadhanam & Groceries",
-      desc: "Fresh nutritious meals served weekly and monthly dry ration kits to needy families.",
+      desc: "Nutritious hot meals & monthly dry ration support for destitute.",
       icon: "utensils",
-      route: "services"
+      route: "services",
+      color: "from-amber-500 to-orange-600"
     },
     {
-      title: "Education & Sports Meet",
-      desc: "Free school kits, notebooks, and annual rural youth athletics championships.",
-      icon: "graduationcap",
-      route: "events"
+      title: "Education & Youth Sports",
+      desc: "Free backpacks, kits, and rural tournaments for children.",
+      icon: "trophy",
+      route: "services",
+      color: "from-blue-600 to-indigo-700"
     }
   ];
 
   return (
-    <section className="relative z-20 -mt-6 sm:-mt-12 lg:-mt-16 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-        {features.map((f, idx) => (
+    <section className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 sm:-mt-16 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {cards.map((card, idx) => (
           <div
             key={idx}
-            onClick={() => navigate(f.route)}
-            className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-lg border border-emerald-100 hover:border-emerald-300 hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between"
+            onClick={() => navigate(card.route)}
+            className="bg-white rounded-2xl p-5 shadow-xl border border-slate-100 hover:shadow-2xl hover:-translate-y-1 transition duration-300 cursor-pointer flex flex-col justify-between group"
           >
-            <div className="space-y-2.5">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 shadow-sm">
-                <Icon name={f.icon} size={20} />
+            <div className="space-y-3">
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${card.color} text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
+                <Icon name={card.icon} size={22} />
               </div>
-              <h3 className="font-extrabold font-heading text-base text-slate-900 group-hover:text-emerald-600 transition-colors">
-                {f.title}
+              <h3 className="font-extrabold font-heading text-slate-900 text-base group-hover:text-emerald-600 transition-colors">
+                {card.title}
               </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                {f.desc}
+              <p className="text-slate-600 text-xs leading-relaxed">
+                {card.desc}
               </p>
             </div>
-            <div className="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600 group-hover:translate-x-1 transition-transform">
-              <span>Learn Details</span>
-              <Icon name="arrowright" size={13} />
+            <div className="pt-4 flex items-center space-x-1.5 text-xs font-bold font-heading text-emerald-600">
+              <span>Learn More</span>
+              <Icon name="arrowright" size={14} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
         ))}
@@ -1463,1251 +2003,144 @@ const HeroFeatureCards = () => {
   );
 };
 
-// --- IMPACT STATS COUNTER ---
-const StatsCounter = () => {
+// --- IMPACT STATS SECTION ---
+const ImpactStatsSection = () => {
   const { stats } = useTrust();
-  return (
-    <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-8 pb-4 w-full">
-      <div className="bg-slate-900 rounded-2xl sm:rounded-3xl p-6 sm:p-10 text-white shadow-xl grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
-        {stats.map((stat, idx) => (
-          <div key={idx} className="text-center space-y-1.5 group">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-800 text-emerald-400 flex items-center justify-center mx-auto mb-1 group-hover:bg-emerald-600 group-hover:text-white transition-all">
-              <Icon name={stat.icon} size={22} />
-            </div>
-            <div className="text-2xl sm:text-4xl font-black font-heading text-white tracking-tight">{stat.value}</div>
-            <div className="text-[11px] sm:text-xs font-bold text-slate-300 font-heading">{stat.label}</div>
-            <div className="text-[10px] font-semibold text-emerald-400">{stat.change}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-};
 
-// --- CAUSE / SERVICE CARD (Mobile Contained) ---
-const ServiceCard = ({ service }) => {
-  const { setSelectedService, setIsDonateModalOpen } = useTrust();
   return (
-    <div className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col w-full">
-      <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-100">
-        <img src={service.image} alt={service.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
-        <div className="absolute top-2.5 left-2.5">
-          <span className="bg-white/95 text-slate-800 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow">
-            {service.category}
+    <section className="py-12 sm:py-16 bg-slate-900 text-white w-full max-w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
+          <span className="text-emerald-400 font-bold font-heading text-xs uppercase tracking-wider">
+            Proven Social Impact
           </span>
-        </div>
-        <div className="absolute bottom-2.5 right-2.5 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-lg group-hover:bg-emerald-700 transition">
-          <Icon name={service.icon || 'award'} size={18} />
-        </div>
-      </div>
-
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
-        <div className="space-y-1.5">
-          <h3 className="font-black font-heading text-base sm:text-lg text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1">
-            {service.title}
-          </h3>
-          <p className="text-slate-600 text-xs leading-relaxed line-clamp-2 sm:line-clamp-3">
-            {service.shortDescription}
+          <h2 className="text-2xl sm:text-4xl font-black font-heading">
+            Our Footprint in Numbers
+          </h2>
+          <p className="text-slate-400 text-xs sm:text-sm">
+            Committed to complete transparency, selfless dedication, and quantifiable community upliftment.
           </p>
         </div>
 
-        {/* Progress / Beneficiary Meter */}
-        <div className="space-y-1 pt-1">
-          <div className="flex justify-between text-[11px] font-bold font-heading">
-            <span className="text-emerald-600">{service.raised || service.beneficiaries}</span>
-            <span className="text-slate-500">{service.goal || 'Ongoing'}</span>
-          </div>
-          <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-emerald-600 to-teal-500 rounded-full transition-all" style={{ width: `${service.progress || 75}%` }} />
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-          <button
-            onClick={() => setSelectedService(service)}
-            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 py-2 px-2 rounded-xl text-xs font-bold font-heading transition text-center"
-          >
-            Details
-          </button>
-          <button
-            onClick={() => setIsDonateModalOpen(true)}
-            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-2 rounded-xl text-xs font-bold font-heading shadow transition text-center"
-          >
-            Support
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- EVENT CARD ---
-const EventCard = ({ event }) => {
-  const { setSelectedEvent } = useTrust();
-  const isCompleted = event.status === 'Completed';
-  const dateObj = new Date(event.date);
-  const day = !isNaN(dateObj.getDate()) ? dateObj.getDate() : '15';
-  const month = !isNaN(dateObj.getMonth()) ? dateObj.toLocaleString('default', { month: 'short' }).toUpperCase() : 'SEP';
-
-  return (
-    <div className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group w-full">
-      <div className="relative h-40 sm:h-48 w-full overflow-hidden bg-slate-900">
-        <img src={event.image} alt={event.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent" />
-        <div className="absolute top-2.5 left-2.5 bg-white rounded-xl shadow p-1.5 text-center min-w-[46px] border border-emerald-100">
-          <span className="block text-emerald-600 font-black text-base leading-none font-heading">{day}</span>
-          <span className="block text-[9px] font-bold text-slate-700 tracking-wider mt-0.5">{month}</span>
-        </div>
-        <div className="absolute top-2.5 right-2.5">
-          <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow ${isCompleted ? 'bg-slate-800 text-slate-200' : 'bg-emerald-600 text-white'}`}>
-            {event.status}
-          </span>
-        </div>
-      </div>
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-2.5">
-        <div className="space-y-1.5">
-          <h3 className="font-bold font-heading text-base text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2">{event.title}</h3>
-          <div className="space-y-1 text-xs text-slate-500">
-            <div className="flex items-center space-x-1.5">
-              <Icon name="clock" size={13} className="text-emerald-600 shrink-0" />
-              <span className="truncate">{event.time}</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <Icon name="mappin" size={13} className="text-emerald-600 shrink-0" />
-              <span className="truncate">{event.location}</span>
-            </div>
-          </div>
-        </div>
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-[11px] text-slate-500 font-medium">{isCompleted ? 'Completed' : `${event.seatsRegistered || 50}+ RSVP`}</span>
-          <button onClick={() => setSelectedEvent(event)} className="bg-slate-900 hover:bg-emerald-600 text-white text-xs font-bold font-heading px-3.5 py-1.5 rounded-xl transition flex items-center space-x-1">
-            <span>{isCompleted ? 'Details' : 'RSVP'}</span>
-            <Icon name="arrowright" size={12} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- NEWS CARD ---
-const NewsCard = ({ newsItem }) => {
-  const { setSelectedNews } = useTrust();
-  return (
-    <div className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group w-full">
-      <div className="relative h-40 sm:h-48 w-full overflow-hidden bg-slate-900">
-        <img src={newsItem.thumbnail} alt={newsItem.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        <div className="absolute top-2.5 left-2.5">
-          <span className="bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow">
-            {newsItem.category}
-          </span>
-        </div>
-      </div>
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-2.5">
-        <div className="space-y-1.5">
-          <div className="flex items-center space-x-2 text-[11px] text-slate-400">
-            <span className="flex items-center space-x-1">
-              <Icon name="calendar" size={11} className="text-emerald-500" />
-              <span>{newsItem.date}</span>
-            </span>
-            <span>•</span>
-            <span>{newsItem.readTime || '3 min'}</span>
-          </div>
-          <h3 className="font-bold font-heading text-sm sm:text-base text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2">{newsItem.title}</h3>
-          <p className="text-slate-600 text-xs line-clamp-2 leading-relaxed">{newsItem.shortDescription}</p>
-        </div>
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-[11px] text-slate-500 truncate max-w-[140px]">{newsItem.author ? `${newsItem.author}` : 'Trust Desk'}</span>
-          <button onClick={() => setSelectedNews(newsItem)} className="text-emerald-600 hover:text-emerald-700 font-bold font-heading text-xs flex items-center space-x-1">
-            <span>Read</span>
-            <Icon name="arrowright" size={13} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- INTERACTIVE DONATION MODAL (Mobile Responsive) ---
-const DonateModal = () => {
-  const { isDonateModalOpen, setIsDonateModalOpen, trustInfo, showToast } = useTrust();
-  const [amount, setAmount] = useState('1000');
-  const [customAmount, setCustomAmount] = useState('');
-  const [donorName, setDonorName] = useState('');
-  const [donorPhone, setDonorPhone] = useState('');
-  const [donorPan, setDonorPan] = useState('');
-  const [isCopied, setIsCopied] = useState(false);
-
-  if (!isDonateModalOpen) return null;
-
-  const handleCopyUpi = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(trustInfo.upiId);
-      setIsCopied(true);
-      showToast('UPI ID copied!');
-      setTimeout(() => setIsCopied(false), 3000);
-    }
-  };
-
-  const handleConfirm = (e) => {
-    e.preventDefault();
-    showToast(`Thank you ${donorName || 'Generous Donor'}! Contribution received.`);
-    setIsDonateModalOpen(false);
-  };
-
-  const currentAmount = customAmount || amount;
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 relative my-auto max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-700 to-teal-800 text-white p-4 sm:p-5 relative">
-          <button onClick={() => setIsDonateModalOpen(false)} className="absolute top-3.5 right-3.5 bg-black/30 hover:bg-black/60 text-white p-1.5 rounded-full transition">
-            <Icon name="x" size={18} />
-          </button>
-          <div className="flex items-center space-x-2.5 mb-1.5">
-            <img src={trustInfo.logoUrl} alt="Logo" className="w-8 h-8 rounded-full bg-white p-0.5 shadow shrink-0" />
-            <span className="bg-white/20 text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full font-heading">
-              80G Tax Exemption
-            </span>
-          </div>
-          <h2 className="text-xl font-black font-heading">Support Medidhisubbaiah Trust</h2>
-          <p className="text-emerald-100 text-xs mt-0.5">100% of contributions fund free tailoring, blood drives & food relief.</p>
-        </div>
-
-        {/* Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 text-slate-800 text-xs sm:text-sm">
-          <div>
-            <label className="block text-xs font-bold font-heading text-slate-700 mb-1.5">Select Amount (₹)</label>
-            <div className="grid grid-cols-4 gap-1.5">
-              {['500', '1000', '2500', '5000'].map((amt) => (
-                <button
-                  key={amt}
-                  type="button"
-                  onClick={() => {
-                    setAmount(amt);
-                    setCustomAmount('');
-                  }}
-                  className={`py-2 rounded-xl font-black font-heading text-xs transition ${
-                    amount === amt && !customAmount
-                      ? 'bg-emerald-600 text-white shadow'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  ₹{amt}
-                </button>
-              ))}
-            </div>
-            <div className="mt-1.5">
-              <input
-                type="number"
-                placeholder="Or custom amount in ₹"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(e.target.value)}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
-          </div>
-
-          <div className="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200 space-y-2">
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="text-[10px] text-slate-500 block">Direct UPI ID</span>
-                <strong className="text-slate-900 font-mono text-xs">{trustInfo.upiId}</strong>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 text-center">
+          {stats.map((st, i) => (
+            <div key={i} className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/60 shadow-lg space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+                <Icon name={st.icon} size={20} />
               </div>
-              <button
-                type="button"
-                onClick={handleCopyUpi}
-                className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 font-bold px-2.5 py-1 rounded-lg text-[11px] transition"
-              >
-                {isCopied ? 'Copied!' : 'Copy UPI'}
-              </button>
-            </div>
-
-            <div className="pt-2 border-t border-emerald-200 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-slate-600">
-              <div><strong>Bank:</strong> {trustInfo.accountDetails.bank}</div>
-              <div><strong>IFSC:</strong> {trustInfo.accountDetails.ifsc}</div>
-              <div className="sm:col-span-2"><strong>A/C:</strong> {trustInfo.accountDetails.accountNumber}</div>
-            </div>
-          </div>
-
-          <form onSubmit={handleConfirm} className="space-y-2.5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <input
-                type="text"
-                required
-                placeholder="Full Name *"
-                value={donorName}
-                onChange={(e) => setDonorName(e.target.value)}
-                className="w-full p-2.5 border rounded-xl text-xs"
-              />
-              <input
-                type="tel"
-                required
-                placeholder="Phone (for Receipt SMS) *"
-                value={donorPhone}
-                onChange={(e) => setDonorPhone(e.target.value)}
-                className="w-full p-2.5 border rounded-xl text-xs"
-              />
-            </div>
-            <input
-              type="text"
-              placeholder="PAN Card (Optional for 80G Receipt)"
-              value={donorPan}
-              onChange={(e) => setDonorPan(e.target.value)}
-              className="w-full p-2.5 border rounded-xl text-xs"
-            />
-
-            <button
-              type="submit"
-              className="donate-shine w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black font-heading py-3 rounded-xl shadow-md transition text-xs sm:text-sm flex items-center justify-center space-x-2"
-            >
-              <span>Confirm Support of ₹{currentAmount}</span>
-              <Icon name="arrowright" size={14} />
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- SERVICE DETAIL MODAL (Mobile Responsive) ---
-const ServiceModal = () => {
-  const { selectedService, setSelectedService, showToast } = useTrust();
-  const [formData, setFormData] = useState({ name: '', phone: '', email: '', message: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  if (!selectedService) return null;
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.phone) {
-      showToast('Please enter your name and phone number.', 'error');
-      return;
-    }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      showToast(`Application submitted for ${selectedService.title}!`, 'success');
-      setSelectedService(null);
-    }, 500);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 relative my-auto max-h-[90vh] flex flex-col">
-        <div className="relative h-44 sm:h-56 w-full overflow-hidden bg-slate-900 shrink-0">
-          <img src={selectedService.image} alt={selectedService.title} className="w-full h-full object-cover opacity-80" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-          <button onClick={() => setSelectedService(null)} className="absolute top-3.5 right-3.5 bg-black/60 hover:bg-emerald-600 text-white p-1.5 rounded-full transition">
-            <Icon name="x" size={18} />
-          </button>
-          <div className="absolute bottom-3 left-4 right-4 text-white">
-            <span className="inline-block bg-emerald-600 text-white text-[10px] font-bold font-heading uppercase px-2.5 py-0.5 rounded-full mb-1">
-              {selectedService.category}
-            </span>
-            <h2 className="text-lg sm:text-2xl font-black font-heading leading-tight">{selectedService.title}</h2>
-          </div>
-        </div>
-
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 text-slate-700 text-xs sm:text-sm">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-emerald-50/70 p-3 rounded-xl border border-emerald-100 text-xs">
-            {selectedService.beneficiaries && (
-              <div>
-                <span className="text-slate-500 block text-[10px]">Impact</span>
-                <strong className="text-emerald-800 font-bold">{selectedService.beneficiaries}</strong>
+              <div className="text-2xl sm:text-3xl font-black text-white font-heading tracking-tight">
+                {st.value}
               </div>
-            )}
-            {selectedService.duration && (
-              <div>
-                <span className="text-slate-500 block text-[10px]">Duration</span>
-                <strong className="text-slate-900 font-bold">{selectedService.duration}</strong>
+              <div className="text-xs font-bold text-slate-200 font-heading">
+                {st.label}
               </div>
-            )}
-            {selectedService.location && (
-              <div className="col-span-2 sm:col-span-1">
-                <span className="text-slate-500 block text-[10px]">Location</span>
-                <strong className="text-slate-900 font-bold truncate block">{selectedService.location}</strong>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <h3 className="font-bold font-heading text-slate-900 mb-1 border-l-3 border-emerald-600 pl-2">Overview</h3>
-            <p className="leading-relaxed text-slate-600">{selectedService.fullDescription || selectedService.shortDescription}</p>
-          </div>
-
-          {selectedService.features && (
-            <div>
-              <h3 className="font-bold font-heading text-slate-900 mb-2 border-l-3 border-emerald-600 pl-2">Program Features</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {selectedService.features.map((feat, idx) => (
-                  <div key={idx} className="flex items-start space-x-2 bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs">
-                    <div className="p-0.5 rounded-full bg-emerald-100 text-emerald-600 mt-0.5 shrink-0">
-                      <Icon name="check" size={12} />
-                    </div>
-                    <span className="font-medium text-slate-700">{feat}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-            <h3 className="font-bold font-heading text-slate-900 mb-1.5">Free Admission Application</h3>
-            <form onSubmit={handleSubmit} className="space-y-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  required
-                  placeholder="Full Name *"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border rounded-xl"
-                />
-                <input
-                  type="tel"
-                  required
-                  placeholder="Phone Number *"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border rounded-xl"
-                />
-              </div>
-              <div className="flex justify-end space-x-2 pt-1">
-                <button type="button" onClick={() => setSelectedService(null)} className="px-3 py-1.5 text-xs font-semibold text-slate-600">Close</button>
-                <button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl text-xs font-bold font-heading shadow">
-                  {isSubmitting ? 'Submitting...' : 'Apply Free'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- EVENT DETAIL & RSVP MODAL ---
-const EventModal = () => {
-  const { selectedEvent, setSelectedEvent, registerForEvent } = useTrust();
-  const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  if (!selectedEvent) return null;
-
-  const handleRegister = (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.phone) {
-      alert('Please provide your name and phone.');
-      return;
-    }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      registerForEvent(selectedEvent.id, formData);
-      setSelectedEvent(null);
-    }, 400);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border my-auto max-h-[90vh] flex flex-col">
-        <div className="relative h-40 sm:h-48 w-full bg-slate-900 shrink-0">
-          <img src={selectedEvent.image} alt={selectedEvent.title} className="w-full h-full object-cover opacity-80" />
-          <button onClick={() => setSelectedEvent(null)} className="absolute top-3.5 right-3.5 bg-black/60 text-white p-1.5 rounded-full">
-            <Icon name="x" size={18} />
-          </button>
-          <div className="absolute bottom-3 left-4 right-4 text-white">
-            <h2 className="text-base sm:text-xl font-bold font-heading leading-tight">{selectedEvent.title}</h2>
-          </div>
-        </div>
-        <div className="p-4 sm:p-5 space-y-3 text-xs sm:text-sm overflow-y-auto">
-          <p className="text-slate-600 leading-relaxed">{selectedEvent.description}</p>
-          <p className="text-xs text-slate-500">📍 {selectedEvent.location} | ⏰ {selectedEvent.time}</p>
-          
-          {selectedEvent.status === 'Upcoming' && (
-            <form onSubmit={handleRegister} className="space-y-2 pt-1">
-              <input type="text" required placeholder="Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full p-2 border rounded-xl text-xs" />
-              <input type="tel" required placeholder="Phone *" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full p-2 border rounded-xl text-xs" />
-              <div className="flex justify-end space-x-2 pt-1">
-                <button type="button" onClick={() => setSelectedEvent(null)} className="px-3 py-1.5 text-xs">Cancel</button>
-                <button type="submit" className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold font-heading shadow">
-                  {isSubmitting ? 'Registering...' : 'Confirm RSVP'}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- NEWS MODAL ---
-const NewsModal = () => {
-  const { selectedNews, setSelectedNews } = useTrust();
-  if (!selectedNews) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border my-auto max-h-[90vh] flex flex-col">
-        <div className="relative h-44 sm:h-52 w-full bg-slate-900 shrink-0">
-          <img src={selectedNews.thumbnail} alt={selectedNews.title} className="w-full h-full object-cover opacity-80" />
-          <button onClick={() => setSelectedNews(null)} className="absolute top-3.5 right-3.5 bg-black/60 text-white p-1.5 rounded-full">
-            <Icon name="x" size={18} />
-          </button>
-          <div className="absolute bottom-3 left-4 right-4 text-white">
-            <span className="bg-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-bold font-heading uppercase">{selectedNews.category}</span>
-            <h2 className="text-base sm:text-xl font-black font-heading mt-1 leading-tight">{selectedNews.title}</h2>
-          </div>
-        </div>
-        <div className="p-4 sm:p-5 space-y-3 text-xs sm:text-sm text-slate-700 overflow-y-auto">
-          <div className="text-[11px] text-slate-400">📅 {selectedNews.date} • {selectedNews.author || 'Trust Desk'}</div>
-          <p className="whitespace-pre-line leading-relaxed">{selectedNews.content || selectedNews.shortDescription}</p>
-          <div className="flex justify-end pt-2">
-            <button onClick={() => setSelectedNews(null)} className="bg-slate-900 text-white text-xs px-4 py-2 rounded-xl font-bold font-heading">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- LIGHTBOX MODAL ---
-const LightboxModal = () => {
-  const { lightboxIndex, setLightboxIndex, gallery } = useTrust();
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (lightboxIndex === null) return;
-      if (e.key === 'Escape') setLightboxIndex(null);
-      if (e.key === 'ArrowLeft') setLightboxIndex(prev => (prev > 0 ? prev - 1 : gallery.length - 1));
-      if (e.key === 'ArrowRight') setLightboxIndex(prev => (prev < gallery.length - 1 ? prev + 1 : 0));
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxIndex, gallery.length]);
-
-  if (lightboxIndex === null || !gallery[lightboxIndex]) return null;
-
-  const currentItem = gallery[lightboxIndex];
-  const handlePrev = (e) => {
-    e.stopPropagation();
-    setLightboxIndex(prev => (prev > 0 ? prev - 1 : gallery.length - 1));
-  };
-  const handleNext = (e) => {
-    e.stopPropagation();
-    setLightboxIndex(prev => (prev < gallery.length - 1 ? prev + 1 : 0));
-  };
-
-  const isVideo = currentItem.type === 'video' || !!currentItem.videoUrl;
-
-  return (
-    <div onClick={() => setLightboxIndex(null)} className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-3 sm:p-5 animate-fadeIn">
-      {/* Top Bar */}
-      <div className="flex justify-between items-center text-white" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center space-x-2 flex-wrap">
-          <span className="bg-emerald-600 text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase font-heading">{currentItem.category}</span>
-          <span className="text-xs text-slate-400 font-mono">{isVideo ? 'Video' : 'Photo'} {lightboxIndex + 1} of {gallery.length}</span>
-          {isVideo && (
-            <span className="bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center space-x-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
-              <span>HD Video • {currentItem.duration || '01:22'}</span>
-            </span>
-          )}
-          {currentItem.isPdfWork && (
-            <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] px-2 py-0.5 rounded-full font-bold">Official Document</span>
-          )}
-        </div>
-        <div className="flex items-center space-x-2">
-          <a
-            href={currentItem.videoUrl || currentItem.imageUrl}
-            download={isVideo ? `Medidhisubbaiah_Trust_Program_Video.mp4` : `Medidhisubbaiah_Trust_Photo_${lightboxIndex + 1}.jpg`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white/10 hover:bg-emerald-600 text-white p-2 rounded-xl text-xs flex items-center space-x-1.5 transition"
-            title={isVideo ? "Download Video" : "Download Image"}
-          >
-            <Icon name="download" size={16} />
-            <span className="hidden sm:inline font-bold font-heading">{isVideo ? 'Download Video' : 'Save'}</span>
-          </a>
-          <button onClick={() => setLightboxIndex(null)} className="bg-white/10 hover:bg-red-600 text-white p-2 rounded-xl transition">
-            <Icon name="x" size={18} />
-          </button>
-        </div>
-      </div>
-
-      {/* Main Media Container */}
-      <div className="relative flex-1 flex items-center justify-center py-2" onClick={(e) => e.stopPropagation()}>
-        <button onClick={handlePrev} className="absolute left-1 sm:left-4 bg-black/60 hover:bg-emerald-600 text-white p-2.5 sm:p-3.5 rounded-full z-10 transition backdrop-blur-sm border border-white/10">
-          <Icon name="chevronleft" size={22} />
-        </button>
-
-        {isVideo ? (
-          <div className="max-h-[72vh] max-w-4xl w-full flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl bg-black border border-slate-800">
-            <video
-              src={currentItem.videoUrl}
-              poster={currentItem.imageUrl}
-              controls
-              autoPlay
-              playsInline
-              className="max-h-[70vh] w-full object-contain"
-            />
-          </div>
-        ) : (
-          <img
-            src={currentItem.imageUrl}
-            alt={currentItem.title}
-            className="max-h-[72vh] max-w-full object-contain rounded-2xl shadow-2xl border border-slate-800"
-          />
-        )}
-
-        <button onClick={handleNext} className="absolute right-1 sm:right-4 bg-black/60 hover:bg-emerald-600 text-white p-2.5 sm:p-3.5 rounded-full z-10 transition backdrop-blur-sm border border-white/10">
-          <Icon name="chevronright" size={22} />
-        </button>
-      </div>
-
-      {/* Bottom Information Panel */}
-      <div className="text-center text-white p-3.5 bg-slate-950/80 border border-slate-800 backdrop-blur-md rounded-2xl max-w-2xl mx-auto w-full space-y-1" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-center space-x-2 flex-wrap text-emerald-400 text-xs font-bold font-heading">
-          <span>{currentItem.title}</span>
-          {currentItem.location && (
-            <span className="text-slate-400 text-[11px] font-normal">📍 {currentItem.location}</span>
-          )}
-        </div>
-        <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed">{currentItem.caption}</p>
-        {currentItem.isPdfWork && (
-          <div className="pt-1">
-            <a
-              href="assets/medidhisubbaiah_trust_all_works.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center space-x-1 text-[11px] text-amber-300 hover:text-amber-200 underline font-semibold"
-            >
-              <span>📄 View in Full 15-Page PDF Presentation</span>
-              <Icon name="arrowright" size={11} />
-            </a>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// --- TOAST NOTIFICATION ---
-const Toast = () => {
-  const { toast } = useTrust();
-  if (!toast) return null;
-
-  return (
-    <div className="fixed bottom-4 right-4 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-xl shadow-2xl border bg-slate-950 text-white text-xs font-medium max-w-[90vw] animate-fadeIn">
-      <span className="text-emerald-400 font-bold">●</span>
-      <span className="truncate">{toast.message}</span>
-    </div>
-  );
-};
-
-// --- FLOATING QUICK ACTION BUTTONS (Mobile Safe) ---
-const FloatingActions = () => {
-  const { trustInfo } = useTrust();
-  const [showTop, setShowTop] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setShowTop(window.scrollY > 300);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  return (
-    <div className="fixed bottom-4 left-3 sm:bottom-6 sm:left-6 z-40 flex flex-col space-y-2.5">
-      {/* WhatsApp Button */}
-      <a
-        href={trustInfo.socials.whatsapp}
-        target="_blank"
-        rel="noreferrer"
-        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
-        aria-label="WhatsApp Helpline"
-      >
-        <Icon name="share" size={20} />
-      </a>
-
-      {/* Emergency Call Helpline */}
-      <a
-        href={`tel:${trustInfo.emergencyBloodHelpline}`}
-        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center shadow-xl hover:scale-105 transition-transform animate-pulse"
-        aria-label="Emergency Blood Call"
-      >
-        <Icon name="heartpulse" size={20} />
-      </a>
-
-      {/* Scroll to Top */}
-      {showTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-lg hover:bg-emerald-600 transition"
-          aria-label="Scroll to top"
-        >
-          ↑
-        </button>
-      )}
-    </div>
-  );
-};
-
-// --- HOME PAGE ---
-const HomePage = () => {
-  const { services, events, news, gallery, testimonials, navigate, setLightboxIndex, setIsDonateModalOpen, trustInfo } = useTrust();
-  const featuredServices = services.slice(0, 6);
-  const upcomingEvents = events.filter(e => e.status === 'Upcoming').slice(0, 3);
-  const latestNews = news.slice(0, 3);
-  const gallerySpotlight = gallery.slice(0, 8);
-
-  return (
-    <div className="space-y-12 sm:space-y-20 w-full max-w-full overflow-hidden">
-      {/* Hero Slider */}
-      <HeroSlider />
-
-      {/* 4 Overlapping Feature Cards */}
-      <HeroFeatureCards />
-
-      {/* About Foundation & Founder Showcase */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          <div className="lg:col-span-6 space-y-4">
-            <div className="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold font-heading uppercase tracking-wider">
-              <span>మేడిది సుబ్బయ్య ట్రస్ట్</span>
-              <span>•</span>
-              <span>About Us</span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-black font-heading text-slate-900 tracking-tight leading-tight">
-              Serving Humanity With <br />
-              <span className="text-emerald-600">Dignity, Care & Transparency</span>
-            </h2>
-            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-              Medidhisubbaiah Trust is dedicated to the social, economic, and educational upliftment of rural and urban communities. From organizing 100% free women vocational skills to 24/7 blood donor coordination, Annadhanam food distributions, summer drinking water kiosks, and sports meets—we work relentlessly at the grassroots.
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                <div className="text-emerald-600 font-black font-heading text-xl sm:text-2xl">100% Free</div>
-                <div className="text-[11px] sm:text-xs text-slate-600 font-bold font-heading">Welfare & Skills</div>
-              </div>
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                <div className="text-emerald-600 font-black font-heading text-xl sm:text-2xl">80,000+</div>
-                <div className="text-[11px] sm:text-xs text-slate-600 font-bold font-heading">Beneficiaries</div>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-1">
-              <button onClick={() => navigate('about')} className="w-full sm:w-auto bg-slate-900 hover:bg-emerald-600 text-white font-bold font-heading px-5 py-3 rounded-xl text-xs sm:text-sm transition flex items-center justify-center space-x-2">
-                <span>Our Mission & Legacy</span>
-                <Icon name="arrowright" size={14} />
-              </button>
-              <button onClick={() => setIsDonateModalOpen(true)} className="donate-shine w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-5 py-3 rounded-xl text-xs sm:text-sm shadow transition">
-                Support Our Programs
-              </button>
-            </div>
-          </div>
-
-          <div className="lg:col-span-6">
-            <div className="relative flex items-center justify-center p-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-white rounded-3xl border border-emerald-200 shadow-lg">
-              <div className="text-center space-y-3">
-                <div className="w-36 h-36 sm:w-48 sm:h-48 mx-auto rounded-full p-1.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-xl">
-                  <img
-                    src={trustInfo.logoUrl}
-                    alt="Sri Medidhi Subbaiah Medallion Logo"
-                    className="w-full h-full rounded-full object-cover bg-white"
-                  />
-                </div>
-                <div>
-                  <h3 className="text-lg sm:text-xl font-black font-heading text-slate-900">శ్రీ మేడిది సుబ్బయ్య స్మారక ట్రస్ట్</h3>
-                  <p className="text-xs font-bold text-emerald-800 font-heading mt-0.5">Sri Medidhisubbaiah Memorial Trust</p>
-                  <p className="text-[11px] text-slate-500 mt-1 max-w-xs mx-auto">Committed to preserving human dignity, self-reliance, and uplifting community welfare across generations.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Impact Statistics */}
-      <StatsCounter />
-
-      {/* Featured Causes / Services */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-2">
-          <div>
-            <span className="text-emerald-700 font-bold font-heading text-[11px] sm:text-xs uppercase tracking-widest bg-emerald-50 px-3 py-0.5 rounded-full inline-block mb-1.5 border border-emerald-200">
-              Our Core Initiatives
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 tracking-tight">Welfare Causes & Programs</h2>
-          </div>
-          <button onClick={() => navigate('services')} className="text-emerald-600 font-bold font-heading text-xs sm:text-sm flex items-center space-x-1 hover:underline self-start sm:self-auto">
-            <span>View All ({services.length}) Services</span>
-            <Icon name="arrowright" size={14} />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {featuredServices.map(s => <ServiceCard key={s.id} service={s} />)}
-        </div>
-      </section>
-
-      {/* Upcoming Events */}
-      <section className="bg-slate-50 py-12 sm:py-16 border-y border-slate-200 w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-2">
-            <div>
-              <span className="text-emerald-700 font-bold font-heading text-[11px] sm:text-xs uppercase tracking-widest bg-white border border-emerald-200 px-3 py-0.5 rounded-full inline-block mb-1.5">
-                Join In Person
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 tracking-tight">Upcoming Drives & Events</h2>
-            </div>
-            <button onClick={() => navigate('events')} className="text-emerald-600 font-bold font-heading text-xs sm:text-sm flex items-center space-x-1 hover:underline self-start sm:self-auto">
-              <span>View All Events</span>
-              <Icon name="arrowright" size={14} />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {upcomingEvents.map(e => <EventCard key={e.id} event={e} />)}
-          </div>
-        </div>
-      </section>
-
-      {/* Photo Gallery Spotlight */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-2">
-          <div>
-            <span className="text-emerald-700 font-bold font-heading text-[11px] sm:text-xs uppercase tracking-widest bg-emerald-50 px-3 py-0.5 rounded-full inline-block mb-1.5">
-              Visual Chronicles
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 tracking-tight">Moments of Social Service</h2>
-          </div>
-          <button onClick={() => navigate('gallery')} className="text-emerald-600 font-bold font-heading text-xs sm:text-sm flex items-center space-x-1 hover:underline self-start sm:self-auto">
-            <span>Explore Gallery</span>
-            <Icon name="arrowright" size={14} />
-          </button>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-          {gallerySpotlight.map((item, idx) => (
-            <div
-              key={item.id}
-              onClick={() => setLightboxIndex(idx)}
-              className="group relative h-36 sm:h-52 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer shadow bg-slate-900 border"
-            >
-              <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent opacity-0 group-hover:opacity-100 transition p-2.5 sm:p-4 flex flex-col justify-between text-white">
-                <span className="bg-emerald-600 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase self-start font-heading">{item.category}</span>
-                <p className="text-[11px] sm:text-xs font-bold font-heading leading-tight line-clamp-2">{item.title}</p>
+              <div className="text-[10px] text-emerald-400 font-medium truncate">
+                {st.sub}
               </div>
             </div>
           ))}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+};
 
-      {/* Testimonials */}
-      <section className="bg-emerald-50/50 py-12 sm:py-16 border-y border-emerald-100 w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
-            <span className="text-emerald-700 font-bold font-heading text-[11px] sm:text-xs uppercase tracking-widest bg-white border border-emerald-200 px-3 py-0.5 rounded-full inline-block mb-1.5">
-              Voices of Change
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900">What Our Community Says</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            {testimonials.map((t) => (
-              <div key={t.id} className="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-emerald-100 shadow-sm space-y-3 flex flex-col justify-between">
-                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed italic">"{t.quote}"</p>
-                <div className="flex items-center space-x-3 pt-3 border-t border-slate-100">
-                  <img src={t.image} alt={t.name} className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500 shrink-0" />
-                  <div className="min-w-0">
-                    <h4 className="font-extrabold font-heading text-xs sm:text-sm text-slate-900 truncate">{t.name}</h4>
-                    <p className="text-[11px] text-slate-500 truncate">{t.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+// --- SERVICES SECTION (Homepage Grid) ---
+const ServicesSection = () => {
+  const { services, setSelectedService, navigate } = useTrust();
 
-      {/* Latest News & Stories */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-2">
-          <div>
-            <span className="text-emerald-700 font-bold font-heading text-[11px] sm:text-xs uppercase tracking-widest bg-emerald-50 px-3 py-0.5 rounded-full inline-block mb-1.5">
-              Press & Media
+  return (
+    <section className="py-12 sm:py-20 bg-slate-50 w-full max-w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-10">
+          <div className="space-y-2 max-w-2xl">
+            <span className="text-emerald-600 font-bold font-heading text-xs uppercase tracking-wider bg-emerald-100 px-3 py-0.5 rounded-full inline-block">
+              Causes & Core Programs
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 tracking-tight">Latest News & Stories</h2>
+            <h2 className="text-2xl sm:text-4xl font-black font-heading text-slate-900">
+              Transforming Lives Through Direct Seva
+            </h2>
+            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+              Explore our verified free welfare programs designed to build lasting self-reliance and provide urgent emergency relief.
+            </p>
           </div>
-          <button onClick={() => navigate('news')} className="text-emerald-600 font-bold font-heading text-xs sm:text-sm flex items-center space-x-1 hover:underline self-start sm:self-auto">
-            <span>Read All News</span>
+          <button
+            onClick={() => navigate('services')}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-5 py-2.5 rounded-xl text-xs shadow transition flex items-center space-x-1.5 shrink-0"
+          >
+            <span>View All 9 Programs</span>
             <Icon name="arrowright" size={14} />
           </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {latestNews.map(n => <NewsCard key={n.id} newsItem={n} />)}
-        </div>
-      </section>
 
-      {/* Big Call To Action */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 w-full">
-        <div className="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 rounded-2xl sm:rounded-3xl p-6 sm:p-12 text-white shadow-xl flex flex-col lg:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl text-center lg:text-left">
-            <span className="bg-white/20 text-white text-[10px] sm:text-xs font-black font-heading uppercase tracking-wider px-2.5 py-0.5 rounded-full">
-              Together We Make A Difference
-            </span>
-            <h2 className="text-xl sm:text-3xl font-black font-heading">Help Us Bring Light & Hope To Deserving Lives</h2>
-            <p className="text-emerald-100 text-xs sm:text-sm leading-relaxed">
-              Every voluntary hour, blood donation, and rupee helps a family eat, a woman learn tailoring, and a child attend school.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto shrink-0">
-            <button onClick={() => setIsDonateModalOpen(true)} className="donate-shine w-full sm:w-auto bg-white text-emerald-800 font-black font-heading px-6 py-3.5 rounded-xl text-xs sm:text-sm shadow-xl hover:bg-emerald-50 text-center">
-              Donate Online Now
-            </button>
-            <button onClick={() => navigate('contact')} className="w-full sm:w-auto bg-slate-950/80 text-white font-bold font-heading px-6 py-3.5 rounded-xl text-xs sm:text-sm border border-white/20 hover:bg-slate-950 text-center">
-              Join Volunteer
-            </button>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-};
-
-// --- ABOUT PAGE (Mobile Contained) ---
-const AboutPage = () => {
-  const { navigate, setIsDonateModalOpen, trustInfo } = useTrust();
-  const objectives = [
-    { title: "Women's Economic Empowerment", desc: "Free tailoring and Maggam embroidery training to help women generate sustainable household income.", icon: "scissors" },
-    { title: "24/7 Life Saving Healthcare", desc: "Voluntary blood donation registries and rapid donor coordination.", icon: "heartpulse" },
-    { title: "Eradicating Hunger (Annadhanam)", desc: "Distributing hot nutritious meals and monthly dry ration kits to needy families.", icon: "utensils" },
-    { title: "Chalivendram Public Water", desc: "Clay-pot drinking water stations and spiced buttermilk kiosks during intense summer.", icon: "droplets" },
-    { title: "Youth Development Through Sports", desc: "Grassroots tournaments in Kabaddi, Cricket, and Volleyball with free sports kits.", icon: "trophy" },
-    { title: "Universal Educational Support", desc: "Free school bags, books, and merit scholarships for underprivileged students.", icon: "graduationcap" }
-  ];
-
-  return (
-    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden animate-fadeIn">
-      {/* First Header Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="max-w-2xl space-y-2.5">
-            <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block">About Medidhisubbaiah Trust</span>
-            <h1 className="text-2xl sm:text-4xl font-black font-heading leading-tight">A Legacy of Selfless Service & <span className="text-emerald-400">Integrity</span></h1>
-            <p className="text-slate-300 text-xs sm:text-base mt-1 leading-relaxed">
-              Medidhisubbaiah Trust is a registered non-profit charitable social-service organization committed to creating equal opportunities, supporting vulnerable families, and empowering rural and urban youth through education and vocational training.
-            </p>
-          </div>
-          <div className="w-28 h-28 sm:w-40 sm:h-40 rounded-full p-1.5 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-xl shrink-0">
-            <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
-          </div>
-        </div>
-      </section>
-
-      {/* Leadership Showcase: Director & Treasurer (10+ Years Experience) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="bg-white rounded-2xl sm:rounded-3xl border border-emerald-100 shadow-xl overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
-            <div className="lg:col-span-5 p-6 sm:p-8 bg-gradient-to-br from-emerald-50 via-teal-50 to-white flex justify-center items-center">
-              <div className="relative group max-w-sm w-full">
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.slice(0, 6).map((service) => (
+            <div
+              key={service.id}
+              className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col justify-between group"
+            >
+              <div>
+                <div className="relative h-48 w-full overflow-hidden bg-slate-100">
                   <img
-                    src="./leadership.png"
-                    alt="Director Dr. Sri Medidhi Venkateshwar Rao & Treasurer Smt. Medidhi Varalakshmi"
-                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                    src={service.image || "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80"}
+                    alt={service.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                   />
-                  {/* Floating role indicator chips at bottom of photo */}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent p-2.5 pt-6 flex justify-between items-end text-white text-[11px] font-bold font-heading">
-                    <span className="bg-emerald-600/95 backdrop-blur-sm px-2.5 py-0.5 rounded-lg shadow">Director</span>
-                    <span className="bg-teal-600/95 backdrop-blur-sm px-2.5 py-0.5 rounded-lg shadow">Treasurer</span>
+                  <div className="absolute top-3 left-3 bg-slate-950/80 text-emerald-300 backdrop-blur-sm text-[11px] font-bold font-heading px-3 py-1 rounded-full border border-emerald-500/30">
+                    {service.category}
                   </div>
                 </div>
 
-                <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 bg-emerald-700 text-white text-[11px] sm:text-xs font-bold font-heading px-4 py-1 rounded-full shadow-xl whitespace-nowrap z-10 border-2 border-white">
-                  10+ Years of Selfless Service
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-7 p-6 sm:p-10 space-y-4">
-              <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3.5 py-1 rounded-full text-xs font-bold font-heading uppercase tracking-wider">
-                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                <span>Trust Leadership & Vision</span>
-              </div>
-
-              {/* Director & Treasurer Profiles (Positioned Above) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                <div className="bg-slate-50 p-4 rounded-2xl border border-emerald-200/80 shadow-sm space-y-1 hover:border-emerald-400 transition-colors">
-                  <span className="bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md inline-block font-heading mb-1">
-                    Director
-                  </span>
-                  <div className="text-emerald-800 font-black font-heading text-base sm:text-lg leading-tight">
-                    Dr. Sri Medidhi Venkateshwar Rao
-                  </div>
-                  <div className="text-xs font-bold text-slate-700 font-heading">
-                    Director, Medidhisubbaiah Trust
-                  </div>
-                  <p className="text-[11px] text-slate-500 pt-1 leading-relaxed">
-                    Leading strategic social welfare, hospital blood donation coordination, and youth skill-building drives for 10+ years.
-                  </p>
-                </div>
-
-                <div className="bg-slate-50 p-4 rounded-2xl border border-teal-200/80 shadow-sm space-y-1 hover:border-teal-400 transition-colors">
-                  <span className="bg-teal-700 text-white text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md inline-block font-heading mb-1">
-                    Treasurer
-                  </span>
-                  <div className="text-teal-900 font-black font-heading text-base sm:text-lg leading-tight">
-                    Smt. Medidhi Varalakshmi
-                  </div>
-                  <div className="text-xs font-bold text-slate-700 font-heading">
-                    Treasurer, Medidhisubbaiah Trust
-                  </div>
-                  <p className="text-[11px] text-slate-500 pt-1 leading-relaxed">
-                    Overseeing transparent trust governance, women empowerment tailoring centers, and free food distribution programs for 10+ years.
+                <div className="p-5 space-y-3">
+                  <h3 className="text-lg font-black font-heading text-slate-900 group-hover:text-emerald-600 transition-colors">
+                    {service.title}
+                  </h3>
+                  <p className="text-slate-600 text-xs leading-relaxed line-clamp-3">
+                    {service.shortDescription || service.short_description}
                   </p>
                 </div>
               </div>
 
-              {/* Dedicated Community Stewards (Positioned Down) */}
-              <div className="pt-2 border-t border-slate-100 space-y-1.5">
-                <h2 className="text-xl sm:text-2xl font-black font-heading text-slate-900 tracking-tight">
-                  Dedicated Community Stewards
-                </h2>
-                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                  Guided by the principles of compassion, integrity, and grassroots social development, our leaders have been tirelessly spearheading free educational, healthcare, and vocational initiatives across the community for more than a decade.
-                </p>
+              <div className="p-5 pt-0">
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500">{service.beneficiaries || service.raised || 'Community Seva'}</span>
+                  <button
+                    onClick={() => setSelectedService(service)}
+                    className="bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white font-bold font-heading px-3.5 py-1.5 rounded-lg text-xs transition"
+                  >
+                    View Details
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          ))}
         </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-          <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow"><Icon name="heart" size={20} /></div>
-            <h2 className="text-xl sm:text-2xl font-black font-heading text-slate-900">Our Mission</h2>
-            <p className="text-slate-700 text-xs sm:text-sm leading-relaxed">To alleviate poverty and vulnerability through holistic community interventions: providing 100% free livelihood training for women, facilitating prompt emergency blood donations, distributing nourishing food, supplying clean drinking water, and fostering youth potential through education and sports.</p>
-          </div>
-          <div className="bg-slate-900 text-white border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-3 shadow-xl">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow"><Icon name="eye" size={20} /></div>
-            <h2 className="text-xl sm:text-2xl font-black font-heading text-white">Our Vision</h2>
-            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">A compassionate, self-reliant society where no family suffers from hunger, no emergency patient loses life due to lack of blood, every woman has vocational independence, and every child possesses the resources to learn, compete, and flourish.</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-slate-50 py-12 sm:py-16 border-y border-slate-200 w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl font-black font-heading text-slate-900">Strategic Core Objectives</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {objectives.map((obj, idx) => (
-              <div key={idx} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm space-y-2">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Icon name={obj.icon} size={18} /></div>
-                <h3 className="font-bold font-heading text-sm sm:text-base text-slate-900">{obj.title}</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">{obj.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 };
 
-// --- SERVICES PAGE (Mobile Safe) ---
-const ServicesPage = () => {
-  const { services } = useTrust();
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const categories = ['All', 'Skill Development', 'Community Welfare', 'Healthcare', 'Public Welfare', 'Sports', 'Education'];
-
-  const filtered = useMemo(() => {
-    return services.filter(s => {
-      const matchCat = selectedCategory === 'All' || s.category === selectedCategory;
-      const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchCat && matchSearch;
-    });
-  }, [services, selectedCategory, searchQuery]);
+// --- ABOUT PAGE COMPONENT ---
+const AboutPage = () => {
+  const { trustInfo, setIsDonateModalOpen } = useTrust();
 
   return (
-    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
-          <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">100% Free Welfare Services</span>
-          <h1 className="text-2xl sm:text-4xl font-black font-heading">Our Community <span className="text-emerald-400">Services & Causes</span></h1>
-          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">Explore our core initiatives designed to foster livelihood self-reliance, ensure food security, save critical lives, and empower future generations.</p>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 mb-6">
-          <div className="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1.5 md:pb-0 scrollbar-none">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold font-heading whitespace-nowrap transition ${
-                  selectedCategory === cat ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          <div className="relative w-full md:w-72">
-            <input
-              type="text"
-              placeholder="Search services..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500"
-            />
-            <div className="absolute left-3 top-2.5 text-slate-400"><Icon name="search" size={14} /></div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {filtered.map(s => <ServiceCard key={s.id} service={s} />)}
-        </div>
-      </section>
-    </div>
-  );
-};
-
-// --- EVENTS PAGE (Mobile Safe) ---
-const EventsPage = () => {
-  const { events } = useTrust();
-  const [statusTab, setStatusTab] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filtered = useMemo(() => {
-    return events.filter(e => {
-      const matchStatus = statusTab === 'All' || e.status === statusTab;
-      const matchSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) || e.description.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchStatus && matchSearch;
-    });
-  }, [events, statusTab, searchQuery]);
-
-  return (
-    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
-          <span className="bg-emerald-600/30 text-emerald-400 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">Community Programs</span>
-          <h1 className="text-2xl sm:text-4xl font-black font-heading">Trust Events & <span className="text-emerald-400">Welfare Camps</span></h1>
-          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">Join our upcoming blood donation drives, sports meets, certificate convocations, and food distribution activities.</p>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm mb-6">
-          <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto justify-center">
-            {['All', 'Upcoming', 'Completed'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setStatusTab(tab)}
-                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold font-heading transition ${statusTab === tab ? 'bg-emerald-600 text-white shadow' : 'text-slate-600'}`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          <div className="relative w-full sm:w-72">
-            <input
-              type="text"
-              placeholder="Search events..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500"
-            />
-            <div className="absolute left-3 top-2.5 text-slate-400"><Icon name="search" size={14} /></div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {filtered.map(e => <EventCard key={e.id} event={e} />)}
-        </div>
-      </section>
-    </div>
-  );
-};
-
-// --- NEWS PAGE ---
-const NewsPage = () => {
-  const { news } = useTrust();
-  return (
-    <div className="space-y-8 sm:space-y-12 py-6 sm:py-8 w-full max-w-full overflow-hidden">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
-          <span className="bg-emerald-600/30 text-emerald-400 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">Press Releases</span>
-          <h1 className="text-2xl sm:text-4xl font-black font-heading">Trust News & <span className="text-emerald-400">Activity Stories</span></h1>
-          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">Stay informed with verified reports, impact stories, and official announcements.</p>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {news.map(n => <NewsCard key={n.id} newsItem={n} />)}
-        </div>
-      </section>
-    </div>
-  );
-};
-
-// --- GALLERY PAGE (Mobile Responsive with PDF Work & Video Showcase) ---
-const GalleryPage = () => {
-  const { gallery, setLightboxIndex } = useTrust();
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const categories = [
-    'All',
-    'Video Documentation',
-    'Certificate Distribution',
-    'Tailoring & Muggam',
-    'Blood Donation',
-    'Food Distribution',
-    'Grocery Distribution',
-    'Chalivendram',
-    'Educational Programs',
-    'Sports'
-  ];
-
-  const filtered = useMemo(() => {
-    return gallery.filter(item => {
-      const matchCat = selectedCategory === 'All' || item.category === selectedCategory;
-      const matchSearch =
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.caption && item.caption.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (item.location && item.location.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchCat && matchSearch;
-    });
-  }, [gallery, selectedCategory, searchQuery]);
-
-  return (
-    <div className="space-y-6 sm:space-y-10 py-6 sm:py-8 w-full max-w-full overflow-hidden">
-      {/* Header Banner */}
+    <div className="space-y-12 sm:space-y-20 py-8 sm:py-12 w-full max-w-full overflow-hidden">
+      {/* Page Header */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl relative overflow-hidden">
-          <div className="relative z-10 max-w-2xl">
-            <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">
-              Visual Chronicles, Video & Official Records
+          <div className="relative z-10 max-w-2xl space-y-2 sm:space-y-3">
+            <span className="bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block">
+              Our Heritage & Vision
             </span>
-            <h1 className="text-2xl sm:text-4xl font-black font-heading leading-tight">
-              Community <span className="text-emerald-400">Gallery & Video Hub</span>
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black font-heading leading-tight">
+              About <span className="text-emerald-400">Medidhisubbaiah Trust</span>
             </h1>
-            <p className="text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed">
-              Authentic photographic records and live video coverage of our Free Tailoring & Muggam Work programs, grand certificate distributions with dignitaries, blood donation drives, Annadhanam food service, and summer Chalivendram water kiosks.
+            <p className="text-xs sm:text-sm text-emerald-300 font-bold font-heading">
+              మేడిది సుబ్బయ్య ట్రస్ట్ — నిస్వార్థ సేవ, సమాజ వికాసం
+            </p>
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+              Founded on the pillars of pure compassion, social welfare, and sustainable empowerment, Sri Medidhi Subbaiah Memorial Trust has been touching thousands of lives through free education, vocational craft mastery, emergency blood donor mobilization, and daily humanitarian relief.
             </p>
           </div>
           <div className="absolute right-4 -bottom-10 opacity-10 pointer-events-none hidden md:block">
@@ -2716,122 +2149,293 @@ const GalleryPage = () => {
         </div>
       </section>
 
-      {/* Featured Live Video Player Section */}
+      {/* Mission & Vision Pillars */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="bg-slate-950 rounded-2xl sm:rounded-3xl border-2 border-emerald-500/40 p-4 sm:p-7 shadow-2xl overflow-hidden text-white">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            {/* Video Player Column */}
-            <div className="lg:col-span-7">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black border border-slate-800 aspect-video group">
-                <video
-                  src="assets/gallery/trust_activity_video.mp4"
-                  poster="assets/gallery/trust_activity_video_thumb.jpg"
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </div>
-
-            {/* Video Info Column */}
-            <div className="lg:col-span-5 space-y-3.5">
-              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                <span className="bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full font-heading flex items-center space-x-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
-                  <span>Featured Video</span>
-                </span>
-                <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full font-heading">
-                  Duration 01:22 • HD Audio & Video
-                </span>
-              </div>
-
-              <h2 className="text-lg sm:text-2xl font-black font-heading text-white leading-snug">
-                Free Tailoring & Muggam Work Convocations — Live Field Footage
-              </h2>
-
-              <p className="text-slate-300 text-xs leading-relaxed">
-                Watch live video documentation of Sri Medidhi Subbaiah Memorial Trust's vocational training activities across <strong>Tanuku, Mogultur, Narsapuram & Tadepalligudam</strong>, featuring student stitching practice, master artisan guidance, and the grand certificate ceremony at <strong>Hotel Chitturi Heritage, Tanuku</strong> with <strong>Dr. Kishore Kumar Garu</strong>.
-              </p>
-
-              <div className="pt-2 flex flex-wrap gap-2.5">
-                <button
-                  onClick={() => setLightboxIndex(0)}
-                  className="inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold font-heading px-4 py-2.5 rounded-xl text-xs shadow-lg transition"
-                >
-                  <Icon name="play" size={14} />
-                  <span>Open Fullscreen Player</span>
-                </button>
-                <a
-                  href="assets/gallery/trust_activity_video.mp4"
-                  download="Medidhisubbaiah_Trust_Program_Video.mp4"
-                  className="inline-flex items-center space-x-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold font-heading px-4 py-2.5 rounded-xl text-xs shadow transition"
-                >
-                  <Icon name="download" size={14} />
-                  <span>Download Video (17.6 MB)</span>
-                </a>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center"><Icon name="target" size={24} /></div>
+            <h3 className="text-lg font-black font-heading text-slate-900">Our Sacred Mission</h3>
+            <p className="text-slate-600 text-xs leading-relaxed">
+              To eliminate socio-economic barriers by providing 100% free vocational training, safeguarding human lives with 24/7 blood helpline support, and ensuring that no underprivileged neighbor sleeps hungry.
+            </p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <div className="w-12 h-12 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center"><Icon name="eye" size={24} /></div>
+            <h3 className="text-lg font-black font-heading text-slate-900">Our Global Vision</h3>
+            <p className="text-slate-600 text-xs leading-relaxed">
+              A self-reliant society where every woman holds verified vocational credentials, every youth has access to healthy athletic arenas, and every emergency patient receives timely medical and blood assistance.
+            </p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center"><Icon name="award" size={24} /></div>
+            <h3 className="text-lg font-black font-heading text-slate-900">Core Values</h3>
+            <p className="text-slate-600 text-xs leading-relaxed">
+              Absolute transparency, zero discrimination across caste or creed, prompt emergency responsiveness, and deep accountability to every community supporter and volunteer.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Official PDF Document Showcase Card */}
+      {/* Official Convocation Document Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-white shadow-xl border border-emerald-700/50 flex flex-col md:flex-row items-center justify-between gap-5">
-          <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-emerald-600/30 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shrink-0 shadow-lg">
-              <Icon name="filetext" size={28} />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2 flex-wrap">
-                <span className="bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-md font-heading">Official Document</span>
-                <span className="text-emerald-300 text-xs font-bold font-heading">15 Pages • Comprehensive Presentation</span>
-              </div>
-              <h2 className="text-base sm:text-xl font-black font-heading text-white">
-                All Works Together — Official Presentation Report (PDF)
-              </h2>
-              <p className="text-slate-300 text-xs leading-relaxed max-w-2xl">
-                Official document chronicling Free Tailoring & Muggam Works conducted at <strong>Tanuku, Mogultur, Narsapuram & Tadepalligudam</strong>, and the grand Certificate Distribution Ceremony at <strong>Hotel Chitturi Heritage, Tanuku</strong> with <strong>Dr. Kishore Kumar Garu</strong> (Founder, GVSK Nutraceuticals & Ayurveda, Hyderabad).
-              </p>
-            </div>
+        <div className="bg-emerald-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-10 shadow-xl border border-emerald-700 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <span className="bg-amber-400 text-slate-950 font-black text-[10px] uppercase px-2.5 py-0.5 rounded-md font-heading">
+              Official Document
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black font-heading">
+              All Works Together — Comprehensive Presentation Report
+            </h2>
+            <p className="text-emerald-100 text-xs sm:text-sm leading-relaxed">
+              Official 15-page chronicle of Free Tailoring, Maggam works, and grand Certificate Distribution at Hotel Chitturi Heritage, Tanuku with Dr. Kishore Kumar Garu.
+            </p>
           </div>
-
-          <div className="flex flex-row sm:flex-col lg:flex-row gap-2.5 w-full md:w-auto shrink-0">
+          <div className="flex gap-3 shrink-0">
             <a
               href="assets/medidhisubbaiah_trust_all_works.pdf"
               target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 md:flex-none inline-flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold font-heading px-4 py-2.5 rounded-xl text-xs shadow-lg transition"
+              rel="noreferrer"
+              className="bg-white text-emerald-950 hover:bg-emerald-50 font-black font-heading px-5 py-2.5 rounded-xl text-xs shadow transition flex items-center space-x-1.5"
             >
-              <Icon name="external-link" size={14} />
-              <span>View PDF</span>
-            </a>
-            <a
-              href="assets/medidhisubbaiah_trust_all_works.pdf"
-              download="Medidhisubbaiah_Trust_All_Works.pdf"
-              className="flex-1 md:flex-none inline-flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold font-heading px-4 py-2.5 rounded-xl text-xs shadow transition"
-            >
-              <Icon name="download" size={14} />
-              <span>Download PDF</span>
+              <Icon name="filetext" size={16} />
+              <span>Read Full Report</span>
             </a>
           </div>
         </div>
       </section>
+    </div>
+  );
+};
 
-      {/* Filter and Search Bar */}
+// --- SERVICES PAGE ---
+const ServicesPage = () => {
+  const { services, setSelectedService } = useTrust();
+  const [activeCategory, setActiveCategory] = useState('All');
+
+  const categories = ['All', 'Skill Development', 'Healthcare', 'Education', 'Social Relief', 'Public Welfare', 'Youth & Sports'];
+
+  const filtered = activeCategory === 'All'
+    ? services
+    : services.filter(s => (s.category || '').toLowerCase().includes(activeCategory.toLowerCase()));
+
+  return (
+    <div className="space-y-8 sm:space-y-12 py-8 sm:py-12 w-full max-w-full overflow-hidden">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 mb-6">
+        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
+          <span className="bg-emerald-600/30 text-emerald-400 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">Programs & Causes</span>
+          <h1 className="text-2xl sm:text-4xl font-black font-heading">Our Core <span className="text-emerald-400">Community Services</span></h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-2 max-w-2xl">100% Free vocational classes, 24/7 blood helpline, food distributions, and youth programs.</p>
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        {/* Category Filters */}
+        <div className="flex items-center space-x-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
+          {categories.map(c => (
+            <button
+              key={c}
+              onClick={() => setActiveCategory(c)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-heading whitespace-nowrap transition ${
+                activeCategory === c ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map(service => (
+            <div key={service.id} className="bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between group">
+              <div>
+                <div className="relative h-48 overflow-hidden bg-slate-100">
+                  <img
+                    src={service.image || "assets/gallery/trust_work_page_01.jpg"}
+                    onError={(ev) => { ev.target.onerror = null; ev.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+                    alt={service.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                  />
+                  <span className="absolute top-3 left-3 bg-slate-950/80 text-emerald-300 text-[10px] font-bold px-2.5 py-1 rounded-full">{service.category}</span>
+                </div>
+                <div className="p-5 space-y-2.5">
+                  <h3 className="font-bold font-heading text-base text-slate-900 group-hover:text-emerald-600 transition">{service.title}</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">{service.shortDescription || service.short_description}</p>
+                </div>
+              </div>
+              <div className="p-5 pt-0">
+                <button onClick={() => setSelectedService(service)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-2.5 rounded-xl text-xs shadow transition">
+                  Apply / View Details
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+// --- EVENTS PAGE ---
+const EventsPage = () => {
+  const { events, setSelectedEvent } = useTrust();
+
+  return (
+    <div className="space-y-8 sm:space-y-12 py-8 sm:py-12 w-full max-w-full overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
+          <span className="bg-emerald-600/30 text-emerald-400 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">Community Calendar</span>
+          <h1 className="text-2xl sm:text-4xl font-black font-heading">Upcoming <span className="text-emerald-400">Events & Drives</span></h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-2 max-w-2xl">Participate in our certificate convocations, blood donation drives, and youth sports meets.</p>
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map(event => (
+            <div key={event.id} className="bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-xl transition flex flex-col justify-between group">
+              <div>
+                <div className="relative h-48 overflow-hidden bg-slate-100">
+                  <img
+                    src={event.image_url || event.image || "assets/gallery/trust_work_page_01.jpg"}
+                    onError={(ev) => { ev.target.onerror = null; ev.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+                    alt={event.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                  />
+                  <span className="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">{event.status || 'Upcoming'}</span>
+                </div>
+                <div className="p-5 space-y-2">
+                  <div className="flex items-center space-x-2 text-[11px] text-emerald-600 font-bold font-heading">
+                    <Icon name="calendar" size={13} />
+                    <span>{event.date}</span>
+                    <span>•</span>
+                    <Icon name="clock" size={13} />
+                    <span>{event.time || '10:00 AM'}</span>
+                  </div>
+                  <h3 className="font-bold font-heading text-base text-slate-900 group-hover:text-emerald-600 transition">{event.title}</h3>
+                  <p className="text-xs text-slate-500 flex items-center space-x-1">
+                    <Icon name="mappin" size={12} className="shrink-0 text-slate-400" />
+                    <span className="truncate">{event.location}</span>
+                  </p>
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{event.description}</p>
+                </div>
+              </div>
+              <div className="p-5 pt-0">
+                <button onClick={() => setSelectedEvent(event)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-2.5 rounded-xl text-xs shadow transition">
+                  Register for Event
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+// --- NEWS PAGE ---
+const NewsPage = () => {
+  const { news, setSelectedNews } = useTrust();
+
+  return (
+    <div className="space-y-8 sm:space-y-12 py-8 sm:py-12 w-full max-w-full overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
+          <span className="bg-emerald-600/30 text-emerald-400 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">Media & Press</span>
+          <h1 className="text-2xl sm:text-4xl font-black font-heading">News & <span className="text-emerald-400">Activity Reports</span></h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-2 max-w-2xl">Press releases, program updates, and field reports from Medidhisubbaiah Trust.</p>
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {news.map(n => (
+            <div key={n.id} className="bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-xl transition flex flex-col justify-between group">
+              <div>
+                <div className="relative h-48 overflow-hidden bg-slate-100">
+                  <img
+                    src={n.thumbnail || "assets/gallery/trust_work_page_01.jpg"}
+                    onError={(ev) => { ev.target.onerror = null; ev.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+                    alt={n.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                  />
+                  <span className="absolute top-3 left-3 bg-slate-950/80 text-emerald-300 text-[10px] font-bold px-2.5 py-1 rounded-full">{n.category}</span>
+                </div>
+                <div className="p-5 space-y-2">
+                  <div className="text-[11px] text-slate-400 font-medium">{n.date} • {n.author || 'Editorial'}</div>
+                  <h3 className="font-bold font-heading text-base text-slate-900 group-hover:text-emerald-600 transition line-clamp-2">{n.title}</h3>
+                  <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">{n.short_description || n.shortDescription}</p>
+                </div>
+              </div>
+              <div className="p-5 pt-0">
+                <button onClick={() => setSelectedNews(n)} className="w-full bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white font-bold font-heading py-2 rounded-xl text-xs transition">
+                  Read Full Article
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+// --- GALLERY PAGE ---
+const GalleryPage = () => {
+  const { gallery, setLightboxIndex } = useTrust();
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const categories = ['All', 'Certificate Distribution', 'Tailoring & Muggam', 'Video Documentation', 'Healthcare', 'Annadhanam', 'Chalivendram'];
+
+  const filtered = gallery.filter(item => {
+    const matchesCat = activeCategory === 'All' || item.category === activeCategory;
+    const matchesSearch = !searchQuery || (item.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || (item.location || '').toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCat && matchesSearch;
+  });
+
+  return (
+    <div className="space-y-8 sm:space-y-12 py-8 sm:py-12 w-full max-w-full overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-xl">
+          <span className="bg-emerald-600/30 text-emerald-400 text-[11px] font-bold font-heading uppercase tracking-wider px-3 py-0.5 rounded-full inline-block mb-2">Visual Chronicles</span>
+          <h1 className="text-2xl sm:text-4xl font-black font-heading">Gallery & <span className="text-emerald-400">Video Records</span></h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-2 max-w-2xl">Photographs and live videos of certificate convocations, blood camps, Annadhanam, and Chalivendram.</p>
+        </div>
+      </section>
+
+      {/* Featured Video Card */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-slate-950 rounded-2xl sm:rounded-3xl border border-emerald-500/40 p-4 sm:p-7 shadow-2xl text-white">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div className="lg:col-span-7">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black aspect-video">
+                <video src="assets/gallery/trust_activity_video.mp4" poster="assets/gallery/trust_activity_video_thumb.jpg" controls playsInline className="w-full h-full object-contain" />
+              </div>
+            </div>
+            <div className="lg:col-span-5 space-y-3">
+              <span className="bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full font-heading inline-block">Featured Live Video</span>
+              <h2 className="text-lg sm:text-2xl font-black font-heading text-white">Free Tailoring & Muggam Work Convocations — Field Footage</h2>
+              <p className="text-slate-300 text-xs leading-relaxed">
+                Watch live video documentation across Tanuku, Mogultur, Narsapuram & Tadepalligudam, featuring student stitching practice and the convocation at Hotel Chitturi Heritage with Dr. Kishore Kumar Garu.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Gallery Filter & Grid */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 mb-6">
           <div className="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
             {categories.map(cat => (
               <button
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => setActiveCategory(cat)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold font-heading whitespace-nowrap transition ${
-                  selectedCategory === cat ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  activeCategory === cat ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                {cat === 'Video Documentation' ? '📹 Videos' : cat}
+                {cat}
               </button>
             ))}
           </div>
@@ -2848,93 +2452,32 @@ const GalleryPage = () => {
           </div>
         </div>
 
-        {/* Results Counter */}
-        <div className="flex justify-between items-center text-xs text-slate-500 mb-4 px-1">
-          <span>Showing <strong>{filtered.length}</strong> photo & video records</span>
-          {selectedCategory !== 'All' && (
-            <button onClick={() => setSelectedCategory('All')} className="text-emerald-600 font-bold hover:underline">
-              Reset Filters
-            </button>
-          )}
-        </div>
-
-        {/* Media Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {filtered.map((item) => {
-            const masterIdx = gallery.findIndex(g => g.id === item.id);
-            const isVid = item.type === 'video' || !!item.videoUrl;
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filtered.map((item, index) => {
+            const isVid = item.type === 'video' || !!item.video_url;
             return (
               <div
-                key={item.id}
-                onClick={() => setLightboxIndex(masterIdx !== -1 ? masterIdx : 0)}
-                className={`group bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer ${
-                  isVid ? 'border-emerald-500/50 ring-2 ring-emerald-500/20' : 'border-slate-200'
-                }`}
+                key={item.id || index}
+                onClick={() => setLightboxIndex(index)}
+                className="bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-xl transition cursor-pointer group flex flex-col justify-between"
               >
-                <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-slate-900">
+                <div className="relative h-44 bg-slate-900 overflow-hidden">
                   <img
-                    src={item.imageUrl}
+                    src={item.image_url || item.imageUrl || "assets/gallery/trust_activity_video_thumb.jpg"}
+                    onError={(ev) => { ev.target.onerror = null; ev.target.src = "assets/gallery/trust_activity_video_thumb.jpg"; }}
                     alt={item.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
-                  
-                  {/* Category & Badge */}
-                  <div className="absolute top-2.5 left-2.5 flex items-center space-x-1.5">
-                    <span className={`text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow font-heading ${
-                      isVid ? 'bg-red-600' : 'bg-emerald-600'
-                    }`}>
-                      {isVid ? '▶ Live Video' : item.category}
-                    </span>
-                    {item.isPdfWork && (
-                      <span className="bg-amber-400 text-slate-950 text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow font-heading">
-                        PDF Report
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Play / Zoom indicator */}
-                  {isVid ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:bg-red-600 transition-all border-2 border-white">
-                        <Icon name="play" size={20} />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow">
-                      <Icon name="maximize" size={14} />
+                  {isVid && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg"><Icon name="play" size={16} /></div>
                     </div>
                   )}
-
-                  {/* Video Duration / Location badge */}
-                  <div className="absolute bottom-2.5 left-2.5 flex items-center space-x-1.5 text-[10px] font-bold text-slate-200">
-                    {isVid && (
-                      <span className="bg-black/70 px-2 py-0.5 rounded-md backdrop-blur-sm">
-                        ⏱️ {item.duration || '01:22'}
-                      </span>
-                    )}
-                    {item.location && (
-                      <span className="bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-sm truncate max-w-[150px]">
-                        📍 {item.location}
-                      </span>
-                    )}
-                  </div>
+                  <span className="absolute top-2.5 left-2.5 bg-black/70 text-white text-[9px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">{item.category}</span>
                 </div>
-
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
-                  <div className="space-y-1">
-                    <h3 className="font-bold font-heading text-sm text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-slate-600 text-xs leading-relaxed line-clamp-2">
-                      {item.caption}
-                    </p>
-                  </div>
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-emerald-600 font-bold font-heading">
-                    <span>{isVid ? 'Watch Full Video' : 'Click to Expand High-Res'}</span>
-                    <Icon name={isVid ? 'play' : 'arrowright'} size={12} />
-                  </div>
+                <div className="p-3.5 space-y-1">
+                  <h4 className="font-bold font-heading text-xs text-slate-900 group-hover:text-emerald-600 transition truncate">{item.title}</h4>
+                  <p className="text-[11px] text-slate-500 truncate">{item.location || item.caption}</p>
                 </div>
               </div>
             );
@@ -2945,7 +2488,7 @@ const GalleryPage = () => {
   );
 };
 
-// --- CONTACT PAGE (Mobile Safe) ---
+// --- CONTACT PAGE ---
 const ContactPage = () => {
   const { trustInfo, submitContactForm } = useTrust();
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', subject: 'General Inquiry', message: '' });
@@ -3042,70 +2585,1443 @@ const ContactPage = () => {
   );
 };
 
-// --- LOGIN PAGE (Mobile Safe) ---
+// --- LOGIN PAGE ---
 const LoginPage = () => {
-  const { loginAdmin, trustInfo } = useTrust();
-  const [username, setUsername] = useState('');
+  const { loginAdmin, trustInfo, navigate } = useTrust();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMessage('');
-    const res = loginAdmin(username, password, true);
-    if (!res.success) setErrorMessage(res.message);
+    setIsLoading(true);
+
+    try {
+      const res = await loginAdmin(email, password, true);
+      if (!res.success) {
+        setErrorMessage(res.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleFillDemo = () => {
-    setUsername('admin@medidhisubbaiah.org');
+    setEmail('admin@medidhisubbaiah.org');
     setPassword('trust2026');
     setErrorMessage('');
   };
 
   return (
-    <div className="min-h-[75vh] flex items-center justify-center py-8 px-4 bg-slate-50 w-full max-w-full">
-      <div className="max-w-md w-full space-y-5 bg-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl border shadow-lg">
-        <div className="text-center space-y-2">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-lg mx-auto">
+    <div className="min-h-screen flex flex-col bg-slate-100 w-full max-w-full">
+      {/* Standalone Minimal Header for Admin Login */}
+      <div className="bg-slate-950 text-white px-4 sm:px-8 py-3.5 flex justify-between items-center border-b border-slate-800 shadow-md">
+        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('home')}>
+          <div className="w-9 h-9 rounded-full p-0.5 bg-gradient-to-tr from-emerald-600 to-amber-400">
             <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
           </div>
           <div>
-            <h2 className="text-xl sm:text-2xl font-black font-heading text-slate-900">Administrator Portal</h2>
-            <p className="text-xs text-slate-500">Authorized management access for Medidhisubbaiah Trust</p>
+            <span className="font-bold text-sm text-white font-heading">Medidhisubbaiah <span className="text-emerald-400">Trust</span></span>
+            <span className="text-[10px] text-slate-400 block font-heading">Admin Management Console</span>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate('home')}
+          className="text-xs font-bold font-heading text-slate-300 hover:text-emerald-400 bg-slate-800 hover:bg-slate-700 px-3.5 py-1.5 rounded-xl border border-slate-700 transition flex items-center space-x-1.5"
+        >
+          <Icon name="arrowright" size={12} className="rotate-180" />
+          <span>Back to Website</span>
+        </button>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center py-10 px-4">
+        <div className="max-w-md w-full space-y-5 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xl">
+          <div className="text-center space-y-2">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-lg mx-auto">
+              <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black font-heading text-slate-900">Administrator Portal</h2>
+              <p className="text-xs text-slate-500">Sign in to manage Events, Media Gallery, Press News & Services</p>
+            </div>
+          </div>
+
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-xs flex justify-between items-center">
+            <div>
+              <span className="font-bold font-heading text-emerald-800 block text-[11px]">Demo Admin Login:</span>
+              <span className="text-slate-600 font-mono text-[10px]">admin@medidhisubbaiah.org / trust2026</span>
+            </div>
+            <button type="button" onClick={handleFillDemo} className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-1 rounded-md">
+              Auto Fill
+            </button>
+          </div>
+
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-300 text-red-700 px-3 py-2 rounded-xl text-xs">{errorMessage}</div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-3 text-xs sm:text-sm">
+            <div>
+              <label className="font-bold font-heading block text-xs text-slate-700 mb-1">Email or Username</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. admin@medidhisubbaiah.org"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="font-bold font-heading block text-xs text-slate-700 mb-1">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-2.5 pr-9 border rounded-xl focus:ring-2 focus:ring-emerald-500"
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2.5 top-2.5 text-slate-400">
+                  <Icon name={showPassword ? 'eyeoff' : 'eye'} size={15} />
+                </button>
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-2.5 rounded-xl shadow transition flex items-center justify-center space-x-2"
+            >
+              {isLoading ? (
+                <span>Authenticating...</span>
+              ) : (
+                <>
+                  <Icon name="shieldcheck" size={16} />
+                  <span>Sign In to Admin Hub</span>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- ADMIN MANAGEMENT HUB (FULL CRUD FOR EVENTS, GALLERY, NEWS, SERVICES & CLOUDINARY/SUPABASE) ---
+const AdminPage = () => {
+  const {
+    isAdminLoggedIn,
+    logoutAdmin,
+    services,
+    addService,
+    updateService,
+    deleteService,
+    events,
+    addEvent,
+    updateEvent,
+    deleteEvent,
+    news,
+    addNews,
+    updateNews,
+    deleteNews,
+    gallery,
+    addGalleryItem,
+    updateGalleryItem,
+    deleteGalleryItem,
+    inquiries,
+    supabaseConnected,
+    supabaseStatusMsg,
+    fetchSupabaseData,
+    resetToFactoryDefaults,
+    navigate,
+    showToast
+  } = useTrust();
+
+  const [activeTab, setActiveTab] = useState('events');
+
+  // Modal Editing States
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [editingNews, setEditingNews] = useState(null);
+  const [editingGallery, setEditingGallery] = useState(null);
+  const [editingService, setEditingService] = useState(null);
+
+  // Modal Create States
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+  const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+
+  // Form states for Create/Edit
+  const [eventForm, setEventForm] = useState({
+    title: '',
+    category: 'Skill Development',
+    date: new Date().toISOString().split('T')[0],
+    time: '10:00 AM - 01:00 PM',
+    location: 'Tanuku, West Godavari',
+    status: 'Upcoming',
+    description: '',
+    image_url: '',
+    total_seats: 200,
+    seats_registered: 0
+  });
+
+  const [newsForm, setNewsForm] = useState({
+    title: '',
+    date: new Date().toISOString().split('T')[0],
+    category: 'Skill Development',
+    short_description: '',
+    content: '',
+    author: 'Trust Editorial Desk',
+    read_time: '3 min read',
+    thumbnail: '',
+    pdf_url: ''
+  });
+
+  const [galleryForm, setGalleryForm] = useState({
+    title: '',
+    category: 'Certificate Distribution',
+    type: 'image',
+    image_url: '',
+    video_url: '',
+    duration: '01:22',
+    date: new Date().toISOString().split('T')[0],
+    location: 'Tanuku',
+    caption: '',
+    is_pdf_work: false
+  });
+
+  const [serviceForm, setServiceForm] = useState({
+    title: '',
+    category: 'Skill Development',
+    shortDescription: '',
+    fullDescription: '',
+    icon: 'scissors',
+    image: '',
+    raised: '0 Beneficiaries',
+    goal: '1,000 Goal',
+    progress: 50,
+    duration: '3 Months',
+    location: 'Trust Skill Center'
+  });
+
+  if (!isAdminLoggedIn) {
+    return (
+      <div className="min-h-[65vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+          <Icon name="shieldcheck" size={32} />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-xl font-black font-heading">Admin Login Required</h2>
+          <p className="text-xs text-slate-500">You must sign in to manage events, media gallery, and press news.</p>
+        </div>
+        <button onClick={() => navigate('login')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold font-heading shadow transition">
+          Sign In Now
+        </button>
+      </div>
+    );
+  }
+
+  // Handle Event Submit (Create or Edit)
+  const handleEventSubmit = (e) => {
+    e.preventDefault();
+    if (!eventForm.title || !eventForm.date) {
+      alert('Title and Date are required.');
+      return;
+    }
+    if (editingEvent) {
+      updateEvent(editingEvent.id, eventForm);
+    } else {
+      addEvent(eventForm);
+    }
+    setIsEventModalOpen(false);
+    setEditingEvent(null);
+  };
+
+  // Handle News Submit (Create or Edit)
+  const handleNewsSubmit = (e) => {
+    e.preventDefault();
+    if (!newsForm.title) {
+      alert('Title is required.');
+      return;
+    }
+    if (editingNews) {
+      updateNews(editingNews.id, newsForm);
+    } else {
+      addNews(newsForm);
+    }
+    setIsNewsModalOpen(false);
+    setEditingNews(null);
+  };
+
+  // Handle Gallery Submit (Create or Edit)
+  const handleGallerySubmit = (e) => {
+    e.preventDefault();
+    if (!galleryForm.title) {
+      alert('Title is required.');
+      return;
+    }
+    if (editingGallery) {
+      updateGalleryItem(editingGallery.id, galleryForm);
+    } else {
+      addGalleryItem(galleryForm);
+    }
+    setIsGalleryModalOpen(false);
+    setEditingGallery(null);
+  };
+
+  // Handle Service Submit (Create or Edit)
+  const handleServiceSubmit = (e) => {
+    e.preventDefault();
+    if (!serviceForm.title) {
+      alert('Title is required.');
+      return;
+    }
+    if (editingService) {
+      updateService(editingService.id, serviceForm);
+    } else {
+      addService(serviceForm);
+    }
+    setIsServiceModalOpen(false);
+    setEditingService(null);
+  };
+
+  const copySqlSchema = () => {
+    const sql = `-- Supabase Table Schema Script
+CREATE TABLE IF NOT EXISTS public.events (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  category TEXT,
+  date TEXT,
+  time TEXT,
+  location TEXT,
+  status TEXT DEFAULT 'Upcoming',
+  description TEXT,
+  image_url TEXT,
+  total_seats INTEGER DEFAULT 100,
+  seats_registered INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.news (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  date TEXT,
+  category TEXT,
+  short_description TEXT,
+  content TEXT,
+  author TEXT,
+  read_time TEXT,
+  thumbnail TEXT,
+  pdf_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.gallery (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  category TEXT,
+  type TEXT DEFAULT 'image',
+  image_url TEXT,
+  video_url TEXT,
+  duration TEXT,
+  date TEXT,
+  location TEXT,
+  caption TEXT,
+  is_pdf_work BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.services (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  category TEXT,
+  short_description TEXT,
+  full_description TEXT,
+  icon TEXT,
+  image TEXT,
+  raised TEXT,
+  goal TEXT,
+  progress INTEGER DEFAULT 0,
+  features JSONB DEFAULT '[]'::jsonb,
+  beneficiaries TEXT,
+  duration TEXT,
+  location TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.inquiries (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  phone TEXT,
+  email TEXT,
+  subject TEXT,
+  message TEXT,
+  submitted_at TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.news ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.gallery ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public events" ON public.events FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public news" ON public.news FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public gallery" ON public.gallery FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public services" ON public.services FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public inquiries" ON public.inquiries FOR ALL USING (true) WITH CHECK (true);`;
+
+    navigator.clipboard.writeText(sql);
+    showToast('Supabase SQL Schema copied to clipboard!', 'success');
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row bg-slate-100 w-full max-w-full">
+      {/* --- LEFT SIDEBAR --- */}
+      <aside className="w-full md:w-64 lg:w-72 bg-slate-950 text-white flex flex-col justify-between p-4 sm:p-5 border-r border-slate-800 shrink-0">
+        <div className="space-y-6">
+          {/* Brand Header */}
+          <div className="space-y-3 pb-4 border-b border-slate-800/80">
+            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('home')}>
+              <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-emerald-600 to-amber-400 shadow-md shrink-0">
+                <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
+              </div>
+              <div className="min-w-0">
+                <span className="font-extrabold text-sm text-white font-heading block truncate">
+                  Medidhisubbaiah <span className="text-emerald-400">Trust</span>
+                </span>
+                <span className="text-[10px] text-emerald-300 font-bold font-heading uppercase tracking-wider block">
+                  Admin Dashboard
+                </span>
+              </div>
+            </div>
+
+            {/* Live Connection Badge */}
+            <div className={`p-2 rounded-xl text-[11px] font-bold font-heading flex items-center space-x-2 ${
+              supabaseConnected ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60' : 'bg-amber-950/80 text-amber-300 border border-amber-800/60'
+            }`}>
+              <span className={`w-2 h-2 rounded-full shrink-0 ${supabaseConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
+              <span className="truncate">{supabaseConnected ? 'Supabase & Cloudinary Synced' : 'Local + Supabase Ready'}</span>
+            </div>
+          </div>
+
+          {/* Navigation Sidebar Tabs */}
+          <div className="space-y-1">
+            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider px-3 mb-1 block font-heading">
+              Management Modules
+            </span>
+
+            {[
+              { id: 'events', label: 'Events & Drives', count: events.length, icon: 'calendar' },
+              { id: 'gallery', label: 'Gallery & Videos', count: gallery.length, icon: 'image' },
+              { id: 'news', label: 'Media & News', count: news.length, icon: 'filetext' },
+              { id: 'services', label: 'Services & Causes', count: services.length, icon: 'scissors' }
+            ].map(t => {
+              const active = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold font-heading transition-all duration-150 ${
+                    active
+                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/30'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5 min-w-0">
+                    <Icon name={t.icon} size={16} className={active ? 'text-white' : 'text-slate-400'} />
+                    <span className="truncate">{t.label}</span>
+                  </div>
+                  {t.count !== null && (
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                      active ? 'bg-emerald-800 text-white' : 'bg-slate-800 text-slate-400'
+                    }`}>
+                      {t.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-xs flex justify-between items-center">
-          <div>
-            <span className="font-bold font-heading text-emerald-800 block text-[11px]">Demo Login:</span>
-            <span className="text-slate-600 font-mono text-[10px]">admin@medidhisubbaiah.org / trust2026</span>
+        {/* Sidebar Footer Actions */}
+        <div className="pt-4 border-t border-slate-800/80 space-y-1.5 mt-6">
+          <button
+            onClick={() => navigate('home')}
+            className="w-full flex items-center justify-center space-x-2 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 py-2 rounded-xl text-xs font-bold font-heading border border-slate-800 transition"
+          >
+            <Icon name="arrowright" size={13} className="rotate-180 text-emerald-400" />
+            <span>Public Website</span>
+          </button>
+
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              onClick={fetchSupabaseData}
+              className="flex items-center justify-center space-x-1 bg-slate-900 hover:bg-slate-800 text-slate-300 py-2 rounded-xl text-[11px] font-bold font-heading border border-slate-800 transition"
+              title="Sync latest records from Supabase"
+            >
+              <Icon name="refresh" size={12} />
+              <span>Sync DB</span>
+            </button>
+            <button
+              onClick={logoutAdmin}
+              className="flex items-center justify-center space-x-1 bg-red-600/90 hover:bg-red-600 text-white py-2 rounded-xl text-[11px] font-bold font-heading transition"
+            >
+              <span>Logout</span>
+            </button>
           </div>
-          <button type="button" onClick={handleFillDemo} className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-1 rounded-md">
-            Auto Fill
+        </div>
+      </aside>
+
+      {/* --- RIGHT MAIN CONTENT AREA --- */}
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 overflow-y-auto max-w-full">
+        {/* Supabase SQL Helper Alert if tables not yet created */}
+        {!supabaseConnected && (
+          <div className="bg-emerald-50 border border-emerald-300 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div className="space-y-1">
+              <span className="font-bold text-emerald-950 font-heading block">
+                ⚡ Supabase Tables Setup (One-Click Ready):
+              </span>
+              <p className="text-emerald-800 leading-relaxed">
+                Your Supabase credentials are connected! If you haven't created the database tables in Supabase yet, click <strong>"Copy SQL Schema"</strong> and paste it into your <strong>Supabase SQL Editor</strong> to enable instant cloud persistence.
+              </p>
+            </div>
+            <button
+              onClick={copySqlSchema}
+              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold font-heading px-4 py-2 rounded-xl text-xs shrink-0 shadow flex items-center space-x-1.5"
+            >
+              <Icon name="copy" size={14} />
+              <span>Copy Supabase SQL Schema</span>
+            </button>
+          </div>
+        )}
+
+      {/* --- TAB 1: EVENTS MANAGER --- */}
+      {activeTab === 'events' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h2 className="text-lg font-black font-heading text-slate-900">Events Management</h2>
+              <p className="text-xs text-slate-500">Create, update, and delete community drives and convocations.</p>
+            </div>
+            <button
+              onClick={() => {
+                setEditingEvent(null);
+                setEventForm({
+                  title: '',
+                  category: 'Skill Development',
+                  date: new Date().toISOString().split('T')[0],
+                  time: '10:00 AM - 01:00 PM',
+                  location: 'Tanuku, West Godavari',
+                  status: 'Upcoming',
+                  description: '',
+                  image_url: '',
+                  total_seats: 200,
+                  seats_registered: 0
+                });
+                setIsEventModalOpen(true);
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-4 py-2 rounded-xl text-xs shadow flex items-center space-x-1.5"
+            >
+              <Icon name="plus" size={15} />
+              <span>Add New Event</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {events.map(e => (
+              <div key={e.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <div className="relative h-36 rounded-xl overflow-hidden bg-slate-100">
+                    <img
+                      src={e.image_url || e.image || "assets/gallery/trust_work_page_01.jpg"}
+                      onError={(ev) => { ev.target.onerror = null; ev.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+                      alt={e.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute top-2 left-2 bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-md">{e.status}</span>
+                  </div>
+                  <div className="text-[10px] text-emerald-600 font-bold font-heading">{e.date} • {e.time}</div>
+                  <h3 className="font-bold font-heading text-sm text-slate-900 leading-snug">{e.title}</h3>
+                  <p className="text-xs text-slate-500 truncate">📍 {e.location}</p>
+                  <p className="text-xs text-slate-600 line-clamp-2">{e.description}</p>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-400">{e.seats_registered || 0} Registered</span>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        setEditingEvent(e);
+                        setEventForm({
+                          title: e.title || '',
+                          category: e.category || 'Skill Development',
+                          date: e.date || '',
+                          time: e.time || '',
+                          location: e.location || '',
+                          status: e.status || 'Upcoming',
+                          description: e.description || '',
+                          image_url: e.image_url || e.image || '',
+                          total_seats: e.total_seats || 200,
+                          seats_registered: e.seats_registered || 0
+                        });
+                        setIsEventModalOpen(true);
+                      }}
+                      className="text-xs font-bold text-emerald-600 hover:bg-emerald-50 px-2.5 py-1 rounded-lg flex items-center space-x-1"
+                    >
+                      <Icon name="edit" size={13} />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Delete event "${e.title}"?`)) deleteEvent(e.id);
+                      }}
+                      className="text-xs font-bold text-red-600 hover:bg-red-50 px-2.5 py-1 rounded-lg flex items-center space-x-1"
+                    >
+                      <Icon name="trash" size={13} />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* --- TAB 2: GALLERY & VIDEOS MANAGER --- */}
+      {activeTab === 'gallery' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h2 className="text-lg font-black font-heading text-slate-900">Photo & Video Gallery Management</h2>
+              <p className="text-xs text-slate-500">Upload and manage images, live video footage, and convocation albums in Cloudinary.</p>
+            </div>
+            <button
+              onClick={() => {
+                setEditingGallery(null);
+                setGalleryForm({
+                  title: '',
+                  category: 'Certificate Distribution',
+                  type: 'image',
+                  image_url: '',
+                  video_url: '',
+                  duration: '01:22',
+                  date: new Date().toISOString().split('T')[0],
+                  location: 'Tanuku',
+                  caption: '',
+                  is_pdf_work: false
+                });
+                setIsGalleryModalOpen(true);
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-4 py-2 rounded-xl text-xs shadow flex items-center space-x-1.5"
+            >
+              <Icon name="plus" size={15} />
+              <span>Add Media Item</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {gallery.map(g => {
+              const isVid = g.type === 'video' || !!g.video_url;
+              return (
+                <div key={g.id} className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm flex flex-col justify-between">
+                  <div className="relative h-32 bg-slate-900 overflow-hidden">
+                    <img
+                      src={g.image_url || g.imageUrl || "assets/gallery/trust_activity_video_thumb.jpg"}
+                      onError={(ev) => { ev.target.onerror = null; ev.target.src = "assets/gallery/trust_activity_video_thumb.jpg"; }}
+                      alt={g.title}
+                      className="w-full h-full object-cover"
+                    />
+                    {isVid && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center"><Icon name="play" size={14} /></div>
+                      </div>
+                    )}
+                    <span className="absolute top-2 left-2 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">{g.category}</span>
+                  </div>
+
+                  <div className="p-3 space-y-1">
+                    <h4 className="font-bold font-heading text-xs text-slate-900 truncate">{g.title}</h4>
+                    <p className="text-[10px] text-slate-500 truncate">{g.location || g.caption}</p>
+                  </div>
+
+                  <div className="p-3 pt-0 border-t border-slate-100 flex items-center justify-between">
+                    <button
+                      onClick={() => {
+                        setEditingGallery(g);
+                        setGalleryForm({
+                          title: g.title || '',
+                          category: g.category || 'Certificate Distribution',
+                          type: g.type || (g.video_url ? 'video' : 'image'),
+                          image_url: g.image_url || g.imageUrl || '',
+                          video_url: g.video_url || '',
+                          duration: g.duration || '01:22',
+                          date: g.date || '',
+                          location: g.location || '',
+                          caption: g.caption || '',
+                          is_pdf_work: !!g.is_pdf_work
+                        });
+                        setIsGalleryModalOpen(true);
+                      }}
+                      className="text-[11px] text-emerald-600 font-bold hover:underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Delete "${g.title}"?`)) deleteGalleryItem(g.id);
+                      }}
+                      className="text-[11px] text-red-600 font-bold hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* --- TAB 3: MEDIA & NEWS MANAGER --- */}
+      {activeTab === 'news' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h2 className="text-lg font-black font-heading text-slate-900">Media & Press News Management</h2>
+              <p className="text-xs text-slate-500">Publish news articles, press clippings, and PDF activity reports.</p>
+            </div>
+            <button
+              onClick={() => {
+                setEditingNews(null);
+                setNewsForm({
+                  title: '',
+                  date: new Date().toISOString().split('T')[0],
+                  category: 'Skill Development',
+                  short_description: '',
+                  content: '',
+                  author: 'Trust Editorial Desk',
+                  read_time: '3 min read',
+                  thumbnail: '',
+                  pdf_url: ''
+                });
+                setIsNewsModalOpen(true);
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-4 py-2 rounded-xl text-xs shadow flex items-center space-x-1.5"
+            >
+              <Icon name="plus" size={15} />
+              <span>Publish News</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {news.map(n => (
+              <div key={n.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <div className="relative h-36 rounded-xl overflow-hidden bg-slate-100">
+                    <img
+                      src={n.thumbnail || "assets/gallery/trust_work_page_01.jpg"}
+                      onError={(ev) => { ev.target.onerror = null; ev.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+                      alt={n.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute top-2 left-2 bg-slate-950/80 text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-md">{n.category}</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 block">{n.date} • {n.author || 'Editorial'}</span>
+                  <h3 className="font-bold font-heading text-sm text-slate-900 leading-snug line-clamp-2">{n.title}</h3>
+                  <p className="text-xs text-slate-600 line-clamp-2">{n.short_description || n.shortDescription}</p>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                  <button
+                    onClick={() => {
+                      setEditingNews(n);
+                      setNewsForm({
+                        title: n.title || '',
+                        date: n.date || '',
+                        category: n.category || 'Skill Development',
+                        short_description: n.short_description || n.shortDescription || '',
+                        content: n.content || '',
+                        author: n.author || 'Trust Editorial Desk',
+                        read_time: n.read_time || '3 min read',
+                        thumbnail: n.thumbnail || '',
+                        pdf_url: n.pdf_url || ''
+                      });
+                      setIsNewsModalOpen(true);
+                    }}
+                    className="text-xs font-bold text-emerald-600 hover:bg-emerald-50 px-2.5 py-1 rounded-lg flex items-center space-x-1"
+                  >
+                    <Icon name="edit" size={13} />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm(`Delete article "${n.title}"?`)) deleteNews(n.id);
+                    }}
+                    className="text-xs font-bold text-red-600 hover:bg-red-50 px-2.5 py-1 rounded-lg flex items-center space-x-1"
+                  >
+                    <Icon name="trash" size={13} />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* --- TAB 4: SERVICES MANAGER --- */}
+      {activeTab === 'services' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h2 className="text-lg font-black font-heading text-slate-900">Services & Welfare Programs</h2>
+              <p className="text-xs text-slate-500">Manage vocational training courses, blood campaigns, and relief seva.</p>
+            </div>
+            <button
+              onClick={() => {
+                setEditingService(null);
+                setServiceForm({
+                  title: '',
+                  category: 'Skill Development',
+                  shortDescription: '',
+                  fullDescription: '',
+                  icon: 'scissors',
+                  image: '',
+                  raised: '0 Beneficiaries',
+                  goal: '1,000 Goal',
+                  progress: 50,
+                  duration: '3 Months',
+                  location: 'Trust Skill Center'
+                });
+                setIsServiceModalOpen(true);
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-4 py-2 rounded-xl text-xs shadow flex items-center space-x-1.5"
+            >
+              <Icon name="plus" size={15} />
+              <span>Add Service Program</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {services.map(s => (
+              <div key={s.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <div className="relative h-32 rounded-xl overflow-hidden bg-slate-100">
+                    <img
+                      src={s.image || "assets/gallery/trust_work_page_01.jpg"}
+                      onError={(ev) => { ev.target.onerror = null; ev.target.src = "assets/gallery/trust_work_page_01.jpg"; }}
+                      alt={s.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute top-2 left-2 bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-md">{s.category}</span>
+                  </div>
+                  <h3 className="font-bold font-heading text-sm text-slate-900">{s.title}</h3>
+                  <p className="text-xs text-slate-500 line-clamp-2">{s.shortDescription || s.short_description}</p>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                  <button
+                    onClick={() => {
+                      setEditingService(s);
+                      setServiceForm({
+                        title: s.title || '',
+                        category: s.category || 'Skill Development',
+                        shortDescription: s.shortDescription || s.short_description || '',
+                        fullDescription: s.fullDescription || s.full_description || '',
+                        icon: s.icon || 'scissors',
+                        image: s.image || '',
+                        raised: s.raised || '',
+                        goal: s.goal || '',
+                        progress: s.progress || 50,
+                        duration: s.duration || '3 Months',
+                        location: s.location || 'Trust Skill Center'
+                      });
+                      setIsServiceModalOpen(true);
+                    }}
+                    className="text-xs font-bold text-emerald-600 hover:bg-emerald-50 px-2.5 py-1 rounded-lg"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm(`Delete service "${s.title}"?`)) deleteService(s.id);
+                    }}
+                    className="text-xs font-bold text-red-600 hover:bg-red-50 px-2.5 py-1 rounded-lg"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL: EVENT CREATE / EDIT --- */}
+      {isEventModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl border my-8">
+            <div className="flex justify-between items-center pb-2 border-b">
+              <h3 className="text-base font-black font-heading text-slate-900">
+                {editingEvent ? 'Edit Event' : 'Create New Event'}
+              </h3>
+              <button onClick={() => setIsEventModalOpen(false)} className="p-1 rounded-lg text-slate-400 hover:bg-slate-100">
+                <Icon name="x" size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleEventSubmit} className="space-y-3 text-xs sm:text-sm">
+              <div>
+                <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Event Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={eventForm.title}
+                  onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
+                  className="w-full p-2.5 border rounded-xl"
+                  placeholder="e.g. Free Vocational Graduation Ceremony"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={eventForm.date}
+                    onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Time</label>
+                  <input
+                    type="text"
+                    value={eventForm.time}
+                    onChange={(e) => setEventForm({ ...eventForm, time: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl"
+                    placeholder="10:00 AM - 01:30 PM"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Category</label>
+                  <select
+                    value={eventForm.category}
+                    onChange={(e) => setEventForm({ ...eventForm, category: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl bg-white"
+                  >
+                    <option value="Skill Development">Skill Development</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Youth & Sports">Youth & Sports</option>
+                    <option value="Education">Education</option>
+                    <option value="Social Relief">Social Relief</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Status</label>
+                  <select
+                    value={eventForm.status}
+                    onChange={(e) => setEventForm({ ...eventForm, status: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl bg-white"
+                  >
+                    <option value="Upcoming">Upcoming</option>
+                    <option value="Registration Open">Registration Open</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Location / Venue</label>
+                <input
+                  type="text"
+                  value={eventForm.location}
+                  onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                  className="w-full p-2.5 border rounded-xl"
+                  placeholder="Hotel Chitturi Heritage, Tanuku"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Description</label>
+                <textarea
+                  rows="2"
+                  value={eventForm.description}
+                  onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                  className="w-full p-2.5 border rounded-xl"
+                  placeholder="Details regarding dignitaries, participants, and schedule..."
+                />
+              </div>
+
+              {/* Cloudinary Upload for Event Banner */}
+              <CloudinaryUploader
+                label="Event Banner Image (Cloudinary)"
+                currentUrl={eventForm.image_url}
+                acceptedTypes="image/*"
+                onUploaded={(url) => setEventForm(prev => ({ ...prev, image_url: url }))}
+              />
+
+              <div className="pt-2 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEventModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-6 py-2 rounded-xl text-xs shadow"
+                >
+                  {editingEvent ? 'Save Changes' : 'Create Event'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL: GALLERY MEDIA CREATE / EDIT --- */}
+      {isGalleryModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl border my-8">
+            <div className="flex justify-between items-center pb-2 border-b">
+              <h3 className="text-base font-black font-heading text-slate-900">
+                {editingGallery ? 'Edit Gallery Media' : 'Upload New Photo or Video'}
+              </h3>
+              <button onClick={() => setIsGalleryModalOpen(false)} className="p-1 rounded-lg text-slate-400 hover:bg-slate-100">
+                <Icon name="x" size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleGallerySubmit} className="space-y-3 text-xs sm:text-sm">
+              <div>
+                <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Title / Headline *</label>
+                <input
+                  type="text"
+                  required
+                  value={galleryForm.title}
+                  onChange={(e) => setGalleryForm({ ...galleryForm, title: e.target.value })}
+                  className="w-full p-2.5 border rounded-xl"
+                  placeholder="e.g. Tanuku Convocation Ceremony Video"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Media Type</label>
+                  <select
+                    value={galleryForm.type}
+                    onChange={(e) => setGalleryForm({ ...galleryForm, type: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl bg-white"
+                  >
+                    <option value="image">Photo / Image</option>
+                    <option value="video">Video Footage</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Category</label>
+                  <select
+                    value={galleryForm.category}
+                    onChange={(e) => setGalleryForm({ ...galleryForm, category: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl bg-white"
+                  >
+                    <option value="Certificate Distribution">Certificate Distribution</option>
+                    <option value="Tailoring & Muggam">Tailoring & Muggam</option>
+                    <option value="Video Documentation">Video Documentation</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Annadhanam">Annadhanam</option>
+                    <option value="Chalivendram">Chalivendram</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Location</label>
+                  <input
+                    type="text"
+                    value={galleryForm.location}
+                    onChange={(e) => setGalleryForm({ ...galleryForm, location: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl"
+                    placeholder="Hotel Chitturi Heritage, Tanuku"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={galleryForm.date}
+                    onChange={(e) => setGalleryForm({ ...galleryForm, date: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Caption / Description</label>
+                <textarea
+                  rows="2"
+                  value={galleryForm.caption}
+                  onChange={(e) => setGalleryForm({ ...galleryForm, caption: e.target.value })}
+                  className="w-full p-2.5 border rounded-xl"
+                  placeholder="Detailed caption describing the activity and dignitaries present..."
+                />
+              </div>
+
+              {/* Cloudinary Upload for Photo/Video */}
+              <CloudinaryUploader
+                label={galleryForm.type === 'video' ? 'Upload Video File (MP4, MOV)' : 'Upload Photo / Image'}
+                currentUrl={galleryForm.type === 'video' ? galleryForm.video_url || galleryForm.image_url : galleryForm.image_url}
+                acceptedTypes={galleryForm.type === 'video' ? 'video/*' : 'image/*'}
+                onUploaded={(url, meta) => {
+                  if (galleryForm.type === 'video' || (meta && meta.resourceType === 'video')) {
+                    setGalleryForm(prev => ({
+                      ...prev,
+                      video_url: url,
+                      type: 'video',
+                      duration: meta?.duration || prev.duration || '01:22'
+                    }));
+                  } else {
+                    setGalleryForm(prev => ({ ...prev, image_url: url, type: 'image' }));
+                  }
+                }}
+              />
+
+              <div className="pt-2 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsGalleryModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-6 py-2 rounded-xl text-xs shadow"
+                >
+                  {editingGallery ? 'Save Changes' : 'Add to Gallery'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL: NEWS CREATE / EDIT --- */}
+      {isNewsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl border my-8">
+            <div className="flex justify-between items-center pb-2 border-b">
+              <h3 className="text-base font-black font-heading text-slate-900">
+                {editingNews ? 'Edit News Article' : 'Publish New News Article'}
+              </h3>
+              <button onClick={() => setIsNewsModalOpen(false)} className="p-1 rounded-lg text-slate-400 hover:bg-slate-100">
+                <Icon name="x" size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleNewsSubmit} className="space-y-3 text-xs sm:text-sm">
+              <div>
+                <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Headline / Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={newsForm.title}
+                  onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })}
+                  className="w-full p-2.5 border rounded-xl"
+                  placeholder="e.g. Free Tailoring Expansion Centers Opened"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Category</label>
+                  <select
+                    value={newsForm.category}
+                    onChange={(e) => setNewsForm({ ...newsForm, category: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl bg-white"
+                  >
+                    <option value="Skill Development">Skill Development</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Education">Education</option>
+                    <option value="Public Welfare">Public Welfare</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Publish Date</label>
+                  <input
+                    type="date"
+                    value={newsForm.date}
+                    onChange={(e) => setNewsForm({ ...newsForm, date: e.target.value })}
+                    className="w-full p-2.5 border rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Short Summary</label>
+                <textarea
+                  rows="2"
+                  value={newsForm.short_description}
+                  onChange={(e) => setNewsForm({ ...newsForm, short_description: e.target.value })}
+                  className="w-full p-2.5 border rounded-xl"
+                  placeholder="Brief 2-sentence summary for the card view..."
+                />
+              </div>
+
+              <div>
+                <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Full Article Body</label>
+                <textarea
+                  rows="4"
+                  value={newsForm.content}
+                  onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })}
+                  className="w-full p-2.5 border rounded-xl"
+                  placeholder="Detailed press release article text..."
+                />
+              </div>
+
+              {/* Cloudinary Thumbnail & PDF */}
+              <CloudinaryUploader
+                label="Article Cover Image (Cloudinary)"
+                currentUrl={newsForm.thumbnail}
+                acceptedTypes="image/*"
+                onUploaded={(url) => setNewsForm(prev => ({ ...prev, thumbnail: url }))}
+              />
+
+              <CloudinaryUploader
+                label="Attach PDF Press Release / Report (Optional)"
+                currentUrl={newsForm.pdf_url}
+                acceptedTypes="application/pdf,.pdf"
+                onUploaded={(url) => setNewsForm(prev => ({ ...prev, pdf_url: url }))}
+              />
+
+              <div className="pt-2 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsNewsModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-6 py-2 rounded-xl text-xs shadow"
+                >
+                  {editingNews ? 'Save Article' : 'Publish Article'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL: SERVICE CREATE / EDIT --- */}
+      {isServiceModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl border my-8">
+            <div className="flex justify-between items-center pb-2 border-b">
+              <h3 className="text-base font-black font-heading text-slate-900">
+                {editingService ? 'Edit Service' : 'Add Service Program'}
+              </h3>
+              <button onClick={() => setIsServiceModalOpen(false)} className="p-1 rounded-lg text-slate-400 hover:bg-slate-100">
+                <Icon name="x" size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleServiceSubmit} className="space-y-3 text-xs sm:text-sm">
+              <div>
+                <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Service Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={serviceForm.title}
+                  onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })}
+                  className="w-full p-2.5 border rounded-xl"
+                  placeholder="e.g. Free Tailoring Training Program"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Category</label>
+                <input
+                  type="text"
+                  value={serviceForm.category}
+                  onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value })}
+                  className="w-full p-2.5 border rounded-xl"
+                  placeholder="Skill Development, Healthcare, etc."
+                />
+              </div>
+
+              <div>
+                <label className="font-bold font-heading text-xs text-slate-700 block mb-1">Short Description</label>
+                <textarea
+                  rows="2"
+                  value={serviceForm.shortDescription}
+                  onChange={(e) => setServiceForm({ ...serviceForm, shortDescription: e.target.value })}
+                  className="w-full p-2.5 border rounded-xl"
+                />
+              </div>
+
+              <CloudinaryUploader
+                label="Cover Image (Cloudinary)"
+                currentUrl={serviceForm.image}
+                acceptedTypes="image/*"
+                onUploaded={(url) => setServiceForm(prev => ({ ...prev, image: url }))}
+              />
+
+              <div className="pt-2 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsServiceModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-6 py-2 rounded-xl text-xs shadow"
+                >
+                  {editingService ? 'Save Service' : 'Add Service'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      </main>
+    </div>
+  );
+};
+
+// --- SERVICE DETAILS & ADMISSION MODAL ---
+const ServiceModal = () => {
+  const { selectedService, setSelectedService, showToast } = useTrust();
+  const [formData, setFormData] = useState({ name: '', phone: '', email: '', city: '', notes: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showApplyForm, setShowApplyForm] = useState(false);
+
+  if (!selectedService) return null;
+
+  const handleApply = (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      showToast(`Application received for ${formData.name}! We will contact you.`);
+      setSelectedService(null);
+      setShowApplyForm(false);
+      setFormData({ name: '', phone: '', email: '', city: '', notes: '' });
+    }, 600);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fadeIn">
+      <div className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 space-y-4 shadow-2xl border border-slate-200 my-8">
+        <div className="flex justify-between items-start">
+          <div>
+            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full font-heading">
+              {selectedService.category}
+            </span>
+            <h3 className="text-xl font-black font-heading text-slate-900 mt-1">{selectedService.title}</h3>
+          </div>
+          <button onClick={() => setSelectedService(null)} className="p-1 rounded-xl text-slate-400 hover:bg-slate-100">
+            <Icon name="x" size={20} />
           </button>
         </div>
 
-        {errorMessage && (
-          <div className="bg-red-50 border border-red-300 text-red-700 px-3 py-2 rounded-xl text-xs">{errorMessage}</div>
-        )}
+        <div className="h-44 rounded-2xl overflow-hidden bg-slate-100">
+          <img src={selectedService.image || "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80"} alt={selectedService.title} className="w-full h-full object-cover" />
+        </div>
 
-        <form onSubmit={handleLogin} className="space-y-3 text-xs sm:text-sm">
-          <div>
-            <label className="font-bold font-heading block text-xs text-slate-700 mb-1">Email or Username</label>
-            <input type="text" required value={username} onChange={(e) => setUsername(e.target.value)} className="w-full p-2.5 border rounded-xl" />
-          </div>
-          <div>
-            <label className="font-bold font-heading block text-xs text-slate-700 mb-1">Password</label>
-            <div className="relative">
-              <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2.5 pr-9 border rounded-xl" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2.5 top-2.5 text-slate-400">
-                <Icon name={showPassword ? 'eyeoff' : 'eye'} size={15} />
-              </button>
+        <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+          {selectedService.fullDescription || selectedService.shortDescription || selectedService.short_description}
+        </p>
+
+        {showApplyForm ? (
+          <form onSubmit={handleApply} className="space-y-3 pt-2 border-t border-slate-100 text-xs">
+            <h4 className="font-bold font-heading text-slate-900">100% Free Program Admission Form</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <input type="text" required placeholder="Full Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full p-2 border rounded-xl" />
+              <input type="tel" required placeholder="Phone Number *" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full p-2 border rounded-xl" />
             </div>
+            <input type="text" placeholder="Village / Mandal / City" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} className="w-full p-2 border rounded-xl" />
+            <button type="submit" disabled={isSubmitting} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-2.5 rounded-xl shadow">
+              {isSubmitting ? 'Submitting Application...' : 'Confirm Free Registration'}
+            </button>
+          </form>
+        ) : (
+          <div className="pt-2 flex justify-end space-x-2">
+            <button onClick={() => setSelectedService(null)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">
+              Close
+            </button>
+            <button onClick={() => setShowApplyForm(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-5 py-2 rounded-xl text-xs shadow">
+              Apply for Free Admission
+            </button>
           </div>
-          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-2.5 rounded-xl shadow transition">
-            Sign In to Admin Hub
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- EVENT REGISTRATION MODAL ---
+const EventModal = () => {
+  const { selectedEvent, setSelectedEvent, registerForEvent } = useTrust();
+  const [formData, setFormData] = useState({ name: '', phone: '', email: '', count: 1 });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!selectedEvent) return null;
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      registerForEvent(selectedEvent.id, formData);
+      setSelectedEvent(null);
+      setFormData({ name: '', phone: '', email: '', count: 1 });
+    }, 500);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fadeIn">
+      <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl border my-8">
+        <div className="flex justify-between items-start">
+          <div>
+            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full font-heading">
+              {selectedEvent.category || 'Trust Event'}
+            </span>
+            <h3 className="text-lg font-black font-heading text-slate-900 mt-1">{selectedEvent.title}</h3>
+          </div>
+          <button onClick={() => setSelectedEvent(null)} className="p-1 rounded-xl text-slate-400 hover:bg-slate-100">
+            <Icon name="x" size={20} />
+          </button>
+        </div>
+
+        <div className="text-xs text-slate-600 space-y-1 bg-slate-50 p-3 rounded-2xl border">
+          <div className="font-bold text-emerald-800">📅 Date: {selectedEvent.date} ({selectedEvent.time || '10:00 AM'})</div>
+          <div>📍 Venue: {selectedEvent.location}</div>
+        </div>
+
+        <form onSubmit={handleRegister} className="space-y-3 text-xs">
+          <input type="text" required placeholder="Full Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full p-2.5 border rounded-xl" />
+          <input type="tel" required placeholder="Phone Number *" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full p-2.5 border rounded-xl" />
+          <button type="submit" disabled={isSubmitting} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-2.5 rounded-xl shadow">
+            {isSubmitting ? 'Confirming...' : 'Confirm RSVP / Free Pass'}
           </button>
         </form>
       </div>
@@ -3113,123 +4029,232 @@ const LoginPage = () => {
   );
 };
 
-// --- ADMIN MANAGEMENT HUB (Mobile Safe) ---
-const AdminPage = () => {
-  const { isAdminLoggedIn, logoutAdmin, services, deleteService, events, deleteEvent, news, deleteNews, gallery, deleteGalleryImage, inquiries, resetToFactoryDefaults, navigate } = useTrust();
-  const [tab, setTab] = useState('services');
+// --- NEWS MODAL ---
+const NewsModal = () => {
+  const { selectedNews, setSelectedNews } = useTrust();
 
-  if (!isAdminLoggedIn) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center space-y-3">
-        <h2 className="text-xl font-bold font-heading">Admin Login Required</h2>
-        <button onClick={() => navigate('login')} className="bg-emerald-600 text-white px-5 py-2 rounded-xl text-xs font-bold">Login</button>
-      </div>
-    );
-  }
+  if (!selectedNews) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-4 w-full max-w-full overflow-hidden">
-      <div className="bg-slate-900 text-white p-4 sm:p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <span className="bg-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-bold font-heading uppercase">Admin Hub</span>
-          <h1 className="text-xl font-black font-heading mt-0.5">Content Management Hub</h1>
-        </div>
-        <div className="flex space-x-2 w-full sm:w-auto">
-          <button onClick={resetToFactoryDefaults} className="flex-1 sm:flex-none bg-slate-800 text-xs px-3 py-1.5 rounded-xl border border-slate-700 font-heading">Reset Data</button>
-          <button onClick={logoutAdmin} className="flex-1 sm:flex-none bg-emerald-600 text-xs font-bold font-heading px-4 py-1.5 rounded-xl">Logout</button>
-        </div>
-      </div>
-
-      <div className="flex space-x-1.5 bg-white p-2 rounded-xl border shadow-sm overflow-x-auto scrollbar-none">
-        {[
-          { id: 'services', label: `Services (${services.length})` },
-          { id: 'events', label: `Events (${events.length})` },
-          { id: 'news', label: `News (${news.length})` },
-          { id: 'gallery', label: `Gallery (${gallery.length})` },
-          { id: 'inquiries', label: `Inquiries (${inquiries.length})` }
-        ].map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={`px-3 py-1.5 rounded-lg text-xs font-bold font-heading whitespace-nowrap ${tab === t.id ? 'bg-emerald-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}`}>
-            {t.label}
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fadeIn">
+      <div className="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-7 space-y-4 shadow-2xl border my-8">
+        <div className="flex justify-between items-start">
+          <div>
+            <span className="text-[10px] text-slate-400 font-bold">{selectedNews.date} • {selectedNews.author || 'Trust Editorial'}</span>
+            <h3 className="text-xl font-black font-heading text-slate-900 mt-1">{selectedNews.title}</h3>
+          </div>
+          <button onClick={() => setSelectedNews(null)} className="p-1 rounded-xl text-slate-400 hover:bg-slate-100">
+            <Icon name="x" size={20} />
           </button>
-        ))}
+        </div>
+
+        <div className="h-52 rounded-2xl overflow-hidden bg-slate-100">
+          <img src={selectedNews.thumbnail || "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80"} alt={selectedNews.title} className="w-full h-full object-cover" />
+        </div>
+
+        <div className="text-slate-700 text-xs sm:text-sm leading-relaxed whitespace-pre-line space-y-2">
+          {selectedNews.content || selectedNews.short_description || selectedNews.shortDescription}
+        </div>
+
+        {selectedNews.pdf_url && (
+          <div className="pt-3 border-t border-slate-100">
+            <a href={selectedNews.pdf_url} target="_blank" rel="noreferrer" className="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3.5 py-2 rounded-xl text-xs font-bold font-heading">
+              <Icon name="filetext" size={14} />
+              <span>View Attached Press PDF Report</span>
+            </a>
+          </div>
+        )}
       </div>
-
-      {tab === 'services' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {services.map(s => (
-            <div key={s.id} className="bg-white p-3.5 rounded-xl border shadow-sm space-y-1.5">
-              <span className="text-[10px] font-bold text-emerald-600 font-heading">{s.category}</span>
-              <h3 className="font-bold font-heading text-sm">{s.title}</h3>
-              <p className="text-xs text-slate-500 line-clamp-2">{s.shortDescription}</p>
-              <div className="flex justify-end pt-1">
-                <button onClick={() => deleteService(s.id)} className="text-xs text-red-600 font-bold hover:underline">Delete</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === 'events' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {events.map(e => (
-            <div key={e.id} className="bg-white p-3.5 rounded-xl border shadow-sm space-y-1.5">
-              <span className="text-[10px] font-bold text-emerald-600 font-heading">{e.status} • {e.date}</span>
-              <h3 className="font-bold font-heading text-sm">{e.title}</h3>
-              <p className="text-xs text-slate-500 truncate">{e.location}</p>
-              <div className="flex justify-end pt-1">
-                <button onClick={() => deleteEvent(e.id)} className="text-xs text-red-600 font-bold hover:underline">Delete</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === 'news' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {news.map(n => (
-            <div key={n.id} className="bg-white p-3.5 rounded-xl border shadow-sm space-y-1.5">
-              <span className="text-[10px] text-slate-400">{n.date}</span>
-              <h3 className="font-bold font-heading text-sm">{n.title}</h3>
-              <div className="flex justify-end pt-1">
-                <button onClick={() => deleteNews(n.id)} className="text-xs text-red-600 font-bold hover:underline">Delete</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === 'gallery' && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-          {gallery.map(g => (
-            <div key={g.id} className="bg-white rounded-xl overflow-hidden border shadow-sm">
-              <img src={g.imageUrl} alt={g.title} className="w-full h-28 object-cover" />
-              <div className="p-2 flex justify-between items-center">
-                <span className="text-[11px] font-bold truncate font-heading">{g.title}</span>
-                <button onClick={() => deleteGalleryImage(g.id)} className="text-xs text-red-600 font-bold">Del</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === 'inquiries' && (
-        <div className="space-y-2.5">
-          {inquiries.length > 0 ? inquiries.map(inq => (
-            <div key={inq.id} className="bg-white p-3.5 rounded-xl border shadow-sm space-y-1 text-xs">
-              <div className="flex justify-between font-bold font-heading"><span>{inq.name} ({inq.phone})</span><span className="text-[10px] text-slate-400">{inq.submittedAt}</span></div>
-              <p className="text-emerald-600 font-semibold">{inq.subject}</p>
-              <p className="text-slate-700 bg-slate-50 p-2 rounded-lg leading-relaxed">"{inq.message}"</p>
-            </div>
-          )) : <div className="p-6 text-center bg-white rounded-xl text-slate-400 text-xs">No inquiries received yet.</div>}
-        </div>
-      )}
     </div>
   );
 };
 
-// --- RICH FOOTER (Mobile Contained) ---
+// --- LIGHTBOX MODAL ---
+const LightboxModal = () => {
+  const { gallery, lightboxIndex, setLightboxIndex } = useTrust();
+
+  if (lightboxIndex === null || !gallery[lightboxIndex]) return null;
+
+  const current = gallery[lightboxIndex];
+  const isVid = current.type === 'video' || !!current.video_url;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 animate-fadeIn">
+      <div className="flex justify-between items-center text-white px-2">
+        <div className="min-w-0">
+          <h4 className="font-bold font-heading text-sm sm:text-base truncate">{current.title}</h4>
+          <p className="text-xs text-slate-400 truncate">{current.location || current.category}</p>
+        </div>
+        <button onClick={() => setLightboxIndex(null)} className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white">
+          <Icon name="x" size={20} />
+        </button>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-2">
+        {isVid ? (
+          <video src={current.video_url || "assets/gallery/trust_activity_video.mp4"} controls autoPlay playsInline className="max-h-[75vh] max-w-full rounded-2xl shadow-2xl" />
+        ) : (
+          <img src={current.image_url || current.imageUrl} alt={current.title} className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl" />
+        )}
+      </div>
+
+      <div className="flex justify-between items-center text-white px-4">
+        <button
+          onClick={() => setLightboxIndex((lightboxIndex - 1 + gallery.length) % gallery.length)}
+          className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold"
+        >
+          Previous
+        </button>
+        <span className="text-xs text-slate-400">{lightboxIndex + 1} / {gallery.length}</span>
+        <button
+          onClick={() => setLightboxIndex((lightboxIndex + 1) % gallery.length)}
+          className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// --- DONATION MODAL ---
+const DonateModal = () => {
+  const { isDonateModalOpen, setIsDonateModalOpen, trustInfo, submitDonationLog } = useTrust();
+  const [amount, setAmount] = useState('1000');
+  const [donorName, setDonorName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [pan, setPan] = useState('');
+
+  if (!isDonateModalOpen) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    submitDonationLog({ donor_name: donorName, amount, phone, pan_number: pan });
+    setIsDonateModalOpen(false);
+    setDonorName('');
+    setPhone('');
+    setPan('');
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fadeIn">
+      <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl border my-8">
+        <div className="flex justify-between items-start pb-2 border-b">
+          <div>
+            <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full font-heading">
+              80G Tax-Exempt
+            </span>
+            <h3 className="text-xl font-black font-heading text-slate-900 mt-1">Support Our Seva</h3>
+          </div>
+          <button onClick={() => setIsDonateModalOpen(false)} className="p-1 rounded-xl text-slate-400 hover:bg-slate-100">
+            <Icon name="x" size={20} />
+          </button>
+        </div>
+
+        {/* UPI ID Quick Copy */}
+        <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 flex justify-between items-center">
+          <div>
+            <span className="text-[10px] font-bold text-emerald-800 uppercase block font-heading">Official SBI UPI ID:</span>
+            <span className="font-mono text-xs font-bold text-slate-800">{trustInfo.upiId}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(trustInfo.upiId);
+              alert('UPI ID copied!');
+            }}
+            className="bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shadow"
+          >
+            Copy UPI
+          </button>
+        </div>
+
+        {/* Quick Amount Buttons */}
+        <div className="grid grid-cols-4 gap-2">
+          {['500', '1000', '2500', '5000'].map(amt => (
+            <button
+              key={amt}
+              type="button"
+              onClick={() => setAmount(amt)}
+              className={`py-2 rounded-xl text-xs font-bold font-heading border transition ${
+                amount === amt ? 'bg-emerald-600 text-white border-emerald-600 shadow' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              ₹{amt}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-2.5 text-xs">
+          <input type="text" required placeholder="Full Name *" value={donorName} onChange={(e) => setDonorName(e.target.value)} className="w-full p-2.5 border rounded-xl" />
+          <input type="tel" required placeholder="Phone Number *" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full p-2.5 border rounded-xl" />
+          <input type="text" placeholder="PAN Number (For 80G Receipt)" value={pan} onChange={(e) => setPan(e.target.value)} className="w-full p-2.5 border rounded-xl" />
+          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading py-2.5 rounded-xl shadow">
+            Record Donation & Receipt
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- TOAST NOTIFICATION ---
+const Toast = () => {
+  const { toast } = useTrust();
+  if (!toast) return null;
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-slate-900 text-white p-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center space-x-3 animate-fadeIn">
+      <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+        <Icon name="check" size={16} />
+      </div>
+      <p className="text-xs font-medium leading-snug">{toast.message}</p>
+    </div>
+  );
+};
+
+// --- FLOATING ACTIONS ---
+const FloatingActions = () => {
+  const { trustInfo } = useTrust();
+
+  return (
+    <div className="fixed bottom-6 right-4 sm:right-6 z-30 flex flex-col space-y-2.5">
+      <a
+        href={`tel:${trustInfo.emergencyBloodHelpline}`}
+        className="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition border-2 border-white animate-pulse"
+        title="24/7 Emergency Blood Helpline"
+      >
+        <Icon name="heartpulse" size={22} />
+      </a>
+      <a
+        href={trustInfo.socials.whatsapp}
+        target="_blank"
+        rel="noreferrer"
+        className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition border-2 border-white"
+        title="WhatsApp Us"
+      >
+        <Icon name="phone" size={20} />
+      </a>
+    </div>
+  );
+};
+
+// --- HOME PAGE AGGREGATOR ---
+const HomePage = () => {
+  return (
+    <div className="space-y-12 sm:space-y-16 pb-12 w-full max-w-full overflow-hidden">
+      <HeroSection />
+      <FeatureCards />
+      <ServicesSection />
+      <ImpactStatsSection />
+    </div>
+  );
+};
+
+// --- RICH FOOTER ---
 const Footer = () => {
   const { navigate, trustInfo, services, setIsDonateModalOpen } = useTrust();
+
   return (
     <footer className="bg-slate-950 text-slate-300 pt-12 pb-6 border-t border-slate-800 w-full max-w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -3240,7 +4265,9 @@ const Footer = () => {
                 <img src={trustInfo.logoUrl} alt="Logo" className="w-full h-full rounded-full object-cover bg-white" />
               </div>
               <div className="min-w-0">
-                <span className="font-bold text-lg text-white tracking-tight font-heading block truncate">Medidhisubbaiah <span className="text-emerald-400">Trust</span></span>
+                <span className="font-bold text-lg text-white tracking-tight font-heading block truncate">
+                  Medidhisubbaiah <span className="text-emerald-400">Trust</span>
+                </span>
                 <p className="text-xs text-emerald-300 font-bold font-heading truncate">మేడిది సుబ్బయ్య ట్రస్ట్</p>
               </div>
             </div>
@@ -3259,11 +4286,11 @@ const Footer = () => {
           <div className="space-y-2.5">
             <h3 className="text-white font-bold font-heading text-xs uppercase tracking-wider border-l-2 border-emerald-500 pl-2">Quick Links</h3>
             <ul className="space-y-1.5 text-xs text-slate-400">
-              {['home', 'about', 'services', 'events', 'news', 'gallery', 'contact', 'login'].map(r => (
+              {['home', 'about', 'services', 'events', 'news', 'gallery', 'contact'].map(r => (
                 <li key={r}>
                   <button onClick={() => navigate(r)} className="hover:text-emerald-400 capitalize flex items-center space-x-1 transition font-medium">
                     <Icon name="chevronright" size={11} className="text-emerald-500" />
-                    <span>{r === 'login' ? 'Admin' : r === 'about' ? 'About Us' : r === 'services' ? 'Our Services' : r === 'news' ? 'Media & News' : r}</span>
+                    <span>{r === 'about' ? 'About Us' : r === 'services' ? 'Our Services' : r === 'news' ? 'Media & News' : r}</span>
                   </button>
                 </li>
               ))}
@@ -3304,7 +4331,7 @@ const Footer = () => {
   );
 };
 
-// --- APP ROOT ---
+// --- MAIN APP ROUTER ---
 const App = () => {
   const { currentRoute } = useTrust();
 
@@ -3314,9 +4341,11 @@ const App = () => {
     }
   }, []);
 
+  const cleanRoute = (currentRoute || '').replace(/^[#\/]+/, '').toLowerCase().trim();
+  const isAdminView = cleanRoute === 'admin' || cleanRoute === 'login' || cleanRoute === 'admin-login' || cleanRoute === 'dashboard';
+
   const renderPage = () => {
-    const r = (currentRoute || '').replace(/^[#\/]+/, '').toLowerCase().trim();
-    switch (r) {
+    switch (cleanRoute) {
       case 'about':
       case 'about-us':
       case 'aboutus':
@@ -3353,7 +4382,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900 font-sans selection:bg-emerald-600 selection:text-white w-full max-w-full overflow-x-hidden">
-      <Navbar />
+      {!isAdminView && <Navbar />}
       <main className="flex-1 w-full max-w-full overflow-x-hidden">{renderPage()}</main>
       <ServiceModal />
       <EventModal />
@@ -3361,8 +4390,8 @@ const App = () => {
       <LightboxModal />
       <DonateModal />
       <Toast />
-      <FloatingActions />
-      <Footer />
+      {!isAdminView && <FloatingActions />}
+      {!isAdminView && <Footer />}
     </div>
   );
 };

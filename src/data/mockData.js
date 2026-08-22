@@ -122,7 +122,7 @@ export const initialServices = [
     shortDescription: "Free traditional clay pot drinking water kiosks and buttermilk stalls serving pedestrians during harsh summers.",
     fullDescription: "During scorching summer months, Medidhisubbaiah Trust installs and maintains multiple 'Chalivendram' kiosks at busy traffic intersections, market areas, and transit stops. Cold, purified water stored in natural clay pots and fresh spiced buttermilk are served free to daily wage laborers, rickshaw drivers, and travelers.",
     icon: "Droplets",
-    image: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=800&q=80",
     features: [
       "Naturally cooled clay pot potable water",
       "Freshly prepared spiced buttermilk (Majjiga) daily",
@@ -234,7 +234,7 @@ export const initialEvents = [
   {
     id: 5,
     title: "Summer Chalivendram Water & Buttermilk Service Inauguration",
-    image: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=800&q=80",
     date: "2026-03-20",
     time: "08:00 AM - 06:00 PM",
     location: "RTC Bus Stand & 7 City Junctions",
@@ -308,7 +308,7 @@ Teachers and parents appreciated the gesture, noting that these kits prevent sch
   {
     id: 4,
     title: "Summer Chalivendram Kiosks Serve Over 1.5 Lakh Citizens Across High-Traffic Hubs",
-    thumbnail: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=800&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=800&q=80",
     date: "2026-05-30",
     category: "Public Welfare",
     shortDescription: "The 3-month summer drinking water and buttermilk service concluded successfully, bringing immense relief to daily wage workers and commuters.",
@@ -381,7 +381,7 @@ export const initialGallery = [
     id: 8,
     title: "Summer Chalivendram Water Service",
     category: "Chalivendram",
-    imageUrl: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=1200&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=1200&q=80",
     date: "2026-04-25",
     caption: "Providing cold clay-pot drinking water and buttermilk to beat the scorching heat."
   },

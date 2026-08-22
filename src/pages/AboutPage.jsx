@@ -160,7 +160,7 @@ export const AboutPage = () => {
                 className="rounded-2xl shadow-lg h-56 w-full object-cover mt-6"
               />
               <img
-                src="https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=600&q=80"
+                src="https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=600&q=80"
                 alt="Chalivendram water"
                 className="rounded-2xl shadow-lg h-56 w-full object-cover -mt-6"
               />
