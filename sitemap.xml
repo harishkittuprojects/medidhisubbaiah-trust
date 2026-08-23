@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- Home Page -->
+  <url>
+    <loc>https://www.medidhisubbaiahtrust.org/</loc>
+    <lastmod>2026-08-23</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://www.medidhisubbaiahtrust.org/logo.png</image:loc>
+      <image:title>Medidhisubbaiah Trust Emblem Logo</image:title>
+      <image:caption>Official emblem and seal of Medidhisubbaiah Trust</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.medidhisubbaiahtrust.org/leadership.webp</image:loc>
+      <image:title>Medidhisubbaiah Trust Leadership Stewards</image:title>
+      <image:caption>Sri Medidhi Venkateshwar Rao &amp; Smt. Medidhi Varalakshmi</image:caption>
+    </image:image>
+  </url>
+
+  <!-- About Us Section -->
+  <url>
+    <loc>https://www.medidhisubbaiahtrust.org/#/about</loc>
+    <lastmod>2026-08-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Services & Core Causes (Free Tailoring, Blood Helpline, Food Relief, etc.) -->
+  <url>
+    <loc>https://www.medidhisubbaiahtrust.org/#/services</loc>
+    <lastmod>2026-08-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Events & Blood Donation Camps -->
+  <url>
+    <loc>https://www.medidhisubbaiahtrust.org/#/events</loc>
+    <lastmod>2026-08-23</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Media, Press & News Updates -->
+  <url>
+    <loc>https://www.medidhisubbaiahtrust.org/#/news</loc>
+    <lastmod>2026-08-23</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Photo & Video Documentation Gallery -->
+  <url>
+    <loc>https://www.medidhisubbaiahtrust.org/#/gallery</loc>
+    <lastmod>2026-08-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Contact & 24/7 Blood Donation Helpline -->
+  <url>
+    <loc>https://www.medidhisubbaiahtrust.org/#/contact</loc>
+    <lastmod>2026-08-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>

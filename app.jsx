@@ -972,6 +972,36 @@ function Icon({ name, className = "w-5 h-5", size = 20, color = "currentColor" }
       <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2" ry="2"/>
       </svg>
+    ),
+    globe: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
+    ),
+    checkcircle: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    ),
+    link: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+    ),
+    code: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+      </svg>
+    ),
+    external: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+    ),
+    trendingup: (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+      </svg>
     )
   };
 
@@ -1379,6 +1409,38 @@ const TrustProvider = ({ children }) => {
       window.removeEventListener('popstate', handleLocationChange);
     };
   }, []);
+
+  // Dynamic SEO Meta & Title Manager
+  useEffect(() => {
+    const routeTitles = {
+      home: 'Medidhisubbaiah Trust | Free Tailoring Training, 24/7 Blood Helpline & Community Welfare',
+      about: 'About Us | Medidhisubbaiah Trust - History, Vision & Leadership',
+      services: 'Our Services & Causes | Free Tailoring, Blood Helpline, Food Relief | Medidhisubbaiah Trust',
+      events: 'Events & Blood Donation Camps | Medidhisubbaiah Trust',
+      news: 'Media & News Updates | Medidhisubbaiah Trust',
+      gallery: 'Photo & Video Gallery | Convocations & Activities | Medidhisubbaiah Trust',
+      contact: 'Contact Us & 24/7 Emergency Blood Helpline | Medidhisubbaiah Trust',
+      login: 'Admin Portal Login | Medidhisubbaiah Trust',
+      admin: 'Admin Management Dashboard | Medidhisubbaiah Trust'
+    };
+
+    const clean = normalizeRoute(currentRoute);
+    if (routeTitles[clean]) {
+      document.title = routeTitles[clean];
+    }
+
+    const canonicalEl = document.getElementById('canonical-url');
+    if (canonicalEl) {
+      const base = window.location.origin || 'https://www.medidhisubbaiahtrust.org';
+      canonicalEl.setAttribute('href', clean === 'home' ? `${base}/` : `${base}/#/${clean}`);
+    }
+
+    const storedGsc = localStorage.getItem('mst_gsc_token');
+    const gscMeta = document.getElementById('meta-gsc-token');
+    if (storedGsc && gscMeta) {
+      gscMeta.setAttribute('content', storedGsc);
+    }
+  }, [currentRoute]);
 
   const loginAdmin = async (email, password, remember = true) => {
     // 1. Direct Master credentials check
@@ -3122,6 +3184,10 @@ const {
     location: 'Trust Skill Center'
   });
 
+  const [gscTokenInput, setGscTokenInput] = useState(() => {
+    return localStorage.getItem('mst_gsc_token') || 'google-search-console-verification-code';
+  });
+
   if (!isAdminLoggedIn) {
     return (
       <div className="min-h-[65vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
@@ -3349,7 +3415,8 @@ CREATE POLICY "Public donations" ON public.donations FOR ALL USING (true) WITH C
             { id: 'news', label: 'News', count: news.length, icon: 'filetext' },
             { id: 'services', label: 'Services', count: services.length, icon: 'scissors' },
             { id: 'leadership', label: 'Leadership', count: null, icon: 'users' },
-            { id: 'inquiries', label: 'Inquiries', count: inquiries.length, icon: 'mail' }
+            { id: 'inquiries', label: 'Inquiries', count: inquiries.length, icon: 'mail' },
+            { id: 'seo', label: 'SEO & Google Console', count: null, icon: 'globe' }
           ].map(t => {
             const active = activeTab === t.id;
             return (
@@ -3416,7 +3483,8 @@ CREATE POLICY "Public donations" ON public.donations FOR ALL USING (true) WITH C
               { id: 'news', label: 'Media & News', count: news.length, icon: 'filetext' },
               { id: 'services', label: 'Services & Causes', count: services.length, icon: 'scissors' },
               { id: 'leadership', label: 'Leadership & Vision', count: null, icon: 'users' },
-              { id: 'inquiries', label: 'Contact Inquiries', count: inquiries.length, icon: 'mail' }
+              { id: 'inquiries', label: 'Contact Inquiries', count: inquiries.length, icon: 'mail' },
+              { id: 'seo', label: 'SEO & Google Console', count: null, icon: 'globe' }
             ].map(t => {
               const active = activeTab === t.id;
               return (
@@ -4592,6 +4660,383 @@ CREATE POLICY "Public donations" ON public.donations FOR ALL USING (true) WITH C
               </div>
             );
           })()}
+        </div>
+      )}
+
+      {/* --- TAB: SEO & GOOGLE SEARCH CONSOLE --- */}
+      {activeTab === 'seo' && (
+        <div className="space-y-6 animate-fadeIn">
+          {/* Header & Quick Links */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full font-heading uppercase tracking-wider">
+                  Live Search Engine Hub
+                </span>
+                <span className="bg-blue-100 text-blue-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full font-heading">
+                  Googlebot &amp; Bingbot Ready
+                </span>
+              </div>
+              <h2 className="text-xl font-black font-heading text-slate-900 mt-1">SEO Optimization &amp; Google Console</h2>
+              <p className="text-xs text-slate-500">
+                Manage search engine verification tokens, XML sitemaps, structured JSON-LD schemas, and Google indexing.
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <a
+                href="https://search.google.com/search-console"
+                target="_blank"
+                rel="noreferrer"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-3.5 py-2 rounded-xl text-xs flex items-center space-x-1.5 shadow transition"
+              >
+                <Icon name="external" size={13} />
+                <span>Open Google Search Console</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Quick Metrics Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 font-heading block">GSC Status</span>
+              <span className="text-sm font-black font-heading text-emerald-700 flex items-center space-x-1">
+                <Icon name="checkcircle" size={14} className="text-emerald-600 shrink-0" />
+                <span>Meta Tag Active</span>
+              </span>
+              <span className="text-[10px] text-slate-500 block">Verification ready</span>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 font-heading block">XML Sitemap</span>
+              <span className="text-sm font-black font-heading text-emerald-600 flex items-center space-x-1">
+                <Icon name="link" size={14} className="shrink-0" />
+                <span>/sitemap.xml</span>
+              </span>
+              <span className="text-[10px] text-slate-500 block">7 High-Priority URLs</span>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 font-heading block">Robots Directives</span>
+              <span className="text-sm font-black font-heading text-emerald-600 flex items-center space-x-1">
+                <Icon name="shieldcheck" size={14} className="shrink-0" />
+                <span>robots.txt</span>
+              </span>
+              <span className="text-[10px] text-slate-500 block">Crawler indexing open</span>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 font-heading block">Schema Graphs</span>
+              <span className="text-sm font-black font-heading text-emerald-600 flex items-center space-x-1">
+                <Icon name="code" size={14} className="shrink-0" />
+                <span>5 Schemas Active</span>
+              </span>
+              <span className="text-[10px] text-slate-500 block">NGO, FAQs &amp; WebSite</span>
+            </div>
+          </div>
+
+          {/* Section 1: Google Search Console Token Manager */}
+          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 pb-3 border-b">
+              <div>
+                <h3 className="text-base font-black font-heading text-slate-900 flex items-center space-x-2">
+                  <Icon name="globe" size={18} className="text-emerald-600" />
+                  <span>Google Search Console Verification Token</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Paste the verification code from Google Search Console (HTML tag method) to immediately verify site ownership.
+                </p>
+              </div>
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg self-start sm:self-auto font-heading">
+                Auto-Injected in &lt;head&gt;
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold font-heading text-slate-700 mb-1">
+                  Google Verification Code / Meta Content
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    value={gscTokenInput}
+                    onChange={(e) => setGscTokenInput(e.target.value)}
+                    placeholder="e.g. googleXXXXXXXXXXXXXXXX or abc123def456..."
+                    className="flex-1 p-2.5 border rounded-xl text-xs font-mono focus:ring-2 focus:ring-emerald-500 bg-slate-50/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const token = gscTokenInput.trim() || 'google-search-console-verification-code';
+                      localStorage.setItem('mst_gsc_token', token);
+                      const el = document.getElementById('meta-gsc-token');
+                      if (el) el.setAttribute('content', token);
+                      showToast('Google Search Console verification token saved and applied!', 'success');
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-heading px-5 py-2.5 rounded-xl text-xs shadow transition shrink-0 flex items-center justify-center space-x-1.5"
+                  >
+                    <Icon name="check" size={14} />
+                    <span>Save &amp; Apply Token</span>
+                  </button>
+                </div>
+                <span className="text-[11px] text-slate-400 mt-1 block">
+                  Current Meta Tag: <code className="text-emerald-700 font-mono font-bold">&lt;meta name="google-site-verification" content="{gscTokenInput || '...'}" /&gt;</code>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Essential SEO Files & Sitemaps */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Sitemap.xml */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded font-heading">
+                    Index Engine
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400 font-heading">XML Format</span>
+                </div>
+                <h4 className="font-black font-heading text-slate-900 text-sm">Sitemap (sitemap.xml)</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Lists all 7 public website sections (Home, About, Services, Events, News, Gallery, Contact) plus critical leadership &amp; logo images for Googlebot crawling.
+                </p>
+                <div className="bg-slate-50 p-2 rounded-lg text-[11px] font-mono text-slate-600 truncate border">
+                  https://www.medidhisubbaiahtrust.org/sitemap.xml
+                </div>
+              </div>
+
+              <div className="pt-2 border-t flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = `${window.location.origin}/sitemap.xml`;
+                    navigator.clipboard.writeText(url);
+                    showToast('Sitemap URL copied: ' + url, 'success');
+                  }}
+                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold font-heading px-3 py-1.5 rounded-lg flex items-center space-x-1 transition"
+                >
+                  <Icon name="copy" size={12} />
+                  <span>Copy URL</span>
+                </button>
+                <a
+                  href="./sitemap.xml"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-slate-500 hover:text-emerald-600 font-bold font-heading flex items-center space-x-1"
+                >
+                  <Icon name="external" size={12} />
+                  <span>View XML</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Robots.txt */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="bg-teal-100 text-teal-800 text-[10px] font-bold px-2 py-0.5 rounded font-heading">
+                    Crawler Rules
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400 font-heading">TXT Format</span>
+                </div>
+                <h4 className="font-black font-heading text-slate-900 text-sm">Robots (robots.txt)</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Permits all genuine search engine crawlers (Google, Bing, Yahoo) to index public assets while disallowing private admin portals.
+                </p>
+                <div className="bg-slate-50 p-2 rounded-lg text-[11px] font-mono text-slate-600 truncate border">
+                  https://www.medidhisubbaiahtrust.org/robots.txt
+                </div>
+              </div>
+
+              <div className="pt-2 border-t flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = `${window.location.origin}/robots.txt`;
+                    navigator.clipboard.writeText(url);
+                    showToast('Robots.txt URL copied: ' + url, 'success');
+                  }}
+                  className="bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs font-bold font-heading px-3 py-1.5 rounded-lg flex items-center space-x-1 transition"
+                >
+                  <Icon name="copy" size={12} />
+                  <span>Copy URL</span>
+                </button>
+                <a
+                  href="./robots.txt"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-slate-500 hover:text-teal-600 font-bold font-heading flex items-center space-x-1"
+                >
+                  <Icon name="external" size={12} />
+                  <span>View TXT</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Manifest & PWA */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded font-heading">
+                    Mobile SEO
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400 font-heading">JSON Format</span>
+                </div>
+                <h4 className="font-black font-heading text-slate-900 text-sm">PWA Web Manifest</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Configured for mobile Android/iOS Google Discover cards and home-screen app installation with official Trust badges and emerald green theme.
+                </p>
+                <div className="bg-slate-50 p-2 rounded-lg text-[11px] font-mono text-slate-600 truncate border">
+                  https://www.medidhisubbaiahtrust.org/site.webmanifest
+                </div>
+              </div>
+
+              <div className="pt-2 border-t flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = `${window.location.origin}/site.webmanifest`;
+                    navigator.clipboard.writeText(url);
+                    showToast('Manifest URL copied: ' + url, 'success');
+                  }}
+                  className="bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold font-heading px-3 py-1.5 rounded-lg flex items-center space-x-1 transition"
+                >
+                  <Icon name="copy" size={12} />
+                  <span>Copy URL</span>
+                </button>
+                <a
+                  href="./site.webmanifest"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-slate-500 hover:text-amber-600 font-bold font-heading flex items-center space-x-1"
+                >
+                  <Icon name="external" size={12} />
+                  <span>View JSON</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: 1-Click Diagnostics & Testing Tools */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white p-5 sm:p-6 rounded-3xl shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 pb-3 border-b border-slate-800">
+              <div>
+                <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full font-heading uppercase tracking-wider">
+                  Official Google &amp; Search Engine Validators
+                </span>
+                <h3 className="text-base font-black font-heading text-white mt-1">1-Click SEO Diagnostic Tools</h3>
+              </div>
+              <p className="text-xs text-slate-400">Click any tool to validate live structured snippets, performance, and indexing.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <a
+                href="https://search.google.com/test/rich-results?url=https%3A%2F%2Fwww.medidhisubbaiahtrust.org%2F"
+                target="_blank"
+                rel="noreferrer"
+                className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700 p-4 rounded-2xl transition group space-y-2 block"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold font-heading text-emerald-400 flex items-center space-x-1.5">
+                    <Icon name="code" size={14} />
+                    <span>Google Rich Results</span>
+                  </span>
+                  <Icon name="external" size={12} className="text-slate-500 group-hover:text-emerald-400 transition" />
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Validates FAQPage, NonProfitOrganization, and Breadcrumb Schema graph without syntax errors.
+                </p>
+              </a>
+
+              <a
+                href="https://pagespeed.web.dev/analysis?url=https%3A%2F%2Fwww.medidhisubbaiahtrust.org%2F"
+                target="_blank"
+                rel="noreferrer"
+                className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700 p-4 rounded-2xl transition group space-y-2 block"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold font-heading text-emerald-400 flex items-center space-x-1.5">
+                    <Icon name="trendingup" size={14} />
+                    <span>Google PageSpeed</span>
+                  </span>
+                  <Icon name="external" size={12} className="text-slate-500 group-hover:text-emerald-400 transition" />
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Tests Core Web Vitals (LCP, FID, CLS), asset caching, and mobile responsiveness score.
+                </p>
+              </a>
+
+              <a
+                href="https://www.bing.com/webmasters"
+                target="_blank"
+                rel="noreferrer"
+                className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700 p-4 rounded-2xl transition group space-y-2 block"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold font-heading text-emerald-400 flex items-center space-x-1.5">
+                    <Icon name="globe" size={14} />
+                    <span>Bing Webmaster</span>
+                  </span>
+                  <Icon name="external" size={12} className="text-slate-500 group-hover:text-emerald-400 transition" />
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Submit sitemaps directly to Bing and Yahoo search engines for global and regional discovery.
+                </p>
+              </a>
+            </div>
+          </div>
+
+          {/* Section 4: 4-Step Google Search Console Setup Guide */}
+          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <h3 className="text-base font-black font-heading text-slate-900 flex items-center space-x-2">
+              <Icon name="award" size={18} className="text-emerald-600" />
+              <span>Step-by-Step Google Search Console Setup Checklist</span>
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl space-y-2">
+                <div className="flex items-center space-x-2">
+                  <span className="w-6 h-6 rounded-full bg-emerald-700 text-white font-bold text-xs flex items-center justify-center">1</span>
+                  <h4 className="text-xs font-black font-heading text-emerald-950">Add Property in Google Search Console</h4>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Go to <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" className="text-emerald-700 font-bold underline">Google Search Console</a> and add your domain using the <strong>URL Prefix</strong> method (e.g., <code>https://www.medidhisubbaiahtrust.org</code>).
+                </p>
+              </div>
+
+              <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl space-y-2">
+                <div className="flex items-center space-x-2">
+                  <span className="w-6 h-6 rounded-full bg-emerald-700 text-white font-bold text-xs flex items-center justify-center">2</span>
+                  <h4 className="text-xs font-black font-heading text-emerald-950">Verify Ownership via HTML Tag</h4>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Choose <strong>"HTML tag"</strong>, copy the verification code string, paste it in the box above, and click <strong>"Save &amp; Apply Token"</strong>. Then click <strong>"Verify"</strong> in Google Console.
+                </p>
+              </div>
+
+              <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl space-y-2">
+                <div className="flex items-center space-x-2">
+                  <span className="w-6 h-6 rounded-full bg-emerald-700 text-white font-bold text-xs flex items-center justify-center">3</span>
+                  <h4 className="text-xs font-black font-heading text-emerald-950">Submit Sitemap (sitemap.xml)</h4>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  In Google Search Console, click <strong>"Sitemaps"</strong> in the left menu, type <code>sitemap.xml</code>, and hit <strong>"Submit"</strong>. Google will automatically discover all 7 trust pages and photos.
+                </p>
+              </div>
+
+              <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl space-y-2">
+                <div className="flex items-center space-x-2">
+                  <span className="w-6 h-6 rounded-full bg-emerald-700 text-white font-bold text-xs flex items-center justify-center">4</span>
+                  <h4 className="text-xs font-black font-heading text-emerald-950">Request Instant Indexing</h4>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Use the <strong>"URL Inspection"</strong> search bar at the top of Google Search Console to inspect <code>https://www.medidhisubbaiahtrust.org</code> and click <strong>"Request Indexing"</strong> to get indexed within 24 to 48 hours.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

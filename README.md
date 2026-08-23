@@ -20,6 +20,11 @@ A modern, responsive, and dynamic web application for **Medidhisubbaiah Trust** 
   - **Services Hub**: Manage 9 core causes with details and progress.
   - **Inquiries Inbox**: Real-time submissions from contact forms.
   - **1-Click Supabase SQL Copier**: Instant schema copier for Supabase SQL Editor.
+- **SEO & Google Search Console Optimization**:
+  - Full search engine configuration with [`sitemap.xml`](./sitemap.xml), [`robots.txt`](./robots.txt), and [`site.webmanifest`](./site.webmanifest).
+  - Rich **JSON-LD Schema.org graphs** for **NonProfit Organization (NGO)**, **FAQPage** rich snippets, **WebSite**, and **BreadcrumbList**.
+  - Built-in **SEO & Google Console Hub** in the Admin Portal for 1-click token updates and sitemap submissions.
+  - Complete setup guide available in [`SEO_AND_GOOGLE_CONSOLE_GUIDE.md`](./SEO_AND_GOOGLE_CONSOLE_GUIDE.md).
 - **Visual Design**:
   - Emerald (`#059669`) & Deep Teal (`#0F6E6E`) theme with **Outfit** and **Inter** typography.
   - Live Marquee Announcement Ticker.
