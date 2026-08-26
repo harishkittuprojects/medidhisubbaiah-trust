@@ -170,3 +170,36 @@ VALUES
 ('2', 'Mega Graduation Convocation - Women Beneficiaries', 'Certificate Distribution', 'image', 'assets/gallery/trust_work_page_02.jpg', NULL, NULL, '2026-08-10', 'Tanuku, West Godavari', 'Grand convocation group photograph of women trainees holding their official certificates.'),
 ('3', 'Tanuku & Mogultur Batch Certificate Distribution', 'Certificate Distribution', 'image', 'assets/gallery/trust_work_page_03.jpg', NULL, NULL, '2026-08-10', 'Hotel Chitturi Heritage, Tanuku', 'Dignitaries presenting vocational credentials to successful trainees from Tanuku and Mogultur mandals.')
 ON CONFLICT (id) DO NOTHING;
+
+-- =======================================================
+-- 8. Admin Authentication & Password Reset Management
+-- =======================================================
+CREATE TABLE IF NOT EXISTS public.admin_auth (
+    id TEXT PRIMARY KEY DEFAULT 'primary_admin',
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.admin_password_resets (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    otp TEXT,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.admin_auth ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_password_resets ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public access admin_auth" ON public.admin_auth;
+CREATE POLICY "Public access admin_auth" ON public.admin_auth FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public access admin_password_resets" ON public.admin_password_resets;
+CREATE POLICY "Public access admin_password_resets" ON public.admin_password_resets FOR ALL USING (true) WITH CHECK (true);
+
+INSERT INTO public.admin_auth (id, email, password_hash)
+VALUES ('primary_admin', 'medidhisubbaiahtrustorg@gmail.com', 'trust2026')
+ON CONFLICT (id) DO NOTHING;

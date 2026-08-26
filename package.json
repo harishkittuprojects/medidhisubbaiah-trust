@@ -1,0 +1,13 @@
+{
+  "name": "medidhisubbaiah-trust",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Medidhisubbaiah Trust Official Portal with SMTP Email & Admin Management",
+  "scripts": {
+    "dev": "python server.py",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.14"
+  }
+}
