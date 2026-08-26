@@ -109,6 +109,7 @@ class TrustServerHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         super().end_headers()
         self.wfile.write(response_bytes)
+        self.wfile.flush()
 
     def handle_forgot_password(self):
         data = self.read_json_body()
@@ -273,11 +274,12 @@ Medidhisubbaiah Trust Security Team
         state = load_auth_state()
         custom_pwd = state.get("custom_password")
 
-        # Check default master password or updated custom password
-        is_valid = (
-            entered_password in ['trust2026', 'admin123'] or
-            (custom_pwd and entered_password == custom_pwd)
-        )
+        # If custom password is set, ONLY accept the custom password
+        if custom_pwd:
+            is_valid = (entered_password == custom_pwd)
+        else:
+            is_valid = (entered_password in ['trust2026', 'admin123'])
+
         self.send_json(200, {"success": True, "valid": is_valid})
 
 def run_server():

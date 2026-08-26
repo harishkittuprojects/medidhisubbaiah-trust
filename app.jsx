@@ -1486,28 +1486,30 @@ const TrustProvider = ({ children }) => {
     const normalizedEmail = (email || '').toLowerCase().trim();
     const customPassword = localStorage.getItem('mst_admin_custom_password');
 
-    // 1. Direct Master credentials & Updated Password check
     const isValidAdminUser = (
       normalizedEmail === 'admin@medidhisubbaiah.org' ||
       normalizedEmail === 'medidhisubbaiahtrustorg@gmail.com' ||
       normalizedEmail === 'admin'
     );
 
-    const isPasswordMatch = (
-      password === 'trust2026' ||
-      password === 'admin123' ||
-      (customPassword && password === customPassword)
-    );
-
-    if (isValidAdminUser && isPasswordMatch) {
-      setIsAdminLoggedIn(true);
-      if (remember) localStorage.setItem('mst_admin_session', 'true');
-      showToast('Welcome back, Trust Administrator!', 'success');
-      navigate('admin');
-      return { success: true };
+    if (!isValidAdminUser) {
+      return { success: false, message: 'Invalid administrator email address.' };
     }
 
-    // 2. Local Python / Node Server Backend Auth check
+    // 1. If custom password exists in browser localStorage, strictly require it!
+    if (customPassword) {
+      if (password === customPassword) {
+        setIsAdminLoggedIn(true);
+        if (remember) localStorage.setItem('mst_admin_session', 'true');
+        showToast('Welcome back, Trust Administrator!', 'success');
+        navigate('admin');
+        return { success: true };
+      } else {
+        return { success: false, message: 'Incorrect password. Old passwords have been disabled.' };
+      }
+    }
+
+    // 2. Server Backend Auth check (verifies server.py custom password)
     try {
       const authCheckResp = await fetch('/api/admin-auth-check', {
         method: 'POST',
@@ -1515,16 +1517,18 @@ const TrustProvider = ({ children }) => {
         body: JSON.stringify({ password })
       });
       const authData = await authCheckResp.json();
-      if (authData.valid && isValidAdminUser) {
+      if (authData.valid) {
         setIsAdminLoggedIn(true);
         if (remember) localStorage.setItem('mst_admin_session', 'true');
         showToast('Welcome back, Trust Administrator!', 'success');
         navigate('admin');
         return { success: true };
+      } else {
+        return { success: false, message: 'Incorrect password. Old passwords have been disabled.' };
       }
     } catch (e) {}
 
-    // 3. Supabase Auth fallback
+    // 3. Supabase Auth check
     if (supabaseClient) {
       try {
         const { data: dbAdmin } = await supabaseClient
@@ -1533,28 +1537,27 @@ const TrustProvider = ({ children }) => {
           .eq('email', normalizedEmail)
           .limit(1);
 
-        if (dbAdmin && dbAdmin.length > 0 && dbAdmin[0].password_hash === password) {
-          setIsAdminLoggedIn(true);
-          if (remember) localStorage.setItem('mst_admin_session', 'true');
-          showToast('Welcome back, Trust Administrator!', 'success');
-          navigate('admin');
-          return { success: true };
+        if (dbAdmin && dbAdmin.length > 0) {
+          if (dbAdmin[0].password_hash === password) {
+            setIsAdminLoggedIn(true);
+            if (remember) localStorage.setItem('mst_admin_session', 'true');
+            showToast('Welcome back, Trust Administrator!', 'success');
+            navigate('admin');
+            return { success: true };
+          } else {
+            return { success: false, message: 'Incorrect password. Old passwords have been disabled.' };
+          }
         }
+      } catch (sbErr) {}
+    }
 
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-          email: normalizedEmail,
-          password: password
-        });
-        if (!error && data?.user) {
-          setIsAdminLoggedIn(true);
-          if (remember) localStorage.setItem('mst_admin_session', 'true');
-          showToast(`Welcome back, ${data.user.email}!`, 'success');
-          navigate('admin');
-          return { success: true };
-        }
-      } catch (err) {
-        console.warn('Supabase auth check:', err);
-      }
+    // 4. Default fallback ONLY if no custom password was ever set anywhere
+    if (password === 'trust2026') {
+      setIsAdminLoggedIn(true);
+      if (remember) localStorage.setItem('mst_admin_session', 'true');
+      showToast('Welcome back, Trust Administrator!', 'success');
+      navigate('admin');
+      return { success: true };
     }
 
     return { success: false, message: 'Invalid credentials. Please verify your password or use "Forgot Password".' };
